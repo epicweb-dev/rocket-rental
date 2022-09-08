@@ -1,6 +1,6 @@
 import { Form, Link } from '@remix-run/react'
 
-import { useOptionalUser } from '~/utils'
+import { useOptionalUser } from '~/utils/misc'
 
 export default function Index() {
 	const user = useOptionalUser()

@@ -59,6 +59,10 @@
 		"isbot": "^3.5.3",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
+		"remix-auth": "^3.2.2",
+		"remix-auth-form": "^1.1.2",
+		"remix-auth-socials": "^1.0.2",
+		"remix-validity-state": "^0.3.1",
 		"tiny-invariant": "^1.2.0"
 	},
 	"devDependencies": {
