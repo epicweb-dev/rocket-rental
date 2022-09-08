@@ -106,16 +106,18 @@ jobs:
       - name: 🛠 Setup Database
         run: npx prisma migrate reset --force
 
-      - name: ⚙️ Build
-        run: npm run build
-
       - name: 🌳 Cypress run
         uses: cypress-io/github-action@v4
         with:
+          build: npm run build
           start: npm run start:mocks
           wait-on: 'http://localhost:8811'
+          record: true
+          parallel: true
+          group: GH Action parallel
         env:
           PORT: '8811'
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
 
   build:
     name: 🐳 Build
