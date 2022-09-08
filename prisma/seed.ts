@@ -13,31 +13,16 @@ async function seed() {
 
 	const hashedPassword = await bcrypt.hash('kodylovesyou', 10)
 
-	const user = await prisma.user.create({
+	await prisma.user.create({
 		data: {
 			email,
 			username: 'kody',
+			name: 'Kody',
 			password: {
 				create: {
 					hash: hashedPassword,
 				},
 			},
-		},
-	})
-
-	await prisma.note.create({
-		data: {
-			title: 'My first note',
-			body: 'Hello, world!',
-			userId: user.id,
-		},
-	})
-
-	await prisma.note.create({
-		data: {
-			title: 'My second note',
-			body: 'Hello, world!',
-			userId: user.id,
 		},
 	})
 
