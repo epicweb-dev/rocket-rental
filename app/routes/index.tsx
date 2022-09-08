@@ -31,7 +31,7 @@ export default function Index() {
 								{user ? (
 									<Form action="/logout" method="post">
 										<button className="flex items-center justify-center rounded-md bg-blue-500 px-4 py-3 font-medium text-white hover:bg-blue-600">
-											Logout of {user.email}
+											Logout of {user.name}
 										</button>
 									</Form>
 								) : (

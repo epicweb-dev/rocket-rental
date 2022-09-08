@@ -3,6 +3,7 @@ import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
 	Form,
+	Link,
 	useActionData,
 	useLoaderData,
 	useSearchParams,
@@ -80,7 +81,7 @@ export async function action({ request }: ActionArgs) {
 
 export const meta: MetaFunction = () => {
 	return {
-		title: 'Login',
+		title: 'Login to Rocket Rental',
 	}
 }
 
@@ -203,6 +204,9 @@ export default function LoginPage() {
 						</button>
 					</div>
 				</Form>
+				<Link to="/signup" className="text-blue-600 underline">
+					New here?
+				</Link>
 			</div>
 		</div>
 	)
