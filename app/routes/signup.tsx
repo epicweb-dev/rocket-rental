@@ -71,17 +71,16 @@ const formValidations: FormValidations = {
 		maxLength: 40,
 	},
 	// TODO: add these when remix-validity-state supports checkboxes
-	// agreeToTermsOfServiceAndPrivacyPolicy: {
-	// 	type: 'checkbox',
-	// 	required: true,
-	// },
-	// agreeToMailingList: {
-	// 	type: 'checkbox',
-	// 	required: true,
-	// }
-	// remember: {
-	//   type: 'checkbox',
-	// }
+	agreeToTermsOfServiceAndPrivacyPolicy: {
+		type: 'checkbox',
+		required: true,
+	},
+	agreeToMailingList: {
+		type: 'checkbox',
+	},
+	remember: {
+		type: 'checkbox',
+	},
 }
 
 const errorMessages: ErrorMessages = {
@@ -92,6 +91,8 @@ const errorMessages: ErrorMessages = {
 	tooLong: (maxLength, name) =>
 		`The ${name} field must be less than ${maxLength} characters`,
 	unique: (_, name, value) => `The ${name} "${value}" is already in use`,
+	matchField: (_, name) =>
+		name === 'confirmPassword' ? `Must match password` : `Must match`,
 }
 
 export async function action({ request }: ActionArgs) {
@@ -112,22 +113,28 @@ export async function action({ request }: ActionArgs) {
 				return !user
 			},
 		},
+		confirmPassword: {
+			...formValidations.confirmPassword,
+			matchField: async value => {
+				return value === formData.get('password')
+			},
+		},
 	})
 
 	if (!serverFormInfo.valid) {
 		return json({ serverFormInfo }, { status: 400 })
 	}
 
-	const { username, password, email, name } =
+	const { username, password, email, name, redirectTo } =
 		serverFormInfo.submittedFormData as {
 			username: string
 			password: string
 			email: string
 			name: string
+			redirectTo: string
 		}
 
 	const remember = formData.get('remember')
-	const redirectTo = safeRedirect(formData.get('redirectTo'), '/')
 
 	const user = await createUser({ email, username, password, name })
 	const session = await getSession(request.headers.get('cookie'))
@@ -137,7 +144,7 @@ export async function action({ request }: ActionArgs) {
 			? 60 * 60 * 24 * 7 // 7 days
 			: undefined,
 	})
-	return redirect(redirectTo, {
+	return redirect(safeRedirect(redirectTo, '/'), {
 		headers: { 'Set-Cookie': newCookie },
 	})
 }
@@ -220,6 +227,52 @@ export default function LoginPage() {
 
 					<div>
 						<label
+							{...emailField.getLabelAttrs({
+								className: 'block text-sm font-medium text-gray-700',
+							})}
+						>
+							Email
+						</label>
+						<div className="mt-1">
+							<input
+								{...emailField.getInputAttrs({
+									className:
+										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
+								})}
+							/>
+
+							<ListOfErrorMessages
+								info={emailField.info}
+								{...emailField.getErrorsAttrs({ className: '' })}
+							/>
+						</div>
+					</div>
+
+					<div>
+						<label
+							{...nameField.getLabelAttrs({
+								className: 'block text-sm font-medium text-gray-700',
+							})}
+						>
+							Name
+						</label>
+						<div className="mt-1">
+							<input
+								{...nameField.getInputAttrs({
+									className:
+										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
+								})}
+							/>
+
+							<ListOfErrorMessages
+								info={nameField.info}
+								{...nameField.getErrorsAttrs({ className: '' })}
+							/>
+						</div>
+					</div>
+
+					<div>
+						<label
 							{...passwordField.getLabelAttrs({
 								className: 'block text-sm font-medium text-gray-700',
 							})}
@@ -266,50 +319,34 @@ export default function LoginPage() {
 						</div>
 					</div>
 
-					<div>
+					<div className="flex items-center">
+						<input
+							id="agreeToTermsOfServiceAndPrivacyPolicy"
+							name="agreeToTermsOfServiceAndPrivacyPolicy"
+							type="checkbox"
+							className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+						/>
 						<label
-							{...emailField.getLabelAttrs({
-								className: 'block text-sm font-medium text-gray-700',
-							})}
+							htmlFor="agreeToTermsOfServiceAndPrivacyPolicy"
+							className="ml-2 block text-sm text-gray-900"
 						>
-							Email
+							Do you agree to our Terms of Service and Privacy Policy?
 						</label>
-						<div className="mt-1">
-							<input
-								{...emailField.getInputAttrs({
-									className:
-										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
-								})}
-							/>
-
-							<ListOfErrorMessages
-								info={emailField.info}
-								{...emailField.getErrorsAttrs({ className: '' })}
-							/>
-						</div>
 					</div>
 
-					<div>
+					<div className="flex items-center">
+						<input
+							id="agreeToMailingList"
+							name="agreeToMailingList"
+							type="checkbox"
+							className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+						/>
 						<label
-							{...nameField.getLabelAttrs({
-								className: 'block text-sm font-medium text-gray-700',
-							})}
+							htmlFor="agreeToMailingList"
+							className="ml-2 block text-sm text-gray-900"
 						>
-							Name
+							Would you like to receive special discounts and offers?
 						</label>
-						<div className="mt-1">
-							<input
-								{...nameField.getInputAttrs({
-									className:
-										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
-								})}
-							/>
-
-							<ListOfErrorMessages
-								info={nameField.info}
-								{...nameField.getErrorsAttrs({ className: '' })}
-							/>
-						</div>
 					</div>
 
 					<div className="flex items-center">
