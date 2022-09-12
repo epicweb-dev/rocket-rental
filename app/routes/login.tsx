@@ -154,7 +154,6 @@ export default function LoginPage() {
 						<div className="mt-1">
 							<input
 								{...passwordField.getInputAttrs({
-									autoFocus: true,
 									autoComplete: 'current-password',
 									className:
 										'w-full rounded border border-gray-500 px-2 py-1 text-lg',

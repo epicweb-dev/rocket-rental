@@ -16,7 +16,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  password Password?
+  password    Password?
+  contactInfo ContactInfo?
+  host        Host?
+  renter      Renter?
+  admin       Admin?
+  messages    Message[]
 }
 
 model Password {
@@ -24,4 +29,187 @@ model Password {
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId String @unique
+}
+
+model ContactInfo {
+  id      String  @id @default(cuid())
+  email   String?
+  phone   String?
+  address String?
+  city    String?
+  state   String?
+  zip     String?
+  country String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId String @unique
+}
+
+model Host {
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId String @unique
+
+  bio String?
+
+  ships         Ship[]
+  reviews       HostReview[]
+  renterReviews RenterReview[]
+  chats         Chat[]
+}
+
+model Renter {
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId String @unique
+
+  bio String?
+
+  bookings    Booking[]
+  shipReviews ShipReview[]
+  hostReviews HostReview[]
+  reviews     RenterReview[]
+  chats       Chat[]
+}
+
+model Admin {
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId String @unique
+}
+
+model ShipBrand {
+  id          String @id @default(cuid())
+  name        String
+  description String
+  imageUrl    String
+  ships       Ship[]
+}
+
+model Ship {
+  id          String @id @default(cuid())
+  name        String
+  capacity    Int
+  description String
+  imageUrl    String
+
+  dailyCharge Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  brand   ShipBrand @relation(fields: [brandId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  brandId String
+
+  owner  Host   @relation(fields: [hostId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  hostId String
+
+  starport   Starport @relation(fields: [starportId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  starportId String
+
+  bookings Booking[]
+  reviews  ShipReview[]
+}
+
+model Starport {
+  id          String @id @default(cuid())
+  name        String
+  description String
+  imageUrl    String
+  latitude    Float
+  longitude   Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ships Ship[]
+}
+
+model Booking {
+  id         String   @id @default(cuid())
+  startDate  DateTime
+  endDate    DateTime
+  totalPrice Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  renter   Renter @relation(fields: [renterId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  renterId String
+
+  ship   Ship   @relation(fields: [shipId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  shipId String
+}
+
+model ShipReview {
+  id          String @id @default(cuid())
+  rating      Int
+  description String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  renter   Renter @relation(fields: [renterId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  renterId String
+
+  ship   Ship   @relation(fields: [shipId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  shipId String
+}
+
+model HostReview {
+  id          String @id @default(cuid())
+  rating      Int
+  description String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  renter   Renter @relation(fields: [renterId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  renterId String
+
+  host   Host   @relation(fields: [hostId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  hostId String
+}
+
+model RenterReview {
+  id          String @id @default(cuid())
+  rating      Int
+  description String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  renter   Renter @relation(fields: [renterId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  renterId String
+
+  host   Host   @relation(fields: [hostId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  hostId String
+}
+
+model Chat {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  renter   Renter @relation(fields: [renterId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  renterId String
+
+  host   Host   @relation(fields: [hostId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  hostId String
+
+  messages Message[]
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  chatId String
+
+  sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  senderId String
 }
