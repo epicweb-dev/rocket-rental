@@ -10,6 +10,7 @@ import {
 } from '@remix-run/react'
 import { FormStrategy } from 'remix-auth-form'
 import type { ErrorMessages, FormValidations } from 'remix-validity-state'
+import { FormContextProvider } from 'remix-validity-state'
 import { useValidatedInput } from 'remix-validity-state'
 import { validateServerFormData } from 'remix-validity-state'
 import { authenticator } from '~/services/auth.server'
@@ -85,7 +86,15 @@ export const meta: MetaFunction = () => {
 	}
 }
 
-export default function LoginPage() {
+export default function TempLoginParent() {
+	return (
+		<FormContextProvider value={{ formValidations, errorMessages }}>
+			<LoginPage />
+		</FormContextProvider>
+	)
+}
+
+function LoginPage() {
 	const [searchParams] = useSearchParams()
 	const data = useLoaderData<typeof loader>()
 	const actionData = useActionData<typeof action>()

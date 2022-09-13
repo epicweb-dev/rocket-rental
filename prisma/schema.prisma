@@ -12,6 +12,7 @@ model User {
   email    String  @unique
   username String  @unique
   name     String?
+  imageUrl String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -101,7 +102,7 @@ model Ship {
   brand   ShipBrand @relation(fields: [brandId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   brandId String
 
-  owner  Host   @relation(fields: [hostId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  host   Host   @relation(fields: [hostId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
   hostId String
 
   starport   Starport @relation(fields: [starportId], references: [id], onDelete: Cascade, onUpdate: Cascade)

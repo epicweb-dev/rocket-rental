@@ -62,7 +62,7 @@
 		"remix-auth": "^3.2.2",
 		"remix-auth-form": "^1.2.0",
 		"remix-auth-socials": "^1.0.2",
-		"remix-validity-state": "^0.3.1",
+		"remix-validity-state": "^0.5.0",
 		"tiny-invariant": "^1.2.0"
 	},
 	"devDependencies": {
@@ -76,22 +76,22 @@
 		"@testing-library/user-event": "^14.4.3",
 		"@types/bcryptjs": "^2.4.2",
 		"@types/eslint": "^8.4.6",
-		"@types/node": "^18.7.16",
-		"@types/react": "^18.0.18",
+		"@types/node": "^18.7.17",
+		"@types/react": "^18.0.19",
 		"@types/react-dom": "^18.0.6",
 		"@vitejs/plugin-react": "^2.1.0",
-		"@vitest/coverage-c8": "^0.23.1",
-		"autoprefixer": "^10.4.8",
+		"@vitest/coverage-c8": "^0.23.2",
+		"autoprefixer": "^10.4.10",
 		"binode": "^1.0.5",
 		"c8": "^7.12.0",
 		"cookie": "^0.5.0",
 		"cross-env": "^7.0.3",
 		"cypress": "^10.7.0",
-		"eslint": "^8.23.0",
+		"eslint": "^8.23.1",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-cypress": "^2.12.1",
 		"happy-dom": "^6.0.4",
-		"msw": "^0.47.0",
+		"msw": "^0.47.2",
 		"npm-run-all": "^4.1.5",
 		"postcss": "^8.4.16",
 		"prettier": "2.7.1",
@@ -104,7 +104,7 @@
 		"typescript": "^4.8.3",
 		"vite": "^3.1.0",
 		"vite-tsconfig-paths": "^3.5.0",
-		"vitest": "^0.23.1"
+		"vitest": "^0.23.2"
 	},
 	"engines": {
 		"node": ">=18"
