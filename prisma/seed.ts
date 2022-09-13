@@ -352,3 +352,8 @@ seed()
 	.finally(async () => {
 		await prisma.$disconnect()
 	})
+
+/*
+eslint
+	@typescript-eslint/no-unused-vars: "off",
+*/
