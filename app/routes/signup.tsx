@@ -24,7 +24,7 @@ import {
 } from '~/models/user.server'
 import { authenticator } from '~/services/auth.server'
 import { commitSession, getSession } from '~/services/session.server'
-import { safeRedirect } from '~/utils/misc'
+import { constrain, safeRedirect } from '~/utils/misc'
 
 export async function loader({ request }: LoaderArgs) {
 	await authenticator.isAuthenticated(request, {
@@ -42,7 +42,7 @@ export async function loader({ request }: LoaderArgs) {
 	)
 }
 
-const formValidations: FormValidations = {
+const formValidations = constrain<FormValidations>()({
 	username: {
 		required: true,
 		minLength: 2,
@@ -82,9 +82,10 @@ const formValidations: FormValidations = {
 	remember: {
 		type: 'checkbox',
 	},
-}
+	redirectTo: {},
+})
 
-const errorMessages: ErrorMessages = {
+const errorMessages = constrain<ErrorMessages>()({
 	valueMissing: (_, name) => `The ${name} field is required`,
 	typeMismatch: (_, name) => `The ${name} field is invalid`,
 	tooShort: (minLength, name) =>
@@ -94,7 +95,7 @@ const errorMessages: ErrorMessages = {
 	unique: (_, name, value) => `The ${name} "${value}" is already in use`,
 	matchField: (_, name) =>
 		name === 'confirmPassword' ? `Must match password` : `Must match`,
-}
+})
 
 export async function action({ request }: ActionArgs) {
 	const formData = await request.formData()
@@ -127,13 +128,7 @@ export async function action({ request }: ActionArgs) {
 	}
 
 	const { username, password, email, name, redirectTo } =
-		serverFormInfo.submittedFormData as {
-			username: string
-			password: string
-			email: string
-			name: string
-			redirectTo: string
-		}
+		serverFormInfo.submittedFormData
 
 	const remember = formData.get('remember')
 

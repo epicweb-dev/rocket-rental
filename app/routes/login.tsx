@@ -15,7 +15,7 @@ import { useValidatedInput } from 'remix-validity-state'
 import { validateServerFormData } from 'remix-validity-state'
 import { authenticator } from '~/services/auth.server'
 import { commitSession, getSession } from '~/services/session.server'
-import { safeRedirect } from '~/utils/misc'
+import { constrain, safeRedirect } from '~/utils/misc'
 
 export async function loader({ request }: LoaderArgs) {
 	await authenticator.isAuthenticated(request, {
@@ -33,7 +33,7 @@ export async function loader({ request }: LoaderArgs) {
 	)
 }
 
-const formValidations: FormValidations = {
+const formValidations = constrain<FormValidations>()({
 	username: {
 		required: true,
 		minLength: 2,
@@ -45,16 +45,16 @@ const formValidations: FormValidations = {
 		minLength: 6,
 		maxLength: 100,
 	},
-}
+})
 
-const errorMessages: ErrorMessages = {
+const errorMessages = constrain<ErrorMessages>()({
 	valueMissing: (_, name) => `The ${name} field is required`,
 	typeMismatch: (_, name) => `The ${name} field is invalid`,
 	tooShort: (minLength, name) =>
 		`The ${name} field must be at least ${minLength} characters`,
 	tooLong: (maxLength, name) =>
 		`The ${name} field must be less than ${maxLength} characters`,
-}
+})
 
 export async function action({ request }: ActionArgs) {
 	const formData = await request.clone().formData()

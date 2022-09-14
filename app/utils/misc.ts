@@ -69,3 +69,10 @@ export function useUser(): User {
 export function validateEmail(email: unknown): email is string {
 	return typeof email === 'string' && email.length > 3 && email.includes('@')
 }
+
+// This is a CIF and we can ditch it as soon as TypeScript 4.9.0 is released
+// More info: https://kentcdodds.com/blog/how-to-write-a-constrained-identity-function-in-typescript
+export const constrain =
+	<Given extends unknown>() =>
+	<Inferred extends Given>(item: Inferred) =>
+		item
