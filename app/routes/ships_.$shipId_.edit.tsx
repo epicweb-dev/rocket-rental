@@ -1,40 +1,30 @@
 import type { LoaderArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import { Outlet, useCatch, useLoaderData, useParams } from '@remix-run/react'
+import { useCatch, useLoaderData, useParams } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
 import { authenticator } from '~/services/auth.server'
 
 export async function loader({ request, params }: LoaderArgs) {
-	invariant(params.bookingId, 'Missing bookingId')
+	invariant(params.shipId, 'Missing shipId')
 	const userId = await authenticator.isAuthenticated(request, {
-		failureRedirect: `/login?redirectTo=${request.url}`,
+		failureRedirect: `/ships/${params.shipId}`,
 	})
-	const booking = await prisma.booking.findFirst({
-		where: { id: params.bookingId, renterId: userId },
-		select: {
-			id: true,
-			shipId: true,
-			totalPrice: true,
-			startDate: true,
-			endDate: true,
-		},
+	const ship = await prisma.ship.findFirst({
+		where: { id: params.shipId, hostId: userId },
 	})
-
-	if (!booking) {
+	if (!ship) {
 		throw new Response('not found', { status: 404 })
 	}
-	return json({ booking })
+	return json({})
 }
 
-export default function BookingRoute() {
+export default function ShipEditRoute() {
 	const data = useLoaderData<typeof loader>()
 	return (
 		<div>
-			<h2>Booking</h2>
+			<h1>Ship Edit</h1>
 			<pre>{JSON.stringify(data, null, 2)}</pre>
-			<hr />
-			<Outlet />
 		</div>
 	)
 }
@@ -44,7 +34,7 @@ export function CatchBoundary() {
 	const params = useParams()
 
 	if (caught.status === 404) {
-		return <div>Booking "{params.starportId}" not found</div>
+		return <div>Ship "{params.shipId}" not found</div>
 	}
 
 	throw new Error(`Unexpected caught response with status: ${caught.status}`)

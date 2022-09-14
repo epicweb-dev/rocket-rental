@@ -1,3 +1,3 @@
-export default function UnnamedRoute() {
-	return <div>UnnamedRoute</div>
+export default function SupportRoute() {
+	return <div>Support</div>
 }

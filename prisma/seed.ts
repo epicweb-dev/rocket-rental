@@ -331,6 +331,7 @@ async function seed() {
 			email,
 			username: 'kody',
 			name: 'Kody',
+			imageUrl: faker.image.avatar(),
 			password: {
 				create: {
 					hash: hashedPassword,
