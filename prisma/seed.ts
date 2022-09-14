@@ -297,8 +297,9 @@ async function seed() {
 			)
 			const chat = await prisma.chat.create({
 				data: {
-					hostId: booking.ship.hostId,
-					renterId: booking.renterId,
+					users: {
+						connect: [{ id: booking.ship.hostId }, { id: booking.renterId }],
+					},
 					createdAt,
 					messages: {
 						create: Array.from(

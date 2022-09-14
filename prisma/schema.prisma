@@ -22,6 +22,7 @@ model User {
   host        Host?
   renter      Renter?
   admin       Admin?
+  chats       Chat[]
   messages    Message[]
 }
 
@@ -58,7 +59,6 @@ model Host {
   ships         Ship[]
   reviews       HostReview[]
   renterReviews RenterReview[]
-  chats         Chat[]
 }
 
 model Renter {
@@ -71,7 +71,6 @@ model Renter {
   shipReviews ShipReview[]
   hostReviews HostReview[]
   reviews     RenterReview[]
-  chats       Chat[]
 }
 
 model Admin {
@@ -193,12 +192,7 @@ model Chat {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  renter   Renter @relation(fields: [renterId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
-  renterId String
-
-  host   Host   @relation(fields: [hostId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
-  hostId String
-
+  users    User[]
   messages Message[]
 }
 
