@@ -127,6 +127,7 @@ jobs:
         env:
           PORT: '8811'
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          RUNNING_E2E: 'true'
 
   build:
     name: 🐳 Build

@@ -101,10 +101,8 @@ export async function action({ request }: ActionArgs) {
 			</body>
 		`,
 	})
-	console.log(response)
-	console.log(await response.text())
 
-	return json({ success: true, serverFormInfo })
+	return json({ success: response.ok, serverFormInfo })
 }
 
 export const meta: MetaFunction = () => {
