@@ -123,6 +123,7 @@ export async function action({ request }: ActionArgs) {
 
 	const user = await createUser({ email, username, password, name })
 	session.set(authenticator.sessionKey, user.id)
+	session.unset(onboardingEmailSessionKey)
 	const newCookie = await commitSession(session, {
 		maxAge: remember
 			? 60 * 60 * 24 * 7 // 7 days

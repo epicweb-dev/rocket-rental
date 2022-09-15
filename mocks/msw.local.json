@@ -1,9 +1,0 @@
-{
-  "email": {
-    "to": "Weston80@example.com",
-    "from": "hello@rocketrental.space",
-    "subject": "Welcome to Rocket Rental!",
-    "text": "Please open this URL: http://localhost:3000/signup?token=c536aab504208ea22ad042c4ddd13222%3A17ff9df217a7bf9cc704628e7d943ab240df4026aa9bc23ca66fe743fdd647ca2aa5613542e3f9e218e86b229a854d5833d762c27018f7dd9cbb8ae5d2e568b3",
-    "html": "\n\t\t<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n\t\t<html>\n\t\t\t<head>\n\t\t\t\t<meta http-equiv=\"Content-Type\" content=\"text/html charset=UTF-8\" />\n\t\t\t</head>\n\t\t\t<body>\n\t\t\t\t<h1>Welcome to Rocket Rental!</h1>\n\t\t\t\t<p>Click the link below to get started:</p>\n\t\t\t\t<a href=\"http://localhost:3000/signup?token=c536aab504208ea22ad042c4ddd13222%3A17ff9df217a7bf9cc704628e7d943ab240df4026aa9bc23ca66fe743fdd647ca2aa5613542e3f9e218e86b229a854d5833d762c27018f7dd9cbb8ae5d2e568b3\">http://localhost:3000/signup?token=c536aab504208ea22ad042c4ddd13222%3A17ff9df217a7bf9cc704628e7d943ab240df4026aa9bc23ca66fe743fdd647ca2aa5613542e3f9e218e86b229a854d5833d762c27018f7dd9cbb8ae5d2e568b3</a>\n\t\t\t</body>\n\t\t"
-  }
-}

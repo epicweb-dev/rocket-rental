@@ -3,20 +3,20 @@ import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
 	Form,
-	Link,
 	useActionData,
 	useLoaderData,
-	useSearchParams,
+	useTransition,
 } from '@remix-run/react'
-import { FormStrategy } from 'remix-auth-form'
-import type { ErrorMessages, FormValidations } from 'remix-validity-state'
+import type { FormValidations, ErrorMessages } from 'remix-validity-state'
 import { FormContextProvider } from 'remix-validity-state'
 import { useValidatedInput } from 'remix-validity-state'
 import { validateServerFormData } from 'remix-validity-state'
 import { ListOfErrorMessages } from '~/components'
+import { resetUserPassword } from '~/models/user.server'
 import { authenticator } from '~/services/auth.server'
 import { commitSession, getSession } from '~/services/session.server'
-import { constrain, safeRedirect } from '~/utils/misc'
+import { constrain } from '~/utils/misc'
+import { resetPasswordSessionKey } from './forgot-password'
 
 export async function loader({ request }: LoaderArgs) {
 	await authenticator.isAuthenticated(request, {
@@ -24,8 +24,12 @@ export async function loader({ request }: LoaderArgs) {
 	})
 	const session = await getSession(request.headers.get('cookie'))
 	const error = session.get(authenticator.sessionErrorKey)
+	const resetPasswordUsername = session.get(resetPasswordSessionKey)
+	if (typeof resetPasswordUsername !== 'string' || !resetPasswordUsername) {
+		return redirect('/login')
+	}
 	return json(
-		{ formError: error?.message },
+		{ formError: error?.message, resetPasswordUsername },
 		{
 			headers: {
 				'Set-Cookie': await commitSession(session),
@@ -35,12 +39,13 @@ export async function loader({ request }: LoaderArgs) {
 }
 
 const formValidations = constrain<FormValidations>()({
-	username: {
-		required: true,
-		minLength: 2,
-		maxLength: 15,
-	},
 	password: {
+		type: 'password',
+		required: true,
+		minLength: 6,
+		maxLength: 100,
+	},
+	confirmPassword: {
 		type: 'password',
 		required: true,
 		minLength: 6,
@@ -50,64 +55,70 @@ const formValidations = constrain<FormValidations>()({
 
 const errorMessages = constrain<ErrorMessages>()({
 	valueMissing: (_, name) => `The ${name} field is required`,
-	typeMismatch: (_, name) => `The ${name} field is invalid`,
 	tooShort: (minLength, name) =>
 		`The ${name} field must be at least ${minLength} characters`,
 	tooLong: (maxLength, name) =>
 		`The ${name} field must be less than ${maxLength} characters`,
+	matchField: (_, name) =>
+		name === 'confirmPassword' ? `Must match password` : `Must match`,
 })
 
 export async function action({ request }: ActionArgs) {
-	const formData = await request.clone().formData()
-	const serverFormInfo = await validateServerFormData(formData, formValidations)
+	const formData = await request.formData()
+	const serverFormInfo = await validateServerFormData(formData, {
+		...formValidations,
+		confirmPassword: {
+			...formValidations.confirmPassword,
+			matchField: async value => {
+				return value === formData.get('password')
+			},
+		},
+	})
+
 	if (!serverFormInfo.valid) {
 		return json({ serverFormInfo }, { status: 400 })
 	}
-	const remember = formData.get('remember') === 'on'
-	const redirectTo = safeRedirect(formData.get('redirectTo'), '/')
-
-	const userId = await authenticator.authenticate(FormStrategy.name, request, {
-		failureRedirect: '/login',
-	})
 	const session = await getSession(request.headers.get('cookie'))
-	session.set(authenticator.sessionKey, userId)
-	const newCookie = await commitSession(session, {
-		maxAge: remember
-			? 60 * 60 * 24 * 7 // 7 days
-			: undefined,
-	})
-	return redirect(redirectTo, {
-		headers: { 'Set-Cookie': newCookie },
+	const username = session.get(resetPasswordSessionKey)
+	if (typeof username !== 'string' || !username) {
+		return redirect('/login')
+	}
+
+	const { password } = serverFormInfo.submittedFormData
+
+	await resetUserPassword({ username, password })
+	session.unset(resetPasswordSessionKey)
+	return redirect('/login', {
+		headers: { 'Set-Cookie': await commitSession(session) },
 	})
 }
 
 export const meta: MetaFunction = () => {
 	return {
-		title: 'Login to Rocket Rental',
+		title: 'Setup Rocket Rental Account',
 	}
 }
 
-export default function TempLoginParent() {
+export default function TempResetPasswordParent() {
 	return (
 		<FormContextProvider value={{ formValidations, errorMessages }}>
-			<LoginPage />
+			<ResetPasswordPage />
 		</FormContextProvider>
 	)
 }
 
-function LoginPage() {
-	const [searchParams] = useSearchParams()
+function ResetPasswordPage() {
 	const data = useLoaderData<typeof loader>()
+	const transition = useTransition()
 	const actionData = useActionData<typeof action>()
-	const redirectTo = searchParams.get('redirectTo') || '/'
-	const usernameField = useValidatedInput({
-		name: 'username',
+	const passwordField = useValidatedInput({
+		name: 'password',
 		formValidations,
 		errorMessages,
 		serverFormInfo: actionData?.serverFormInfo,
 	})
-	const passwordField = useValidatedInput({
-		name: 'password',
+	const confirmPasswordField = useValidatedInput({
+		name: 'confirmPassword',
 		formValidations,
 		errorMessages,
 		serverFormInfo: actionData?.serverFormInfo,
@@ -122,27 +133,7 @@ function LoginPage() {
 					aria-invalid={data.formError ? true : undefined}
 					aria-describedby="form-error"
 				>
-					<div>
-						<label
-							{...usernameField.getLabelAttrs({
-								className: 'block text-sm font-medium text-gray-700',
-							})}
-						>
-							Username
-						</label>
-						<div className="mt-1">
-							<input
-								{...usernameField.getInputAttrs({
-									autoFocus: true,
-									autoComplete: 'username',
-									className:
-										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
-								})}
-							/>
-
-							<ListOfErrorMessages info={usernameField.info} />
-						</div>
-					</div>
+					<div>Resetting password for {data.resetPasswordUsername}</div>
 
 					<div>
 						<label
@@ -155,32 +146,43 @@ function LoginPage() {
 						<div className="mt-1">
 							<input
 								{...passwordField.getInputAttrs({
+									autoComplete: 'new-password',
+									className:
+										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
+								})}
+							/>
+
+							<ListOfErrorMessages
+								info={passwordField.info}
+								{...passwordField.getErrorsAttrs({ className: '' })}
+							/>
+						</div>
+					</div>
+
+					<div>
+						<label
+							{...confirmPasswordField.getLabelAttrs({
+								className: 'block text-sm font-medium text-gray-700',
+							})}
+						>
+							Confirm Password
+						</label>
+						<div className="mt-1">
+							<input
+								{...confirmPasswordField.getInputAttrs({
 									autoComplete: 'current-password',
 									className:
 										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
 								})}
 							/>
 
-							<ListOfErrorMessages info={passwordField.info} />
+							<ListOfErrorMessages
+								info={confirmPasswordField.info}
+								{...confirmPasswordField.getErrorsAttrs({ className: '' })}
+							/>
 						</div>
 					</div>
 
-					<div className="flex items-center">
-						<input
-							id="remember"
-							name="remember"
-							type="checkbox"
-							className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-						/>
-						<label
-							htmlFor="remember"
-							className="ml-2 block text-sm text-gray-900"
-						>
-							Remember me
-						</label>
-					</div>
-
-					<input type="hidden" name="redirectTo" value={redirectTo} />
 					{data.formError ? (
 						<div className="pt-1 text-red-700" id="form-error">
 							{data.formError}
@@ -189,20 +191,13 @@ function LoginPage() {
 					<div className="flex items-center justify-between gap-6">
 						<button
 							type="submit"
-							className="w-full rounded bg-blue-500  py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400"
+							className="w-full rounded bg-gray-500  py-2 px-4 text-white hover:bg-gray-600 focus:bg-gray-400"
+							disabled={Boolean(transition.submission)}
 						>
-							Log in
+							{transition.submission ? 'Resetting...' : 'Reset Password'}
 						</button>
 					</div>
 				</Form>
-				<div className="flex justify-around pt-6">
-					<Link to="/signup" className="text-blue-600 underline">
-						New here?
-					</Link>
-					<Link to="/forgot-password" className="text-blue-600 underline">
-						Forgot password?
-					</Link>
-				</div>
 			</div>
 		</div>
 	)
