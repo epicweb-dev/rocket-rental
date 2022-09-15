@@ -8,21 +8,12 @@ import {
 	useLoaderData,
 	useSearchParams,
 } from '@remix-run/react'
-import * as React from 'react'
-import type {
-	FormValidations,
-	ErrorMessages,
-	InputInfo,
-} from 'remix-validity-state'
+import type { FormValidations, ErrorMessages } from 'remix-validity-state'
 import { FormContextProvider } from 'remix-validity-state'
 import { useValidatedInput } from 'remix-validity-state'
 import { validateServerFormData } from 'remix-validity-state'
 import { ListOfErrorMessages } from '~/components'
-import {
-	createUser,
-	getUserByEmail,
-	getUserByUsername,
-} from '~/models/user.server'
+import { createUser, getUserByUsername } from '~/models/user.server'
 import { authenticator } from '~/services/auth.server'
 import { commitSession, getSession } from '~/services/session.server'
 import { constrain, safeRedirect } from '~/utils/misc'

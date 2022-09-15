@@ -10,6 +10,7 @@ import {
 } from 'remix-validity-state'
 import { ListOfErrorMessages } from '~/components'
 import { getUserByEmail } from '~/models/user.server'
+import { sendEmail } from '~/services/email.server'
 import { decrypt, encrypt } from '~/services/encryption.server'
 import { commitSession, getSession } from '~/services/session.server'
 import { constrain } from '~/utils/misc'
@@ -83,8 +84,25 @@ export async function action({ request }: ActionArgs) {
 	const onboardingUrl = new URL(`${getDomainUrl(request)}/signup`)
 	onboardingUrl.searchParams.set(onboardingTokenQueryParam, onboardingToken)
 
-	// TODO: send email with the link
-	console.log(onboardingUrl)
+	const response = await sendEmail({
+		to: email,
+		subject: `Welcome to Rocket Rental!`,
+		text: `Please open this URL: ${onboardingUrl}`,
+		html: `
+		<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+		<html>
+			<head>
+				<meta http-equiv="Content-Type" content="text/html charset=UTF-8" />
+			</head>
+			<body>
+				<h1>Welcome to Rocket Rental!</h1>
+				<p>Click the link below to get started:</p>
+				<a href="${onboardingUrl}">${onboardingUrl}</a>
+			</body>
+		`,
+	})
+	console.log(response)
+	console.log(await response.text())
 
 	return json({ success: true, serverFormInfo })
 }
@@ -141,7 +159,9 @@ function SignupRoute() {
 					</div>
 				</div>
 				<div>
-					<button type="submit">Submit</button>
+					<button type="submit" disabled={signupFetcher.state !== 'idle'}>
+						{signupFetcher.state === 'idle' ? 'Submit' : 'Submitting...'}
+					</button>
 				</div>
 			</signupFetcher.Form>
 		</div>
