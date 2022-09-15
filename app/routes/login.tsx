@@ -13,6 +13,7 @@ import type { ErrorMessages, FormValidations } from 'remix-validity-state'
 import { FormContextProvider } from 'remix-validity-state'
 import { useValidatedInput } from 'remix-validity-state'
 import { validateServerFormData } from 'remix-validity-state'
+import { ListOfErrorMessages } from '~/components'
 import { authenticator } from '~/services/auth.server'
 import { commitSession, getSession } from '~/services/session.server'
 import { constrain, safeRedirect } from '~/utils/misc'
@@ -139,16 +140,7 @@ function LoginPage() {
 								})}
 							/>
 
-							{usernameField.info.touched &&
-							usernameField.info.errorMessages ? (
-								<ul {...usernameField.getErrorsAttrs({ className: '' })}>
-									{Object.values(usernameField.info.errorMessages).map(msg => (
-										<li className="pt-1 text-red-700" key={msg}>
-											{msg}
-										</li>
-									))}
-								</ul>
-							) : null}
+							<ListOfErrorMessages info={usernameField.info} />
 						</div>
 					</div>
 
@@ -169,16 +161,7 @@ function LoginPage() {
 								})}
 							/>
 
-							{passwordField.info.touched &&
-							passwordField.info.errorMessages ? (
-								<ul {...passwordField.getErrorsAttrs({ className: '' })}>
-									{Object.values(passwordField.info.errorMessages).map(msg => (
-										<li className="pt-1 text-red-700" key={msg}>
-											{msg}
-										</li>
-									))}
-								</ul>
-							) : null}
+							<ListOfErrorMessages info={passwordField.info} />
 						</div>
 					</div>
 
