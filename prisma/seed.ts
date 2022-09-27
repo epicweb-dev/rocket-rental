@@ -2,67 +2,15 @@ import type * as P from '@prisma/client'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { faker } from '@faker-js/faker'
+import {
+	createContactInfo,
+	createDateRange,
+	createUser,
+	oneDay,
+	typedBoolean,
+} from './seed-utils'
 
 const prisma = new PrismaClient()
-
-function createContactInfo(): Omit<
-	P.ContactInfo,
-	'id' | 'userId' | 'createdAt' | 'updatedAt'
-> {
-	return {
-		email: faker.internet.email(),
-		address: faker.address.streetAddress(),
-		city: faker.address.city(),
-		state: faker.address.state(),
-		zip: faker.address.zipCode(),
-		country: faker.address.country(),
-		phone: faker.phone.number(),
-	}
-}
-
-function createUser(): Omit<P.User, 'id' | 'createdAt' | 'updatedAt'> {
-	const firstName = faker.name.firstName()
-	const lastName = faker.name.lastName()
-	const username = faker.internet.userName(firstName, lastName).toLowerCase()
-	return {
-		username,
-		name: `${firstName} ${lastName}`,
-		email: faker.internet.email(firstName, lastName),
-		imageUrl: faker.image.avatar(),
-	}
-}
-
-const oneDay = 1000 * 60 * 60 * 24
-function createDateRange({
-	start,
-	end,
-	maxDays,
-}: {
-	start: Date
-	end: Date
-	maxDays: number
-}) {
-	const randomStart = faker.date.between(start, end.getTime() - oneDay * 2)
-	const endStartRange = randomStart.getTime() + oneDay
-	const endEndRange = Math.min(endStartRange + oneDay * maxDays, end.getTime())
-	return {
-		startDate: randomStart,
-		endDate: faker.date.between(endStartRange, endEndRange),
-	}
-}
-/*
-function createShipReview() {}
-function createHostReview() {}
-function createRenterReview() {}
-function createChat() {}
-function createMessage() {}
-*/
-
-function typedBoolean<T>(
-	value: T,
-): value is Exclude<T, false | null | undefined | '' | 0> {
-	return Boolean(value)
-}
 
 async function seed() {
 	const email = 'kody@kcd.dev'

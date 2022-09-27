@@ -108,7 +108,7 @@ export async function action({ request }: ActionArgs) {
 
 	const response = await sendEmail({
 		to: user.email,
-		subject: `Welcome to Rocket Rental!`,
+		subject: `Rocket Rental Password Reset`,
 		text: `Please open this URL: ${resetPasswordUrl}`,
 		html: `
 		<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">

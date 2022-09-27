@@ -3,7 +3,7 @@ import invariant from 'tiny-invariant'
 
 invariant(process.env.SESSION_SECRET, 'SESSION_SECRET must be set')
 
-export let sessionStorage = createCookieSessionStorage({
+export const sessionStorage = createCookieSessionStorage({
 	cookie: {
 		name: '_session',
 		sameSite: 'lax',
@@ -15,4 +15,4 @@ export let sessionStorage = createCookieSessionStorage({
 })
 
 // you can also export the methods individually for your own usage
-export let { getSession, commitSession, destroySession } = sessionStorage
+export const { getSession, commitSession, destroySession } = sessionStorage
