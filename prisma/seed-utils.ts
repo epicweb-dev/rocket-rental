@@ -17,14 +17,20 @@ export function createContactInfo(): Omit<
 }
 
 export function createUser(): Omit<P.User, 'id' | 'createdAt' | 'updatedAt'> {
-	const firstName = faker.name.firstName()
+	const gender = faker.helpers.arrayElement(['female', 'male']) as
+		| 'female'
+		| 'male'
+
+	const firstName = faker.name.firstName(gender)
 	const lastName = faker.name.lastName()
 	const username = faker.internet.userName(firstName, lastName).toLowerCase()
+	const imageGender = gender === 'female' ? 'women' : 'men'
+	const imageNumber = faker.datatype.number({ min: 0, max: 99 })
 	return {
 		username,
 		name: `${firstName} ${lastName}`,
 		email: `${username}@example.com`,
-		imageUrl: faker.image.avatar(),
+		imageUrl: `https://randomuser.me/api/portraits/${imageGender}/${imageNumber}.jpg`,
 	}
 }
 

@@ -274,12 +274,14 @@ async function seed() {
 		}),
 	)
 
+	const kodyUser = createUser()
+
 	await prisma.user.create({
 		data: {
 			email,
 			username: 'kody',
 			name: 'Kody',
-			imageUrl: faker.image.avatar(),
+			imageUrl: kodyUser.imageUrl,
 			password: {
 				create: {
 					hash: hashedPassword,

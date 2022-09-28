@@ -26,9 +26,17 @@ export const meta: MetaFunction = () => ({
 export async function loader({ request }: LoaderArgs) {
 	const userId = await authenticator.isAuthenticated(request)
 
-	return json({
-		user: userId ? await getUserById(userId) : null,
-	})
+	let user: Awaited<ReturnType<typeof getUserById>> | null = null
+	if (userId) {
+		user = await getUserById(userId)
+		if (!user) {
+			// something weird happened... The user is authenticated but we can't find
+			// them in the database. Maybe they were deleted? Let's log them out.
+			await authenticator.logout(request, { redirectTo: '/' })
+		}
+	}
+
+	return json({ user })
 }
 
 export default function App() {
