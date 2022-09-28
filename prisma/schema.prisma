@@ -56,6 +56,9 @@ model Host {
 
   bio String?
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   ships         Ship[]
   reviews       HostReview[]
   renterReviews RenterReview[]
@@ -67,6 +70,9 @@ model Renter {
 
   bio String?
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   bookings    Booking[]
   shipReviews ShipReview[]
   hostReviews HostReview[]
@@ -76,6 +82,9 @@ model Renter {
 model Admin {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ShipBrand {
