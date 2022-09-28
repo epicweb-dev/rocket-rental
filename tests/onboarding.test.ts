@@ -39,7 +39,7 @@ test('onboarding', async ({ page, screen }) => {
 	await expect(
 		await screen.findByRole('button', { name: /submit$/i }),
 	).toBeVisible()
-	const email = await readEmail()
+	const email = await readEmail(loginForm.email)
 	invariant(email, 'Email not found')
 	expect(email.to).toBe(loginForm.email)
 	expect(email.from).toBe('hello@rocketrental.space')
@@ -73,6 +73,10 @@ test('onboarding', async ({ page, screen }) => {
 
 	await expect(page).toHaveURL(`/`)
 
+	await (await screen.findByRole('link', { name: loginForm.name })).click()
+
+	await expect(page).toHaveURL(`/users/${loginForm.username}`)
+
 	await (await screen.findByRole('button', { name: /logout/i })).click()
 	await expect(page).toHaveURL(`/`)
 
@@ -82,6 +86,7 @@ test('onboarding', async ({ page, screen }) => {
 test('login as existing user', async ({ page, screen }) => {
 	const password = faker.internet.password()
 	const user = await insertNewUser({ password })
+	invariant(user.name, 'User name not found')
 	await page.goto('/login')
 	await (
 		await screen.findByRole('textbox', { name: /username/i })
@@ -89,8 +94,12 @@ test('login as existing user', async ({ page, screen }) => {
 	await (await screen.findByLabelText(/^password$/i)).fill(password)
 	await (await screen.findByRole('button', { name: /log in/i })).click()
 	await expect(page).toHaveURL(`/`)
+
+	await (await screen.findByRole('link', { name: user.name })).click()
+
+	await expect(page).toHaveURL(`/users/${user.username}`)
+
 	const logoutButton = await screen.findByRole('button', { name: /logout/i })
-	invariant(user.name, 'User name not found')
 	await expect(logoutButton).toContainText(user.name)
 	await expect(logoutButton).toBeVisible()
 
@@ -101,6 +110,7 @@ test('login as existing user', async ({ page, screen }) => {
 test('reset password', async ({ page, screen }) => {
 	const originalPassword = faker.internet.password()
 	const user = await insertNewUser({ password: originalPassword })
+	invariant(user.name, 'User name not found')
 	await page.goto('/login')
 
 	await (await screen.findByRole('link', { name: /forgot password/i })).click()
@@ -120,7 +130,7 @@ test('reset password', async ({ page, screen }) => {
 		await screen.findByRole('button', { name: /submit$/i }),
 	).toBeVisible()
 
-	const email = await readEmail()
+	const email = await readEmail(user.email)
 	invariant(email, 'Email not found')
 	expect(email.subject).toMatch(/password reset/i)
 	expect(email.to).toBe(user.email)
@@ -136,7 +146,7 @@ test('reset password', async ({ page, screen }) => {
 
 	await (await screen.findByRole('button', { name: /reset password/i })).click()
 
-	await expect(page).toHaveURL('http://localhost:8181/login')
+	await expect(page).toHaveURL('/login')
 	await (
 		await screen.findByRole('textbox', { name: /username/i })
 	).fill(user.username)
@@ -151,6 +161,10 @@ test('reset password', async ({ page, screen }) => {
 	await (await screen.findByRole('button', { name: /log in/i })).click()
 
 	await expect(page).toHaveURL(`/`)
+
+	await (await screen.findByRole('link', { name: user.name })).click()
+
+	await expect(page).toHaveURL(`/users/${user.username}`)
 
 	const logoutButton = await screen.findByRole('button', { name: /logout/i })
 	invariant(user.name, 'User name not found')

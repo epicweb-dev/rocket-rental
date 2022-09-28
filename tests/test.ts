@@ -20,11 +20,11 @@ type Email = {
 	html: string
 }
 
-export async function readEmail() {
+export async function readEmail(recipient: string) {
 	try {
 		const mswOutput = require('../mocks/msw.local.json')
 		// TODO: add validation
-		return mswOutput.email as Email
+		return mswOutput.email[recipient] as Email
 	} catch (error) {
 		return null
 	}

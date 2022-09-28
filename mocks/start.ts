@@ -1,6 +1,6 @@
 import { rest } from 'msw'
 import { setupServer } from 'msw/node'
-import { isE2E, updateFixture } from './utils'
+import { isE2E, readFixture, updateFixture } from './utils'
 
 const miscHandlers = [
 	rest.post(
@@ -10,7 +10,13 @@ const miscHandlers = [
 			console.info('🔶 mocked email contents:', body)
 
 			if (isE2E && body.text) {
-				await updateFixture({ email: body })
+				const fixture = await readFixture()
+				await updateFixture({
+					email: {
+						...fixture?.email,
+						[body.to]: body,
+					},
+				})
 			}
 			const randomId = '20210321210543.1.E01B8B612C44B41B'
 			const id = `<${randomId}>@${req.params.domain}`

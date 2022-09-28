@@ -17,9 +17,22 @@ export async function isConnectedToTheInternet() {
 	return connected
 }
 
+const mswDataPath = path.join(__dirname, `./msw.local.json`)
+
+// !! side effect !!
+const clearingFixture = fs.promises.writeFile(mswDataPath, '{}')
+
 export async function updateFixture(updates: Record<string, unknown>) {
-	const mswDataPath = path.join(__dirname, `./msw.local.json`)
-	let mswData = {}
+	const mswData = await readFixture()
+	await fs.promises.writeFile(
+		mswDataPath,
+		JSON.stringify({ ...mswData, ...updates }, null, 2),
+	)
+}
+
+export async function readFixture() {
+	await clearingFixture
+	let mswData: Record<string, any> = {}
 	try {
 		const contents = await fs.promises.readFile(mswDataPath)
 		mswData = JSON.parse(contents.toString())
@@ -28,11 +41,9 @@ export async function updateFixture(updates: Record<string, unknown>) {
 			`Error reading and parsing the msw fixture. Clearing it.`,
 			(error as { stack?: string }).stack ?? error,
 		)
+		await fs.promises.writeFile(mswDataPath, '{}')
 	}
-	await fs.promises.writeFile(
-		mswDataPath,
-		JSON.stringify({ ...mswData, ...updates }, null, 2),
-	)
+	return mswData
 }
 
 export function requiredParam(params: URLSearchParams, param: string) {
