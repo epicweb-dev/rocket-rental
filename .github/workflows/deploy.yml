@@ -113,6 +113,9 @@ jobs:
       - name: 🛠 Setup Database
         run: npx prisma migrate reset --force
 
+      - name: 🏗 Build
+        run: npm run build
+
       - name: 🎭 Playwright tests
         run: npx playwright test
 
