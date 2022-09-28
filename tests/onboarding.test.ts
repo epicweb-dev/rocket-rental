@@ -15,7 +15,7 @@ function extractUrl(text: string) {
 	return match?.groups?.url
 }
 
-test.only('onboarding', async ({ page, screen }) => {
+test('onboarding', async ({ page, screen }) => {
 	const loginForm = makeLoginForm()
 
 	await page.goto('/')
