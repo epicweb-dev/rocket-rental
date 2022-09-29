@@ -2,12 +2,10 @@ import type { LoaderArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Outlet, useLoaderData } from '@remix-run/react'
 import { prisma } from '~/db.server'
-import { authenticator } from '~/services/auth.server'
+import { requireUserId } from '~/services/auth.server'
 
 export async function loader({ request }: LoaderArgs) {
-	const userId = await authenticator.isAuthenticated(request, {
-		failureRedirect: `/login?redirectTo=${request.url}`,
-	})
+	const userId = await requireUserId(request)
 	const bookings = await prisma.booking.findMany({
 		where: { renterId: userId },
 		select: { id: true },

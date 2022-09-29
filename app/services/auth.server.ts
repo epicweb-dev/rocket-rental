@@ -8,6 +8,7 @@ import { FormStrategy } from 'remix-auth-form'
 import invariant from 'tiny-invariant'
 import { sessionStorage } from './session.server'
 import { verifyLogin } from '~/models/user.server'
+import { redirect } from '@remix-run/server-runtime'
 
 export const authenticator = new Authenticator<string>(sessionStorage, {
 	sessionKey: 'token',
@@ -33,6 +34,18 @@ authenticator.use(
 	}),
 	FormStrategy.name,
 )
+
+export async function requireUserId(request: Request) {
+	const requestUrl = new URL(request.url)
+	const loginParams = new URLSearchParams([
+		['redirectTo', `${requestUrl.pathname}${requestUrl.search}`],
+	])
+	const failureRedirect = `/login?${loginParams}`
+	const userId = await authenticator.isAuthenticated(request, {
+		failureRedirect,
+	})
+	return userId
+}
 
 // authenticator.use(
 // 	new GoogleStrategy(

@@ -1,15 +1,17 @@
 import type { LoaderArgs } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { prisma } from '~/db.server'
-import { authenticator } from '~/services/auth.server'
+import { authenticator, requireUserId } from '~/services/auth.server'
 
 export async function loader({ request }: LoaderArgs) {
-	const userId = await authenticator.isAuthenticated(request, {
-		failureRedirect: '/login',
-	})
+	const userId = await requireUserId(request)
 	const user = await prisma.user.findUnique({ where: { id: userId } })
 	if (!user) {
-		const redirectTo = `/login?redirectTo=${request.url}`
+		const requestUrl = new URL(request.url)
+		const loginParams = new URLSearchParams([
+			['redirectTo', `${requestUrl.pathname}${requestUrl.search}`],
+		])
+		const redirectTo = `/login?${loginParams}`
 		await authenticator.logout(request, { redirectTo })
 		return redirect(redirectTo)
 	}

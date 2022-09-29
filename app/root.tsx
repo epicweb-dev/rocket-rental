@@ -12,9 +12,10 @@ import { getUserById } from './models/user.server'
 import { authenticator } from './services/auth.server'
 
 import tailwindStylesheetUrl from './styles/tailwind.css'
+import { links as vendorLinks } from './utils/vendor.css'
 
 export const links: LinksFunction = () => {
-	return [{ rel: 'stylesheet', href: tailwindStylesheetUrl }]
+	return [{ rel: 'stylesheet', href: tailwindStylesheetUrl }, ...vendorLinks]
 }
 
 export const meta: MetaFunction = () => ({

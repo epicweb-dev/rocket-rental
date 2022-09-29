@@ -3,13 +3,11 @@ import { json } from '@remix-run/node'
 import { useCatch, useLoaderData, useParams } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
-import { authenticator } from '~/services/auth.server'
+import { requireUserId } from '~/services/auth.server'
 
 export async function loader({ request, params }: LoaderArgs) {
 	invariant(params.shipId, 'Missing shipId')
-	const userId = await authenticator.isAuthenticated(request, {
-		failureRedirect: `/ships/${params.shipId}`,
-	})
+	const userId = await requireUserId(request)
 	const ship = await prisma.ship.findFirst({
 		where: { id: params.shipId, hostId: userId },
 	})

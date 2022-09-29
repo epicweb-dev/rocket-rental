@@ -1,10 +1,15 @@
 import type { LoaderArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import { Link, useCatch, useLoaderData, useParams } from '@remix-run/react'
+import {
+	Link,
+	Outlet,
+	useCatch,
+	useLoaderData,
+	useParams,
+} from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
 import * as df from 'date-fns'
-import { Booker } from './resources.booker'
 
 export async function loader({ params }: LoaderArgs) {
 	invariant(params.shipId, 'Missing shipId')
@@ -136,16 +141,11 @@ export default function ShipRoute() {
 					<p>Capacity: {data.ship.capacity}</p>
 					<p>Daily Charge: {data.ship.dailyCharge}</p>
 					<p>Starport: {data.ship.starport.name}</p>
+					<p>SHOW MAP HERE</p>
 				</div>
 				<div>
 					<div>
-						<p>Book this rocket</p>
-						<Booker
-							shipId={data.ship.id}
-							initialIsAvailable={data.isAvailableInRange}
-							initialStartDate={data.bookingRangeStart}
-							initialEndDate={data.bookingRangeEnd}
-						/>
+						<Outlet />
 					</div>
 					<div>
 						<p>
