@@ -1,5 +1,4 @@
 import type { LoaderArgs } from '@remix-run/node'
-import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { useCatch, useLoaderData, useParams } from '@remix-run/react'
 import invariant from 'tiny-invariant'
