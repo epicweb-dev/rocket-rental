@@ -47,6 +47,10 @@ export async function requireUserId(request: Request) {
 	return userId
 }
 
+export async function getUserId(request: Request) {
+	return authenticator.isAuthenticated(request)
+}
+
 // authenticator.use(
 // 	new GoogleStrategy(
 // 		{
