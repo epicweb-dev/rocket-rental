@@ -127,12 +127,8 @@ export default function UserRoute() {
 					</Tab>
 				</TabList>
 				<TabPanels>
-					<TabPanel>
-						<Outlet />
-					</TabPanel>
-					<TabPanel>
-						<Outlet />
-					</TabPanel>
+					<TabPanel>{tabIndex === 0 ? <Outlet /> : null}</TabPanel>
+					<TabPanel>{tabIndex === 1 ? <Outlet /> : null}</TabPanel>
 				</TabPanels>
 			</Tabs>
 		</div>
