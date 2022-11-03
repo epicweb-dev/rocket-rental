@@ -1,19 +1,12 @@
 import type { ActionArgs, LoaderArgs, MetaFunction } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import { useActionData, useFetcher } from '@remix-run/react'
-import type { ErrorMessages, FormValidations } from 'remix-validity-state'
-import {
-	FormContextProvider,
-	useValidatedInput,
-	validateServerFormData,
-} from 'remix-validity-state'
-import { ListOfErrorMessages } from '~/components'
+import { useFetcher } from '@remix-run/react'
+import invariant from 'tiny-invariant'
 import { getUserByEmail } from '~/models/user.server'
 import { sendEmail } from '~/services/email.server'
 import { decrypt, encrypt } from '~/services/encryption.server'
 import { commitSession, getSession } from '~/services/session.server'
-import { constrain } from '~/utils/misc'
 import { getDomainUrl } from '~/utils/misc.server'
 
 export const onboardingEmailSessionKey = 'onboardingToken'
@@ -41,43 +34,30 @@ export async function loader({ request }: LoaderArgs) {
 	return json({})
 }
 
-const formValidations = constrain<FormValidations>()({
-	email: {
-		type: 'email',
-		required: true,
-		minLength: 3,
-		maxLength: 50,
-	},
-})
-
-const errorMessages = constrain<ErrorMessages>()({
-	valueMissing: (_, name) => `The ${name} field is required`,
-	typeMismatch: (_, name) => `The ${name} field is invalid`,
-	tooShort: (minLength, name) =>
-		`The ${name} field must be at least ${minLength} characters`,
-	tooLong: (maxLength, name) =>
-		`The ${name} field must be less than ${maxLength} characters`,
-	unique: (_, name, value) => `The ${name} "${value}" is already in use`,
-})
-
 export async function action({ request }: ActionArgs) {
 	const formData = await request.formData()
-	const serverFormInfo = await validateServerFormData(formData, {
-		...formValidations,
-		email: {
-			...formValidations.email,
-			unique: async value => {
-				const user = await getUserByEmail(value)
-				return !user
-			},
-		},
-	})
+	const { email } = Object.fromEntries(formData)
+	invariant(typeof email === 'string', 'email type invalid')
 
-	if (!serverFormInfo.valid) {
-		return json({ success: false, serverFormInfo }, { status: 400 })
+	const isEmailValid = /\S+@\S+\.\S+/.test(email)
+	if (!isEmailValid) {
+		return json(
+			{ success: false, errors: { email: 'Invalid email', form: null } },
+			{ status: 400 },
+		)
 	}
 
-	const { email } = serverFormInfo.submittedFormData
+	const userExists = await getUserByEmail(email)
+	if (userExists) {
+		return json(
+			{
+				success: false,
+				errors: { email: 'User with this email already exists', form: null },
+			},
+			{ status: 400 },
+		)
+	}
+
 	const onboardingToken = encrypt(
 		JSON.stringify({ type: tokenType, payload: { email } }),
 	)
@@ -102,7 +82,14 @@ export async function action({ request }: ActionArgs) {
 		`,
 	})
 
-	return json({ success: response.ok, serverFormInfo })
+	if (response.ok) {
+		return json({ success: true, errors: null })
+	} else {
+		return json({
+			success: false,
+			errors: { form: 'Email not sent successfully', email: null },
+		})
+	}
 }
 
 export const meta: MetaFunction = () => {
@@ -111,57 +98,64 @@ export const meta: MetaFunction = () => {
 	}
 }
 
-export default function TempSignupParent() {
-	return (
-		<FormContextProvider value={{ formValidations, errorMessages }}>
-			<SignupRoute />
-		</FormContextProvider>
-	)
-}
-
-function SignupRoute() {
-	const signupFetcher = useFetcher()
-	const actionData = useActionData<typeof action>()
-
-	const emailField = useValidatedInput({
-		name: 'email',
-		formValidations,
-		errorMessages,
-		serverFormInfo: actionData?.serverFormInfo,
-	})
+export default function SignupRoute() {
+	const signupFetcher = useFetcher<typeof action>()
+	const hasEmailError = signupFetcher.data?.errors?.email
 
 	return (
 		<div>
 			<h1>Signup</h1>
-			<signupFetcher.Form method="post">
+			<signupFetcher.Form
+				method="post"
+				noValidate
+				aria-invalid={signupFetcher.data?.errors?.form ? true : undefined}
+				aria-describedby={
+					signupFetcher.data?.errors?.form ? 'form-error' : undefined
+				}
+			>
 				<div>
 					<label
-						{...emailField.getLabelAttrs({
-							className: 'block text-sm font-medium text-gray-700',
-						})}
+						htmlFor="email"
+						className="block text-sm font-medium text-gray-700"
 					>
 						Email
 					</label>
 					<div className="mt-1">
 						<input
-							{...emailField.getInputAttrs({
-								className:
-									'w-full rounded border border-gray-500 px-2 py-1 text-lg',
-							})}
+							id="email"
+							type="email"
+							name="email"
+							className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+							aria-describedby={hasEmailError ? 'email-error' : undefined}
+							aria-invalid={hasEmailError ? true : undefined}
 						/>
-
-						<ListOfErrorMessages
-							info={emailField.info}
-							{...emailField.getErrorsAttrs({ className: '' })}
-						/>
+						{hasEmailError ? (
+							<span className="pt-1 text-red-700" id="email-error">
+								{signupFetcher.data?.errors?.email}
+							</span>
+						) : null}
 					</div>
 				</div>
+				{signupFetcher.data?.errors?.form ? (
+					<div className="pt-1 text-red-700" id="form-error">
+						{signupFetcher.data?.errors?.form}
+					</div>
+				) : null}
 				<div>
 					<button type="submit" disabled={signupFetcher.state !== 'idle'}>
 						{signupFetcher.state === 'idle' ? 'Submit' : 'Submitting...'}
 					</button>
 				</div>
 			</signupFetcher.Form>
+			{signupFetcher.data?.success ? (
+				<div>Great! Check your email for a link to continue.</div>
+			) : null}
 		</div>
 	)
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+	console.error(error)
+
+	return <div>An unexpected error occurred: {error.message}</div>
 }

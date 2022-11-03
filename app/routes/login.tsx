@@ -1,6 +1,5 @@
 import type { ActionArgs, LoaderArgs, MetaFunction } from '@remix-run/node'
-import { redirect } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import { redirect, json } from '@remix-run/node'
 import {
 	Form,
 	Link,
@@ -8,15 +7,12 @@ import {
 	useLoaderData,
 	useSearchParams,
 } from '@remix-run/react'
+import { useEffect, useRef } from 'react'
 import { FormStrategy } from 'remix-auth-form'
-import type { ErrorMessages, FormValidations } from 'remix-validity-state'
-import { FormContextProvider } from 'remix-validity-state'
-import { useValidatedInput } from 'remix-validity-state'
-import { validateServerFormData } from 'remix-validity-state'
-import { ListOfErrorMessages } from '~/components'
+import invariant from 'tiny-invariant'
 import { authenticator } from '~/services/auth.server'
 import { commitSession, getSession } from '~/services/session.server'
-import { constrain, safeRedirect } from '~/utils/misc'
+import { safeRedirect } from '~/utils/misc'
 
 export async function loader({ request }: LoaderArgs) {
 	await authenticator.isAuthenticated(request, {
@@ -34,37 +30,40 @@ export async function loader({ request }: LoaderArgs) {
 	)
 }
 
-const formValidations = constrain<FormValidations>()({
-	username: {
-		required: true,
-		minLength: 2,
-		maxLength: 15,
-	},
-	password: {
-		type: 'password',
-		required: true,
-		minLength: 6,
-		maxLength: 100,
-	},
-})
+const MIN_USERNAME_LENGTH = 3
+const MAX_USERNAME_LENGTH = 20
 
-const errorMessages = constrain<ErrorMessages>()({
-	valueMissing: (_, name) => `The ${name} field is required`,
-	typeMismatch: (_, name) => `The ${name} field is invalid`,
-	tooShort: (minLength, name) =>
-		`The ${name} field must be at least ${minLength} characters`,
-	tooLong: (maxLength, name) =>
-		`The ${name} field must be less than ${maxLength} characters`,
-})
+const MIN_PASSWORD_LENGTH = 6
+const MAX_PASSWORD_LENGTH = 100
+
+function validateUsername(username: string) {
+	if (username.length < MIN_USERNAME_LENGTH) return 'Username is too short'
+	if (username.length > MAX_USERNAME_LENGTH) return 'Username is too long'
+	return null
+}
+
+function validatePassword(password: string) {
+	if (password.length < MIN_PASSWORD_LENGTH) return 'Password is too short'
+	if (password.length > MAX_PASSWORD_LENGTH) return 'Password is too long'
+	return null
+}
 
 export async function action({ request }: ActionArgs) {
 	const formData = await request.clone().formData()
-	const serverFormInfo = await validateServerFormData(formData, formValidations)
-	if (!serverFormInfo.valid) {
-		return json({ serverFormInfo }, { status: 400 })
+	const { username, password, redirectTo, remember } =
+		Object.fromEntries(formData)
+	invariant(typeof username === 'string', 'username type invalid')
+	invariant(typeof password === 'string', 'password type invalid')
+	invariant(typeof redirectTo === 'string', 'redirectTo type invalid')
+
+	const errors = {
+		username: validateUsername(username),
+		password: validatePassword(password),
 	}
-	const remember = formData.get('remember') === 'on'
-	const redirectTo = safeRedirect(formData.get('redirectTo'), '/')
+	const hasErrors = Object.values(errors).some(Boolean)
+	if (hasErrors) {
+		return json({ errors }, { status: 400 })
+	}
 
 	const userId = await authenticator.authenticate(FormStrategy.name, request, {
 		failureRedirect: '/login',
@@ -76,7 +75,7 @@ export async function action({ request }: ActionArgs) {
 			? 60 * 60 * 24 * 7 // 7 days
 			: undefined,
 	})
-	return redirect(redirectTo, {
+	return redirect(safeRedirect(redirectTo), {
 		headers: { 'Set-Cookie': newCookie },
 	})
 }
@@ -87,32 +86,25 @@ export const meta: MetaFunction = () => {
 	}
 }
 
-// TODO: remove the wrapper thing when this is fixed: https://github.com/brophdawg11/remix-validity-state/issues/14
-export default function TempLoginParent() {
-	return (
-		<FormContextProvider value={{ formValidations, errorMessages }}>
-			<LoginPage />
-		</FormContextProvider>
-	)
-}
-
-function LoginPage() {
+export default function LoginPage() {
 	const [searchParams] = useSearchParams()
+	const form = useRef<HTMLFormElement>(null)
 	const data = useLoaderData<typeof loader>()
-	const actionData = useActionData<typeof action>()
 	const redirectTo = searchParams.get('redirectTo') || '/'
-	const usernameField = useValidatedInput({
-		name: 'username',
-		formValidations,
-		errorMessages,
-		serverFormInfo: actionData?.serverFormInfo,
-	})
-	const passwordField = useValidatedInput({
-		name: 'password',
-		formValidations,
-		errorMessages,
-		serverFormInfo: actionData?.serverFormInfo,
-	})
+	const actionData = useActionData<typeof action>()
+	const hasUsernameError = actionData?.errors?.username
+	const hasPasswordError = actionData?.errors?.password
+	const hasErrors = hasUsernameError || hasPasswordError
+
+	useEffect(() => {
+		if (!form.current) return
+		if (hasErrors) {
+			const firstInvalidElement = form.current.querySelector('[aria-invalid]')
+			if (firstInvalidElement instanceof HTMLElement) {
+				firstInvalidElement.focus()
+			}
+		}
+	}, [hasErrors])
 
 	return (
 		<div className="flex min-h-full flex-col justify-center">
@@ -121,48 +113,67 @@ function LoginPage() {
 					method="post"
 					className="space-y-6"
 					aria-invalid={data.formError ? true : undefined}
-					aria-describedby="form-error"
+					aria-describedby={data.formError ? 'form-error' : undefined}
+					noValidate
+					ref={form}
 				>
 					<div>
 						<label
-							{...usernameField.getLabelAttrs({
-								className: 'block text-sm font-medium text-gray-700',
-							})}
+							htmlFor="username"
+							className="block text-sm font-medium text-gray-700"
 						>
 							Username
 						</label>
 						<div className="mt-1">
 							<input
-								{...usernameField.getInputAttrs({
-									autoFocus: true,
-									autoComplete: 'username',
-									className:
-										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
-								})}
+								id="username"
+								name="username"
+								autoFocus={true}
+								required
+								minLength={MIN_USERNAME_LENGTH}
+								maxLength={MAX_USERNAME_LENGTH}
+								autoComplete="username"
+								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+								aria-describedby={
+									hasUsernameError ? 'username-error' : undefined
+								}
+								aria-invalid={hasUsernameError ? true : undefined}
 							/>
-
-							<ListOfErrorMessages info={usernameField.info} />
+							{hasUsernameError ? (
+								<span className="pt-1 text-red-700" id="username-error">
+									{actionData?.errors.username}
+								</span>
+							) : null}
 						</div>
 					</div>
 
 					<div>
 						<label
-							{...passwordField.getLabelAttrs({
-								className: 'block text-sm font-medium text-gray-700',
-							})}
+							htmlFor="password"
+							className="block text-sm font-medium text-gray-700"
 						>
 							Password
 						</label>
 						<div className="mt-1">
 							<input
-								{...passwordField.getInputAttrs({
-									autoComplete: 'current-password',
-									className:
-										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
-								})}
+								id="password"
+								type="password"
+								name="password"
+								required
+								minLength={MIN_PASSWORD_LENGTH}
+								maxLength={MAX_PASSWORD_LENGTH}
+								autoComplete={'current-password'}
+								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+								aria-describedby={
+									hasPasswordError ? 'password-error' : undefined
+								}
+								aria-invalid={hasPasswordError ? true : undefined}
 							/>
-
-							<ListOfErrorMessages info={passwordField.info} />
+							{hasPasswordError ? (
+								<span className="pt-1 text-red-700" id="password-error">
+									{actionData?.errors.password}
+								</span>
+							) : null}
 						</div>
 					</div>
 
@@ -207,4 +218,10 @@ function LoginPage() {
 			</div>
 		</div>
 	)
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+	console.error(error)
+
+	return <div>An unexpected error occurred: {error.message}</div>
 }
