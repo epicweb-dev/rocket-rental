@@ -10,6 +10,14 @@ import {
 import { useEffect, useRef } from 'react'
 import { FormStrategy } from 'remix-auth-form'
 import invariant from 'tiny-invariant'
+import {
+	MAX_PASSWORD_LENGTH,
+	MAX_USERNAME_LENGTH,
+	MIN_PASSWORD_LENGTH,
+	MIN_USERNAME_LENGTH,
+	validatePassword,
+	validateUsername,
+} from '~/models/user.server'
 import { authenticator } from '~/services/auth.server'
 import { commitSession, getSession } from '~/services/session.server'
 import { safeRedirect } from '~/utils/misc'
@@ -28,24 +36,6 @@ export async function loader({ request }: LoaderArgs) {
 			},
 		},
 	)
-}
-
-const MIN_USERNAME_LENGTH = 3
-const MAX_USERNAME_LENGTH = 20
-
-const MIN_PASSWORD_LENGTH = 6
-const MAX_PASSWORD_LENGTH = 100
-
-function validateUsername(username: string) {
-	if (username.length < MIN_USERNAME_LENGTH) return 'Username is too short'
-	if (username.length > MAX_USERNAME_LENGTH) return 'Username is too long'
-	return null
-}
-
-function validatePassword(password: string) {
-	if (password.length < MIN_PASSWORD_LENGTH) return 'Password is too short'
-	if (password.length > MAX_PASSWORD_LENGTH) return 'Password is too long'
-	return null
 }
 
 export async function action({ request }: ActionArgs) {
@@ -162,7 +152,7 @@ export default function LoginPage() {
 								required
 								minLength={MIN_PASSWORD_LENGTH}
 								maxLength={MAX_PASSWORD_LENGTH}
-								autoComplete={'current-password'}
+								autoComplete="current-password"
 								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
 								aria-describedby={
 									hasPasswordError ? 'password-error' : undefined

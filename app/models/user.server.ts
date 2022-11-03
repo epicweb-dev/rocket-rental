@@ -93,3 +93,33 @@ export async function verifyLogin(
 
 	return userWithoutPassword
 }
+
+export const MIN_USERNAME_LENGTH = 3
+export const MAX_USERNAME_LENGTH = 20
+
+export const MIN_PASSWORD_LENGTH = 6
+export const MAX_PASSWORD_LENGTH = 100
+
+export function validateUsername(username: string) {
+	if (username.length < MIN_USERNAME_LENGTH) return 'Username is too short'
+	if (username.length > MAX_USERNAME_LENGTH) return 'Username is too long'
+	return null
+}
+
+export function validatePassword(password: string) {
+	if (password.length < MIN_PASSWORD_LENGTH) return 'Password is too short'
+	if (password.length > MAX_PASSWORD_LENGTH) return 'Password is too long'
+	return null
+}
+
+export async function validateEmailIsUnique(email: string) {
+	const user = await getUserByEmail(email)
+	if (user) return 'Email is already in use'
+	return null
+}
+
+export async function validateUserExists(username: string) {
+	const user = await getUserByUsername(username)
+	if (!user) return 'User does not exist'
+	return null
+}

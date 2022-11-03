@@ -1,20 +1,12 @@
 import type { ActionArgs, LoaderArgs, MetaFunction } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import { useActionData, useFetcher } from '@remix-run/react'
-import type { ErrorMessages, FormValidations } from 'remix-validity-state'
-import {
-	FormContextProvider,
-	useValidatedInput,
-	validateServerFormData,
-} from 'remix-validity-state'
+import { useFetcher } from '@remix-run/react'
 import invariant from 'tiny-invariant'
-import { ListOfErrorMessages } from '~/components'
-import { getUserByUsername } from '~/models/user.server'
+import { prisma } from '~/db.server'
 import { sendEmail } from '~/services/email.server'
 import { decrypt, encrypt } from '~/services/encryption.server'
 import { commitSession, getSession } from '~/services/session.server'
-import { constrain } from '~/utils/misc'
 import { getDomainUrl } from '~/utils/misc.server'
 
 export const resetPasswordSessionKey = 'resetPasswordToken'
@@ -42,69 +34,35 @@ export async function loader({ request }: LoaderArgs) {
 	return json({})
 }
 
-const formValidations = constrain<FormValidations>()({
-	username: {
-		required: true,
-		minLength: 2,
-		maxLength: 15,
-	},
-})
-
-const errorMessages = constrain<ErrorMessages>()({
-	valueMissing: (_, name) => `The ${name} field is required`,
-	typeMismatch: (_, name) => `The ${name} field is invalid`,
-	tooShort: (minLength, name) =>
-		`The ${name} field must be at least ${minLength} characters`,
-	tooLong: (maxLength, name) =>
-		`The ${name} field must be less than ${maxLength} characters`,
-	exists: (_, __, username) =>
-		`No user with the username of "${username}" exists`,
-})
-
-export const meta: MetaFunction = () => {
-	return {
-		title: 'Forgot Rocket Rental password',
-	}
-}
-
-export default function TempForgotPasswordParent() {
-	return (
-		<FormContextProvider value={{ formValidations, errorMessages }}>
-			<ForgotPasswordRoute />
-		</FormContextProvider>
-	)
-}
-
 export async function action({ request }: ActionArgs) {
 	const formData = await request.formData()
-	const serverFormInfo = await validateServerFormData(formData, {
-		...formValidations,
-		username: {
-			...formValidations.username,
-			exists: async value => {
-				const user = await getUserByUsername(value)
-				return Boolean(user)
-			},
-		},
-	})
+	const { usernameOrEmail } = Object.fromEntries(formData)
+	invariant(typeof usernameOrEmail === 'string', 'usernameOrEmail type invalid')
+	// just a quick check to make sure they're not being ridiculous
+	invariant(usernameOrEmail.length < 256, 'usernameOrEmail too long')
 
-	if (!serverFormInfo.valid) {
-		console.log(serverFormInfo)
-		return json({ success: false, serverFormInfo }, { status: 400 })
+	const user = await prisma.user.findFirst({
+		where: { OR: [{ email: usernameOrEmail }, { username: usernameOrEmail }] },
+		select: { email: true, username: true },
+	})
+	if (!user) {
+		return json(
+			{
+				success: false,
+				errors: { usernameOrEmail: 'User not found', form: null },
+			},
+			{ status: 400 },
+		)
 	}
 
-	const { username } = serverFormInfo.submittedFormData
 	const resetPasswordToken = encrypt(
-		JSON.stringify({ type: tokenType, payload: { username } }),
+		JSON.stringify({ type: tokenType, payload: { username: user.username } }),
 	)
 	const resetPasswordUrl = new URL(`${getDomainUrl(request)}/forgot-password`)
 	resetPasswordUrl.searchParams.set(
 		resetPasswordTokenQueryParam,
 		resetPasswordToken,
 	)
-
-	const user = await getUserByUsername(username)
-	invariant(user, 'User should exist')
 
 	const response = await sendEmail({
 		to: user.email,
@@ -118,58 +76,87 @@ export async function action({ request }: ActionArgs) {
 			</head>
 			<body>
 				<h1>Reset your Rocket Rental password.</h1>
-				<p>Click the link below to reset the rocket rental password for ${username}.</p>
+				<p>Click the link below to reset the rocket rental password for ${user.username}.</p>
 				<a href="${resetPasswordUrl}">${resetPasswordUrl}</a>
 			</body>
 		`,
 	})
 
-	return json({ success: response.ok, serverFormInfo })
+	if (response.ok) {
+		return json({ success: true, errors: null })
+	} else {
+		return json({
+			success: false,
+			errors: { form: 'Email not sent successfully', usernameOrEmail: null },
+		})
+	}
 }
 
-function ForgotPasswordRoute() {
-	const fetcher = useFetcher()
-	const actionData = useActionData<typeof action>()
+export const meta: MetaFunction = () => {
+	return {
+		title: 'Password Recovery for Rocket Rental',
+	}
+}
 
-	const usernameField = useValidatedInput({
-		name: 'username',
-		formValidations,
-		errorMessages,
-		serverFormInfo: actionData?.serverFormInfo,
-	})
+export default function SignupRoute() {
+	const forgotPassword = useFetcher<typeof action>()
+	const hasUsernameOrEmailError = forgotPassword.data?.errors?.usernameOrEmail
 
 	return (
 		<div>
 			<h1>Forgot Password</h1>
-			<fetcher.Form method="post">
+			<forgotPassword.Form
+				method="post"
+				noValidate
+				aria-invalid={forgotPassword.data?.errors?.form ? true : undefined}
+				aria-describedby={
+					forgotPassword.data?.errors?.form ? 'form-error' : undefined
+				}
+			>
 				<div>
 					<label
-						{...usernameField.getLabelAttrs({
-							className: 'block text-sm font-medium text-gray-700',
-						})}
+						htmlFor="usernameOrEmail"
+						className="block text-sm font-medium text-gray-700"
 					>
-						Username
+						Username or Email
 					</label>
 					<div className="mt-1">
 						<input
-							{...usernameField.getInputAttrs({
-								className:
-									'w-full rounded border border-gray-500 px-2 py-1 text-lg',
-							})}
+							id="usernameOrEmail"
+							name="usernameOrEmail"
+							className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+							aria-describedby={
+								hasUsernameOrEmailError ? 'username-or-email-error' : undefined
+							}
+							aria-invalid={hasUsernameOrEmailError ? true : undefined}
 						/>
-
-						<ListOfErrorMessages
-							info={usernameField.info}
-							{...usernameField.getErrorsAttrs({ className: '' })}
-						/>
+						{hasUsernameOrEmailError ? (
+							<span className="pt-1 text-red-700" id="username-or-email-error">
+								{forgotPassword.data?.errors?.usernameOrEmail}
+							</span>
+						) : null}
 					</div>
 				</div>
+				{forgotPassword.data?.errors?.form ? (
+					<div className="pt-1 text-red-700" id="form-error">
+						{forgotPassword.data?.errors?.form}
+					</div>
+				) : null}
 				<div>
-					<button type="submit" disabled={fetcher.state !== 'idle'}>
-						{fetcher.state === 'idle' ? 'Submit' : 'Submitting...'}
+					<button type="submit" disabled={forgotPassword.state !== 'idle'}>
+						{forgotPassword.state === 'idle' ? 'Submit' : 'Submitting...'}
 					</button>
 				</div>
-			</fetcher.Form>
+			</forgotPassword.Form>
+			{forgotPassword.data?.success ? (
+				<div>Great! Check your email for a link to continue.</div>
+			) : null}
 		</div>
 	)
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+	console.error(error)
+
+	return <div>An unexpected error occurred: {error.message}</div>
 }
