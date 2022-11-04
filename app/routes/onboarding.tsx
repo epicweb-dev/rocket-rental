@@ -156,7 +156,7 @@ export default function OnboardingPage() {
 			'confirmPassword',
 			'agreeToTermsOfServiceAndPrivacyPolicy',
 		],
-		ui: <span className="pt-1 text-red-700" id="start-date-error" />,
+		ui: <span className="pt-1 text-red-700" />,
 	})
 	const redirectTo = searchParams.get('redirectTo') || '/'
 
