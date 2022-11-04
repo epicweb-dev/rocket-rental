@@ -162,7 +162,7 @@ export function Booker({
 					/>
 					{startDateError ? (
 						<span className="pt-1 text-red-700" id="start-date-error">
-							{availabilityFetcher.data?.errors?.startDate}
+							{startDateError}
 						</span>
 					) : null}
 				</label>
@@ -182,7 +182,7 @@ export function Booker({
 				</label>
 				{endDateError ? (
 					<span className="pt-1 text-red-700" id="end-date-error">
-						{availabilityFetcher.data?.errors?.endDate}
+						{endDateError}
 					</span>
 				) : null}
 			</div>

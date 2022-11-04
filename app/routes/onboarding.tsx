@@ -1,6 +1,5 @@
 import type { ActionArgs, LoaderArgs, MetaFunction } from '@remix-run/node'
-import { redirect } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import { json, redirect } from '@remix-run/node'
 import {
 	Form,
 	Link,
@@ -8,15 +7,24 @@ import {
 	useLoaderData,
 	useSearchParams,
 } from '@remix-run/react'
-import type { FormValidations, ErrorMessages } from 'remix-validity-state'
-import { FormContextProvider } from 'remix-validity-state'
-import { useValidatedInput } from 'remix-validity-state'
-import { validateServerFormData } from 'remix-validity-state'
-import { ListOfErrorMessages } from '~/components'
-import { createUser, getUserByUsername } from '~/models/user.server'
+import * as React from 'react'
+import invariant from 'tiny-invariant'
+import {
+	createUser,
+	MAX_NAME_LENGTH,
+	MAX_PASSWORD_LENGTH,
+	MAX_USERNAME_LENGTH,
+	MIN_NAME_LENGTH,
+	MIN_PASSWORD_LENGTH,
+	MIN_USERNAME_LENGTH,
+	validateConfirmPassword,
+	validateName,
+	validatePassword,
+	validateUsername,
+} from '~/models/user.server'
 import { authenticator } from '~/services/auth.server'
 import { commitSession, getSession } from '~/services/session.server'
-import { constrain, safeRedirect } from '~/utils/misc'
+import { safeRedirect } from '~/utils/misc'
 import { onboardingEmailSessionKey } from './signup'
 
 export async function loader({ request }: LoaderArgs) {
@@ -39,87 +47,53 @@ export async function loader({ request }: LoaderArgs) {
 	)
 }
 
-const formValidations = constrain<FormValidations>()({
-	username: {
-		required: true,
-		minLength: 2,
-		maxLength: 15,
-	},
-	password: {
-		type: 'password',
-		required: true,
-		minLength: 6,
-		maxLength: 100,
-	},
-	confirmPassword: {
-		type: 'password',
-		required: true,
-		minLength: 6,
-		maxLength: 100,
-	},
-	name: {
-		required: true,
-		minLength: 1,
-		maxLength: 40,
-	},
-	// TODO: add these when remix-validity-state supports checkboxes
-	agreeToTermsOfServiceAndPrivacyPolicy: {
-		type: 'checkbox',
-		required: true,
-	},
-	agreeToMailingList: {
-		type: 'checkbox',
-	},
-	remember: {
-		type: 'checkbox',
-	},
-	redirectTo: {},
-})
-
-const errorMessages = constrain<ErrorMessages>()({
-	valueMissing: (_, name) => `The ${name} field is required`,
-	typeMismatch: (_, name) => `The ${name} field is invalid`,
-	tooShort: (minLength, name) =>
-		`The ${name} field must be at least ${minLength} characters`,
-	tooLong: (maxLength, name) =>
-		`The ${name} field must be less than ${maxLength} characters`,
-	unique: (_, name, value) => `The ${name} "${value}" is already in use`,
-	matchField: (_, name) =>
-		name === 'confirmPassword' ? `Must match password` : `Must match`,
-})
-
 export async function action({ request }: ActionArgs) {
-	const formData = await request.formData()
-	const serverFormInfo = await validateServerFormData(formData, {
-		...formValidations,
-		username: {
-			...formValidations.username,
-			unique: async value => {
-				const user = await getUserByUsername(value)
-				return !user
-			},
-		},
-		confirmPassword: {
-			...formValidations.confirmPassword,
-			matchField: async value => {
-				return value === formData.get('password')
-			},
-		},
-	})
-
-	if (!serverFormInfo.valid) {
-		return json({ serverFormInfo }, { status: 400 })
-	}
 	const session = await getSession(request.headers.get('cookie'))
 	const email = session.get(onboardingEmailSessionKey)
 	if (typeof email !== 'string' || !email) {
 		return redirect('/signup')
 	}
 
-	const { username, password, name, redirectTo } =
-		serverFormInfo.submittedFormData
+	const formData = await request.formData()
+	const {
+		username,
+		name,
+		password,
+		confirmPassword,
+		agreeToTermsOfServiceAndPrivacyPolicy,
+		agreeToMailingList,
+		remember,
+		redirectTo,
+	} = Object.fromEntries(formData)
+	invariant(typeof username === 'string', 'username type invalid')
+	invariant(typeof name === 'string', 'name type invalid')
+	invariant(typeof password === 'string', 'password type invalid')
+	invariant(typeof confirmPassword === 'string', 'confirmPassword type invalid')
+	invariant(
+		typeof agreeToTermsOfServiceAndPrivacyPolicy === 'string',
+		'agreeToTermsOfServiceAndPrivacyPolicy type invalid',
+	)
+	invariant(
+		typeof agreeToMailingList === 'string',
+		'agreeToMailingList type invalid',
+	)
+	invariant(typeof remember === 'string', 'remember type invalid')
+	invariant(typeof redirectTo === 'string', 'redirectTo type invalid')
 
-	const remember = formData.get('remember')
+	const errors = {
+		username: validateUsername(username),
+		name: validateName(name),
+		password: validatePassword(password),
+		confirmPassword: validateConfirmPassword({ password, confirmPassword }),
+		agreeToTermsOfServiceAndPrivacyPolicy:
+			agreeToTermsOfServiceAndPrivacyPolicy === 'on'
+				? null
+				: 'You must agree to the terms of service and privacy policy',
+	}
+	const hasErrors = Object.values(errors).some(Boolean)
+	if (hasErrors) {
+		return json({ status: 'error', errors }, { status: 400 })
+	}
 
 	const user = await createUser({ email, username, password, name })
 	session.set(authenticator.sessionKey, user.id)
@@ -140,43 +114,51 @@ export const meta: MetaFunction = () => {
 	}
 }
 
-export default function TempOnboardingParent() {
-	return (
-		<FormContextProvider value={{ formValidations, errorMessages }}>
-			<OnboardingPage />
-		</FormContextProvider>
-	)
+function getErrorInfo<Key extends string>({
+	errors,
+	names,
+	ui,
+}: {
+	errors: Record<string, string | null> | undefined
+	names: Array<Key>
+	ui: React.ReactElement
+}) {
+	const info = names.reduce((acc, name) => {
+		if (errors?.[name]) {
+			acc[name] = {
+				fieldProps: {
+					'aria-invalid': true,
+					'aria-describedby': `${name}-error`,
+				},
+				errorUI: React.cloneElement(ui, {
+					id: `${name}-error`,
+					children: errors[name],
+				}),
+			}
+		} else {
+			acc[name] = {}
+		}
+		return acc
+	}, {} as Record<Key, { fieldProps?: { 'aria-invalid': true; 'aria-describedby': string }; errorUI?: React.ReactElement }>)
+	return info
 }
 
-function OnboardingPage() {
+export default function OnboardingPage() {
 	const [searchParams] = useSearchParams()
 	const data = useLoaderData<typeof loader>()
 	const actionData = useActionData<typeof action>()
+	const errorInfo = getErrorInfo({
+		errors: actionData?.errors,
+		names: [
+			'username',
+			'name',
+			'password',
+			'confirmPassword',
+			'agreeToTermsOfServiceAndPrivacyPolicy',
+		],
+		ui: <span className="pt-1 text-red-700" id="start-date-error" />,
+	})
 	const redirectTo = searchParams.get('redirectTo') || '/'
-	const usernameField = useValidatedInput({
-		name: 'username',
-		formValidations,
-		errorMessages,
-		serverFormInfo: actionData?.serverFormInfo,
-	})
-	const passwordField = useValidatedInput({
-		name: 'password',
-		formValidations,
-		errorMessages,
-		serverFormInfo: actionData?.serverFormInfo,
-	})
-	const confirmPasswordField = useValidatedInput({
-		name: 'confirmPassword',
-		formValidations,
-		errorMessages,
-		serverFormInfo: actionData?.serverFormInfo,
-	})
-	const nameField = useValidatedInput({
-		name: 'name',
-		formValidations,
-		errorMessages,
-		serverFormInfo: actionData?.serverFormInfo,
-	})
 
 	return (
 		<div className="flex min-h-full flex-col justify-center">
@@ -186,101 +168,97 @@ function OnboardingPage() {
 					className="space-y-6"
 					aria-invalid={data.formError ? true : undefined}
 					aria-describedby="form-error"
+					noValidate
 				>
 					<div>Onboarding for {data.onboardingEmail}</div>
 					<div>
 						<label
-							{...usernameField.getLabelAttrs({
-								className: 'block text-sm font-medium text-gray-700',
-							})}
+							htmlFor="username"
+							className="block text-sm font-medium text-gray-700"
 						>
 							Username
 						</label>
 						<div className="mt-1">
 							<input
-								{...usernameField.getInputAttrs({
-									autoFocus: true,
-									autoComplete: 'username',
-									className:
-										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
-								})}
+								id="username"
+								name="username"
+								autoFocus={true}
+								autoComplete="username"
+								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+								minLength={MIN_USERNAME_LENGTH}
+								maxLength={MAX_USERNAME_LENGTH}
+								required
+								{...errorInfo.username.fieldProps}
 							/>
-
-							<ListOfErrorMessages
-								info={usernameField.info}
-								{...usernameField.getErrorsAttrs({ className: '' })}
-							/>
+							{errorInfo.username.errorUI}
 						</div>
 					</div>
 
 					<div>
 						<label
-							{...nameField.getLabelAttrs({
-								className: 'block text-sm font-medium text-gray-700',
-							})}
+							htmlFor="name"
+							className="block text-sm font-medium text-gray-700"
 						>
 							Name
 						</label>
 						<div className="mt-1">
 							<input
-								{...nameField.getInputAttrs({
-									className:
-										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
-								})}
+								id="name"
+								name="name"
+								autoComplete="name"
+								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+								minLength={MIN_NAME_LENGTH}
+								maxLength={MAX_NAME_LENGTH}
+								required
+								{...errorInfo.name.fieldProps}
 							/>
-
-							<ListOfErrorMessages
-								info={nameField.info}
-								{...nameField.getErrorsAttrs({ className: '' })}
-							/>
+							{errorInfo.name.errorUI}
 						</div>
 					</div>
 
 					<div>
 						<label
-							{...passwordField.getLabelAttrs({
-								className: 'block text-sm font-medium text-gray-700',
-							})}
+							htmlFor="password"
+							className="block text-sm font-medium text-gray-700"
 						>
 							Password
 						</label>
 						<div className="mt-1">
 							<input
-								{...passwordField.getInputAttrs({
-									autoComplete: 'new-password',
-									className:
-										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
-								})}
+								id="password"
+								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+								autoComplete="new-password"
+								type="password"
+								name="password"
+								minLength={MIN_PASSWORD_LENGTH}
+								maxLength={MAX_PASSWORD_LENGTH}
+								required
+								{...errorInfo.password.fieldProps}
 							/>
-
-							<ListOfErrorMessages
-								info={passwordField.info}
-								{...passwordField.getErrorsAttrs({ className: '' })}
-							/>
+							{errorInfo.password.errorUI}
 						</div>
 					</div>
 
 					<div>
 						<label
-							{...confirmPasswordField.getLabelAttrs({
-								className: 'block text-sm font-medium text-gray-700',
-							})}
+							htmlFor="confirmPassword"
+							className="block text-sm font-medium text-gray-700"
 						>
 							Confirm Password
 						</label>
 						<div className="mt-1">
 							<input
-								{...confirmPasswordField.getInputAttrs({
-									autoComplete: 'current-password',
-									className:
-										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
-								})}
+								id="confirmPassword"
+								autoComplete="new-password"
+								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+								type="password"
+								name="confirmPassword"
+								minLength={MIN_PASSWORD_LENGTH}
+								maxLength={MAX_PASSWORD_LENGTH}
+								required
+								{...errorInfo.confirmPassword.fieldProps}
 							/>
-
-							<ListOfErrorMessages
-								info={confirmPasswordField.info}
-								{...confirmPasswordField.getErrorsAttrs({ className: '' })}
-							/>
+							{errorInfo.confirmPassword.errorUI}
 						</div>
 					</div>
 
@@ -290,6 +268,8 @@ function OnboardingPage() {
 							name="agreeToTermsOfServiceAndPrivacyPolicy"
 							type="checkbox"
 							className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+							required
+							{...errorInfo.agreeToTermsOfServiceAndPrivacyPolicy.fieldProps}
 						/>
 						<label
 							htmlFor="agreeToTermsOfServiceAndPrivacyPolicy"
@@ -297,6 +277,7 @@ function OnboardingPage() {
 						>
 							Do you agree to our Terms of Service and Privacy Policy?
 						</label>
+						{errorInfo.agreeToTermsOfServiceAndPrivacyPolicy.errorUI}
 					</div>
 
 					<div className="flex items-center">
