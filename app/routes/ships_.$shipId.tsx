@@ -9,7 +9,6 @@ import {
 } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
-import * as df from 'date-fns'
 
 export async function loader({ params }: LoaderArgs) {
 	invariant(params.shipId, 'Missing shipId')
@@ -76,28 +75,7 @@ export async function loader({ params }: LoaderArgs) {
 		throw new Response('not found', { status: 404 })
 	}
 
-	const bookingRange = {
-		start: df.addDays(new Date(), 2),
-		end: df.addDays(new Date(), 5),
-	}
-
-	const booking = await prisma.booking.findFirst({
-		where: {
-			AND: [
-				{ shipId: params.shipId },
-				{ startDate: { lte: bookingRange.end } },
-				{ endDate: { gte: bookingRange.start } },
-			],
-		},
-	})
-
-	return json({
-		ship,
-		isAvailableInRange: !booking,
-		// format range start and end as YYYY-MM-DD
-		bookingRangeStart: df.format(bookingRange.start, 'yyyy-MM-dd'),
-		bookingRangeEnd: df.format(bookingRange.end, 'yyyy-MM-dd'),
-	})
+	return json({ ship })
 }
 
 export default function ShipRoute() {

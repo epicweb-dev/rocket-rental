@@ -1,26 +1,51 @@
 import type { ActionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Link, useFetcher } from '@remix-run/react'
+import { useEffect, useRef } from 'react'
 import { FormStrategy } from 'remix-auth-form'
-import { FormContextProvider } from 'remix-validity-state'
-import { useValidatedInput } from 'remix-validity-state'
-import { validateServerFormData } from 'remix-validity-state'
-import { ListOfErrorMessages } from '~/components'
+import invariant from 'tiny-invariant'
+import {
+	MAX_PASSWORD_LENGTH,
+	MAX_USERNAME_LENGTH,
+	MIN_PASSWORD_LENGTH,
+	MIN_USERNAME_LENGTH,
+	validatePassword,
+	validateUsername,
+} from '~/models/user.server'
 import { authenticator } from '~/services/auth.server'
 import { commitSession, getSession } from '~/services/session.server'
-import { formValidations, errorMessages } from '~/utils/login'
 
 export async function action({ request }: ActionArgs) {
 	const formData = await request.clone().formData()
-	const serverFormInfo = await validateServerFormData(formData, formValidations)
-	if (!serverFormInfo.valid) {
-		return json({ status: 'form-error', serverFormInfo }, { status: 400 })
+	const { username, password, redirectTo, remember } =
+		Object.fromEntries(formData)
+	invariant(typeof username === 'string', 'username type invalid')
+	invariant(typeof password === 'string', 'password type invalid')
+	invariant(typeof redirectTo === 'string', 'redirectTo type invalid')
+
+	const errors = {
+		username: validateUsername(username),
+		password: validatePassword(password),
+		form: null,
 	}
-	const remember = formData.get('remember') === 'on'
+	const hasErrors = Object.values(errors).some(Boolean)
+	if (hasErrors) {
+		return json({ status: 'error', errors }, { status: 400 })
+	}
 
 	const userId = await authenticator.authenticate(FormStrategy.name, request)
 	if (!userId) {
-		return json({ status: 'auth-error' }, { status: 400 })
+		return json(
+			{
+				status: 'auth-error',
+				errors: {
+					username: null,
+					password: null,
+					form: 'Invalid username or password',
+				},
+			},
+			{ status: 400 },
+		)
 	}
 	const session = await getSession(request.headers.get('cookie'))
 	session.set(authenticator.sessionKey, userId)
@@ -30,40 +55,31 @@ export async function action({ request }: ActionArgs) {
 			: undefined,
 	})
 	return json(
-		{ status: 'success' },
+		{ status: 'success', errors: null },
 		{
 			headers: { 'Set-Cookie': newCookie },
 		},
 	)
 }
 
-// TODO: remove the wrapper thing when this is fixed: https://github.com/brophdawg11/remix-validity-state/issues/14
 export function InlineLogin() {
-	return (
-		<FormContextProvider value={{ formValidations, errorMessages }}>
-			<InlineLoginImpl />
-		</FormContextProvider>
-	)
-}
+	const loginFetcher = useFetcher<typeof action>()
+	const form = useRef<HTMLFormElement>(null)
+	const hasUsernameError = loginFetcher.data?.errors?.username
+	const hasPasswordError = loginFetcher.data?.errors?.password
+	const hasErrors = hasUsernameError || hasPasswordError
 
-function InlineLoginImpl() {
-	const loginFetcher = useFetcher()
-	const usernameField = useValidatedInput({
-		name: 'username',
-		formValidations,
-		errorMessages,
-		serverFormInfo: loginFetcher.data?.serverFormInfo,
-	})
-	const passwordField = useValidatedInput({
-		name: 'password',
-		formValidations,
-		errorMessages,
-		serverFormInfo: loginFetcher.data?.serverFormInfo,
-	})
-	const formError =
-		loginFetcher.data?.status === 'auth-error'
-			? 'Invalid username or password'
-			: null
+	useEffect(() => {
+		if (!form.current) return
+		if (hasErrors) {
+			const firstInvalidElement = form.current.querySelector('[aria-invalid]')
+			if (firstInvalidElement instanceof HTMLElement) {
+				firstInvalidElement.focus()
+			}
+		}
+	}, [hasErrors])
+
+	const formError = loginFetcher.data?.errors?.form
 
 	return (
 		<div>
@@ -74,47 +90,66 @@ function InlineLoginImpl() {
 					className="space-y-6"
 					aria-invalid={formError ? true : undefined}
 					aria-describedby="form-error"
+					ref={form}
+					noValidate
 				>
 					<div>
 						<label
-							{...usernameField.getLabelAttrs({
-								className: 'block text-sm font-medium text-gray-700',
-							})}
+							htmlFor="username"
+							className="block text-sm font-medium text-gray-700"
 						>
 							Username
 						</label>
 						<div className="mt-1">
 							<input
-								{...usernameField.getInputAttrs({
-									autoFocus: true,
-									autoComplete: 'username',
-									className:
-										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
-								})}
+								id="username"
+								type="text"
+								name="username"
+								required
+								minLength={MIN_USERNAME_LENGTH}
+								maxLength={MAX_USERNAME_LENGTH}
+								autoComplete="username"
+								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+								aria-describedby={
+									hasUsernameError ? 'username-error' : undefined
+								}
+								aria-invalid={hasUsernameError ? true : undefined}
 							/>
-
-							<ListOfErrorMessages info={usernameField.info} />
+							{hasUsernameError ? (
+								<span className="pt-1 text-red-700" id="username-error">
+									{loginFetcher.data?.errors?.username}
+								</span>
+							) : null}
 						</div>
 					</div>
 
 					<div>
 						<label
-							{...passwordField.getLabelAttrs({
-								className: 'block text-sm font-medium text-gray-700',
-							})}
+							htmlFor="password"
+							className="block text-sm font-medium text-gray-700"
 						>
 							Password
 						</label>
 						<div className="mt-1">
 							<input
-								{...passwordField.getInputAttrs({
-									autoComplete: 'current-password',
-									className:
-										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
-								})}
+								id="password"
+								type="password"
+								name="password"
+								required
+								minLength={MIN_PASSWORD_LENGTH}
+								maxLength={MAX_PASSWORD_LENGTH}
+								autoComplete="current-password"
+								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+								aria-describedby={
+									hasPasswordError ? 'password-error' : undefined
+								}
+								aria-invalid={hasPasswordError ? true : undefined}
 							/>
-
-							<ListOfErrorMessages info={passwordField.info} />
+							{hasPasswordError ? (
+								<span className="pt-1 text-red-700" id="password-error">
+									{loginFetcher.data?.errors?.password}
+								</span>
+							) : null}
 						</div>
 					</div>
 

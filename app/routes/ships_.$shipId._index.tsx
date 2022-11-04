@@ -1,24 +1,28 @@
-import type { LoaderArgs } from '@remix-run/node'
-import type { ActionArgs } from '@remix-run/node'
-import { redirect, json } from '@remix-run/node'
-import { useActionData } from '@remix-run/react'
+import {
+	redirect,
+	json,
+	type ActionArgs,
+	type LoaderArgs,
+} from '@remix-run/node'
+import { Form, useLoaderData, useParams, useActionData } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import * as df from 'date-fns'
-import { Booker } from './resources.booker'
-import { Form, useLoaderData, useParams } from '@remix-run/react'
+import { commitSession, getSession } from '~/services/session.server'
 import {
+	Booker,
 	bookingSessionKey,
 	getIsShipAvailable,
 	validateBookerForm,
-} from '~/utils/booker'
-import { commitSession, getSession } from '~/services/session.server'
+} from './resources.booker'
 
-export async function loader({ params }: LoaderArgs) {
+export async function loader({ request, params }: LoaderArgs) {
 	invariant(params.shipId, 'Missing shipId')
+	const session = await getSession(request.headers.get('cookie'))
+	const { startDate, endDate } = session.get(bookingSessionKey) ?? {}
 
 	const bookingRange = {
-		start: df.addDays(new Date(), 2),
-		end: df.addDays(new Date(), 5),
+		start: startDate ? df.parseISO(startDate) : df.addDays(new Date(), 2),
+		end: endDate ? df.parseISO(endDate) : df.addDays(new Date(), 5),
 	}
 
 	return json({
@@ -34,11 +38,12 @@ export async function loader({ params }: LoaderArgs) {
 
 export async function action({ request }: ActionArgs) {
 	const formData = await request.formData()
-	const serverFormInfo = await validateBookerForm(formData)
-	if (!serverFormInfo.valid) {
-		return json({ type: 'error', serverFormInfo } as const, { status: 400 })
+	const result = validateBookerForm(formData)
+	if (!result.ok) {
+		return json({ status: 'error', errors: result.errors }, { status: 400 })
 	}
-	const { startDate, endDate, shipId } = serverFormInfo.submittedFormData
+
+	const { shipId, startDate, endDate } = result.data
 	const session = await getSession(request.headers.get('cookie'))
 	session.set(bookingSessionKey, { shipId, startDate, endDate })
 	return redirect(`/ships/${shipId}/book`, {
@@ -54,16 +59,13 @@ export default function ShipIndexRoute() {
 	return (
 		<div>
 			<p>Book this rocket</p>
-			{/* TODO: figure out why I have to specify the action to avoid a console warning */}
-			<Form action={`/ships/${shipId}?index`} method="post">
+			<Form method="post">
 				<Booker
 					shipId={shipId}
 					initialIsAvailable={data.isAvailableInRange}
 					initialStartDate={data.bookingRangeStart}
 					initialEndDate={data.bookingRangeEnd}
-					serverFormInfo={
-						actionData?.type === 'error' ? actionData.serverFormInfo : null
-					}
+					errors={actionData?.errors}
 				/>
 			</Form>
 		</div>

@@ -7,10 +7,14 @@ import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
 import { requireUserId } from '~/services/auth.server'
 import { getSession, commitSession } from '~/services/session.server'
-import { bookingSessionKey, validateBookerForm } from '~/utils/booker'
 import { useOptionalUser } from '~/utils/misc'
 import { InlineLogin } from './resources.login'
 import * as df from 'date-fns'
+import {
+	bookingSessionKey,
+	getIsShipAvailable,
+	validateBookerForm,
+} from './resources.booker'
 
 function createFormDataFromEntries(
 	entries: Array<[string, FormDataEntryValue]>,
@@ -28,8 +32,8 @@ async function calculateTotalPrice({
 	endDate,
 }: {
 	shipId: string
-	startDate: string
-	endDate: string
+	startDate: Date
+	endDate: Date
 }) {
 	const ship = await prisma.ship.findUnique({
 		where: { id: shipId },
@@ -39,9 +43,7 @@ async function calculateTotalPrice({
 		throw new Response('ship not found', { status: 404 })
 	}
 
-	const totalPrice =
-		ship.dailyCharge *
-		df.differenceInDays(df.parseISO(endDate), df.parseISO(startDate))
+	const totalPrice = ship.dailyCharge * df.differenceInDays(endDate, startDate)
 
 	return Math.ceil(totalPrice)
 }
@@ -53,17 +55,17 @@ export async function loader({ request, params }: LoaderArgs) {
 	if (!booking) {
 		return redirect(`/ships/${params.shipId}`)
 	}
-	const serverFormInfo = await validateBookerForm(
+	const result = validateBookerForm(
 		createFormDataFromEntries([
 			['shipId', booking.shipId],
 			['startDate', booking.startDate],
 			['endDate', booking.endDate],
 		]),
 	)
-	if (!serverFormInfo.valid) {
+	if (!result.ok) {
 		return redirect(`/ships/${params.shipId}`)
 	}
-	const { startDate, endDate, shipId } = serverFormInfo.submittedFormData
+	const { startDate, endDate, shipId } = result.data
 	const totalPrice = await calculateTotalPrice({ startDate, endDate, shipId })
 	return json({ startDate, endDate, shipId, totalPrice })
 }
@@ -71,11 +73,23 @@ export async function loader({ request, params }: LoaderArgs) {
 export async function action({ request }: ActionArgs) {
 	const userId = await requireUserId(request)
 	const formData = await request.formData()
-	const serverFormInfo = await validateBookerForm(formData)
-	if (!serverFormInfo.valid) {
-		return json({ type: 'error', serverFormInfo } as const, { status: 400 })
+	const result = validateBookerForm(formData)
+	if (!result.ok) {
+		return json(
+			{ type: 'error', errors: result.errors },
+			{
+				status: 400,
+			},
+		)
 	}
-	const { startDate, endDate, shipId } = serverFormInfo.submittedFormData
+	const { startDate, endDate, shipId } = result.data
+	const isAvailable = await getIsShipAvailable({ shipId, startDate, endDate })
+	if (!isAvailable) {
+		return json(
+			{ type: 'error', errors: 'Ship is not available' },
+			{ status: 400 },
+		)
+	}
 	const totalPrice = await calculateTotalPrice({ startDate, endDate, shipId })
 	let renter = await prisma.renter.findUnique({
 		where: { userId },
@@ -89,8 +103,8 @@ export async function action({ request }: ActionArgs) {
 
 	const booking = await prisma.booking.create({
 		data: {
-			startDate: df.parseISO(startDate),
-			endDate: df.parseISO(endDate),
+			startDate,
+			endDate,
 			shipId,
 			renterId: userId,
 			totalPrice,

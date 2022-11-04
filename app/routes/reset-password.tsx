@@ -7,15 +7,17 @@ import {
 	useLoaderData,
 	useTransition,
 } from '@remix-run/react'
-import type { FormValidations, ErrorMessages } from 'remix-validity-state'
-import { FormContextProvider } from 'remix-validity-state'
-import { useValidatedInput } from 'remix-validity-state'
-import { validateServerFormData } from 'remix-validity-state'
-import { ListOfErrorMessages } from '~/components'
-import { resetUserPassword } from '~/models/user.server'
+import { useEffect, useRef } from 'react'
+import invariant from 'tiny-invariant'
+import {
+	MAX_PASSWORD_LENGTH,
+	MIN_PASSWORD_LENGTH,
+	resetUserPassword,
+	validateConfirmPassword,
+	validatePassword,
+} from '~/models/user.server'
 import { authenticator } from '~/services/auth.server'
 import { commitSession, getSession } from '~/services/session.server'
-import { constrain } from '~/utils/misc'
 import { resetPasswordSessionKey } from './forgot-password'
 
 export async function loader({ request }: LoaderArgs) {
@@ -38,54 +40,26 @@ export async function loader({ request }: LoaderArgs) {
 	)
 }
 
-const formValidations = constrain<FormValidations>()({
-	password: {
-		type: 'password',
-		required: true,
-		minLength: 6,
-		maxLength: 100,
-	},
-	confirmPassword: {
-		type: 'password',
-		required: true,
-		minLength: 6,
-		maxLength: 100,
-	},
-})
-
-const errorMessages = constrain<ErrorMessages>()({
-	valueMissing: (_, name) => `The ${name} field is required`,
-	tooShort: (minLength, name) =>
-		`The ${name} field must be at least ${minLength} characters`,
-	tooLong: (maxLength, name) =>
-		`The ${name} field must be less than ${maxLength} characters`,
-	matchField: (_, name) =>
-		name === 'confirmPassword' ? `Must match password` : `Must match`,
-})
-
 export async function action({ request }: ActionArgs) {
 	const formData = await request.formData()
-	const serverFormInfo = await validateServerFormData(formData, {
-		...formValidations,
-		confirmPassword: {
-			...formValidations.confirmPassword,
-			matchField: async value => {
-				return value === formData.get('password')
-			},
-		},
-	})
+	const { password, confirmPassword } = Object.fromEntries(formData)
+	invariant(typeof password === 'string', 'password type invalid')
+	invariant(typeof confirmPassword === 'string', 'confirmPassword type invalid')
 
-	if (!serverFormInfo.valid) {
-		return json({ serverFormInfo }, { status: 400 })
+	const errors = {
+		password: validatePassword(password),
+		confirmPassword: validateConfirmPassword({ password, confirmPassword }),
 	}
+	const hasErrors = Object.values(errors).some(Boolean)
+	if (hasErrors) {
+		return json({ errors }, { status: 400 })
+	}
+
 	const session = await getSession(request.headers.get('cookie'))
 	const username = session.get(resetPasswordSessionKey)
 	if (typeof username !== 'string' || !username) {
 		return redirect('/login')
 	}
-
-	const { password } = serverFormInfo.submittedFormData
-
 	await resetUserPassword({ username, password })
 	session.unset(resetPasswordSessionKey)
 	return redirect('/login', {
@@ -99,30 +73,25 @@ export const meta: MetaFunction = () => {
 	}
 }
 
-export default function TempResetPasswordParent() {
-	return (
-		<FormContextProvider value={{ formValidations, errorMessages }}>
-			<ResetPasswordPage />
-		</FormContextProvider>
-	)
-}
-
-function ResetPasswordPage() {
+export default function ResetPasswordPage() {
 	const data = useLoaderData<typeof loader>()
+	const form = useRef<HTMLFormElement>(null)
 	const transition = useTransition()
 	const actionData = useActionData<typeof action>()
-	const passwordField = useValidatedInput({
-		name: 'password',
-		formValidations,
-		errorMessages,
-		serverFormInfo: actionData?.serverFormInfo,
-	})
-	const confirmPasswordField = useValidatedInput({
-		name: 'confirmPassword',
-		formValidations,
-		errorMessages,
-		serverFormInfo: actionData?.serverFormInfo,
-	})
+
+	const hasPasswordError = actionData?.errors?.password
+	const hasConfirmPasswordError = actionData?.errors?.confirmPassword
+	const hasErrors = hasConfirmPasswordError || hasPasswordError
+
+	useEffect(() => {
+		if (!form.current) return
+		if (hasErrors) {
+			const firstInvalidElement = form.current.querySelector('[aria-invalid]')
+			if (firstInvalidElement instanceof HTMLElement) {
+				firstInvalidElement.focus()
+			}
+		}
+	}, [hasErrors])
 
 	return (
 		<div className="flex min-h-full flex-col justify-center">
@@ -132,54 +101,68 @@ function ResetPasswordPage() {
 					className="space-y-6"
 					aria-invalid={data.formError ? true : undefined}
 					aria-describedby="form-error"
+					ref={form}
+					noValidate
 				>
 					<div>Resetting password for {data.resetPasswordUsername}</div>
 
 					<div>
 						<label
-							{...passwordField.getLabelAttrs({
-								className: 'block text-sm font-medium text-gray-700',
-							})}
+							htmlFor="password"
+							className="block text-sm font-medium text-gray-700"
 						>
 							Password
 						</label>
 						<div className="mt-1">
 							<input
-								{...passwordField.getInputAttrs({
-									autoComplete: 'new-password',
-									className:
-										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
-								})}
+								id="password"
+								type="password"
+								name="password"
+								required
+								minLength={MIN_PASSWORD_LENGTH}
+								maxLength={MAX_PASSWORD_LENGTH}
+								autoComplete="current-password"
+								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+								aria-describedby={
+									hasPasswordError ? 'password-error' : undefined
+								}
+								aria-invalid={hasPasswordError ? true : undefined}
 							/>
-
-							<ListOfErrorMessages
-								info={passwordField.info}
-								{...passwordField.getErrorsAttrs({ className: '' })}
-							/>
+							{hasPasswordError ? (
+								<span className="pt-1 text-red-700" id="password-error">
+									{actionData?.errors.password}
+								</span>
+							) : null}
 						</div>
 					</div>
 
 					<div>
 						<label
-							{...confirmPasswordField.getLabelAttrs({
-								className: 'block text-sm font-medium text-gray-700',
-							})}
+							htmlFor="confirmPassword"
+							className="block text-sm font-medium text-gray-700"
 						>
 							Confirm Password
 						</label>
 						<div className="mt-1">
 							<input
-								{...confirmPasswordField.getInputAttrs({
-									autoComplete: 'current-password',
-									className:
-										'w-full rounded border border-gray-500 px-2 py-1 text-lg',
-								})}
+								id="confirmPassword"
+								type="password"
+								name="confirmPassword"
+								required
+								minLength={MIN_PASSWORD_LENGTH}
+								maxLength={MAX_PASSWORD_LENGTH}
+								autoComplete="current-password"
+								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+								aria-describedby={
+									hasConfirmPasswordError ? 'confirm-password-error' : undefined
+								}
+								aria-invalid={hasConfirmPasswordError ? true : undefined}
 							/>
-
-							<ListOfErrorMessages
-								info={confirmPasswordField.info}
-								{...confirmPasswordField.getErrorsAttrs({ className: '' })}
-							/>
+							{hasConfirmPasswordError ? (
+								<span className="pt-1 text-red-700" id="confirm-password-error">
+									{actionData?.errors.confirmPassword}
+								</span>
+							) : null}
 						</div>
 					</div>
 
@@ -201,4 +184,10 @@ function ResetPasswordPage() {
 			</div>
 		</div>
 	)
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+	console.error(error)
+
+	return <div>An unexpected error occurred: {error.message}</div>
 }

@@ -2,76 +2,126 @@ import { useFetcher } from '@remix-run/react'
 import * as df from 'date-fns'
 import type { ActionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import type { ServerFormInfo } from 'remix-validity-state'
-import { FormContextProvider, useValidatedInput } from 'remix-validity-state'
-import { ListOfErrorMessages } from '~/components'
-import {
-	getIsShipAvailable,
-	validateBookerForm,
-	formValidations,
-	errorMessages,
-} from '~/utils/booker'
 import invariant from 'tiny-invariant'
+import { prisma } from '~/db.server'
+import { commitSession, getSession } from '~/services/session.server'
+
+export const bookingSessionKey = 'bookingRange'
+
+export async function getIsShipAvailable({
+	shipId,
+	startDate,
+	endDate,
+}: {
+	shipId: string
+	startDate: Date
+	endDate: Date
+}) {
+	const booking = await prisma.booking.findFirst({
+		select: { id: true },
+		where: { shipId, startDate: { lte: endDate }, endDate: { gte: startDate } },
+	})
+	return !booking
+}
+
+function validateFutureDate(date: Date) {
+	if (!df.isValid(date)) return 'Invalid date'
+	if (df.isPast(date)) return 'Date must be in the future'
+	return null
+}
+
+function validateEndDate({
+	startDate,
+	endDate,
+}: {
+	startDate: Date
+	endDate: Date
+}) {
+	const futureDateError = validateFutureDate(endDate)
+	if (futureDateError) return futureDateError
+	if (df.differenceInDays(endDate, startDate) < 1)
+		return 'End date must be after start date'
+	return null
+}
+
+export function validateBookerForm(formData: FormData) {
+	const {
+		shipId,
+		startDate: startDateString,
+		endDate: endDateString,
+	} = Object.fromEntries(formData)
+
+	invariant(typeof shipId === 'string', 'shipId type invalid')
+	invariant(typeof startDateString === 'string', 'startDate type invalid')
+	invariant(typeof endDateString === 'string', 'endDate type invalid')
+
+	const startDate = df.parseISO(startDateString)
+	const endDate = df.parseISO(endDateString)
+
+	const errors = {
+		startDate: validateFutureDate(startDate),
+		endDate: validateEndDate({ startDate, endDate }),
+	}
+
+	const hasErrors = Object.values(errors).some(Boolean)
+	return hasErrors
+		? ({ ok: false, errors } as const)
+		: { ok: true, data: { shipId, startDate, endDate } as const }
+}
 
 export async function action({ request }: ActionArgs) {
 	const formData = await request.formData()
 
-	const serverFormInfo = await validateBookerForm(formData)
-	if (!serverFormInfo.valid) {
-		return json({ type: 'error', serverFormInfo }, { status: 400 })
+	const result = validateBookerForm(formData)
+	if (!result.ok) {
+		return json(
+			{ status: 'error', errors: result.errors, isAvailable: false },
+			{ status: 400 },
+		)
 	}
-	const { startDate, endDate, shipId } = serverFormInfo.submittedFormData
+	const { shipId, startDate, endDate } = result.data
+	const session = await getSession(request.headers.get('cookie'))
+	session.set(bookingSessionKey, { shipId, startDate, endDate })
 
-	return json({
-		type: 'success',
-		isAvailable: await getIsShipAvailable({
-			shipId,
-			startDate: df.parseISO(startDate),
-			endDate: df.parseISO(endDate),
-		}),
-	})
-}
-
-// TODO: once this is fixed then we can remove the silly wrapper Impl thing
-// https://github.com/brophdawg11/remix-validity-state/issues/14
-export function Booker(props: Parameters<typeof BookerImpl>[0]) {
-	return (
-		<FormContextProvider value={{ formValidations, errorMessages }}>
-			<BookerImpl {...props} />
-		</FormContextProvider>
+	return json(
+		{
+			status: 'success',
+			errors: null,
+			isAvailable: await getIsShipAvailable({
+				shipId,
+				startDate,
+				endDate,
+			}),
+		},
+		{
+			headers: { 'Set-Cookie': await commitSession(session) },
+		},
 	)
 }
 
-function BookerImpl({
+export function Booker({
 	initialIsAvailable,
 	initialStartDate,
 	initialEndDate,
 	shipId,
-	serverFormInfo,
+	errors,
 }: {
 	initialIsAvailable: boolean
 	initialStartDate: string
 	initialEndDate: string
 	shipId: string
-	serverFormInfo: ServerFormInfo | null
+	errors: { startDate: string | null; endDate: string | null } | undefined
 }) {
-	const availabilityFetcher = useFetcher()
-	const startDateField = useValidatedInput({
-		name: 'startDate',
-		formValidations,
-		errorMessages,
-		serverFormInfo: serverFormInfo ?? availabilityFetcher.data?.serverFormInfo,
-	})
-	const endDateField = useValidatedInput({
-		name: 'endDate',
-		formValidations,
-		errorMessages,
-		serverFormInfo: serverFormInfo ?? availabilityFetcher.data?.serverFormInfo,
-	})
+	const availabilityFetcher = useFetcher<typeof action>()
+	const startDateError =
+		availabilityFetcher.data?.errors?.startDate ?? errors?.startDate
+	const endDateError =
+		availabilityFetcher.data?.errors?.endDate ?? errors?.endDate
 
-	const isAvailable = availabilityFetcher.data
-		? availabilityFetcher.data.isAvailable
-		: initialIsAvailable
+	const isAvailable =
+		availabilityFetcher.data?.status === 'success'
+			? availabilityFetcher.data.isAvailable
+			: initialIsAvailable
 
 	function handleRangeChange(event: React.ChangeEvent<HTMLInputElement>) {
 		invariant(
@@ -102,25 +152,39 @@ function BookerImpl({
 				<label>
 					<span>Trip Start Date</span>
 					<input
-						{...startDateField.getInputAttrs({
-							defaultValue: initialStartDate,
-							onChange: handleRangeChange,
-						})}
+						type="date"
+						name="startDate"
+						defaultValue={initialStartDate}
+						onChange={handleRangeChange}
+						required
+						aria-describedby={startDateError ? 'start-date-error' : undefined}
+						aria-invalid={startDateError ? true : undefined}
 					/>
+					{startDateError ? (
+						<span className="pt-1 text-red-700" id="start-date-error">
+							{availabilityFetcher.data?.errors?.startDate}
+						</span>
+					) : null}
 				</label>
-				<ListOfErrorMessages info={startDateField.info} />
 			</div>
 			<div>
 				<label>
 					<span>Trip End Date</span>
 					<input
-						{...endDateField.getInputAttrs({
-							defaultValue: initialEndDate,
-							onChange: handleRangeChange,
-						})}
+						type="date"
+						name="endDate"
+						defaultValue={initialEndDate}
+						onChange={handleRangeChange}
+						required
+						aria-describedby={endDateError ? 'end-date-error' : undefined}
+						aria-invalid={endDateError ? true : undefined}
 					/>
 				</label>
-				<ListOfErrorMessages info={endDateField.info} />
+				{endDateError ? (
+					<span className="pt-1 text-red-700" id="end-date-error">
+						{availabilityFetcher.data?.errors?.endDate}
+					</span>
+				) : null}
 			</div>
 			<input type="hidden" name="shipId" value={shipId} />
 			<div>

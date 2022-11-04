@@ -42,7 +42,7 @@ export async function action({ request }: ActionArgs) {
 	const isEmailValid = /\S+@\S+\.\S+/.test(email)
 	if (!isEmailValid) {
 		return json(
-			{ success: false, errors: { email: 'Invalid email', form: null } },
+			{ status: 'error', errors: { email: 'Invalid email', form: null } },
 			{ status: 400 },
 		)
 	}
@@ -51,7 +51,7 @@ export async function action({ request }: ActionArgs) {
 	if (userExists) {
 		return json(
 			{
-				success: false,
+				status: 'error',
 				errors: { email: 'User with this email already exists', form: null },
 			},
 			{ status: 400 },
@@ -83,10 +83,10 @@ export async function action({ request }: ActionArgs) {
 	})
 
 	if (response.ok) {
-		return json({ success: true, errors: null })
+		return json({ status: 'success', errors: null })
 	} else {
 		return json({
-			success: false,
+			status: 'error',
 			errors: { form: 'Email not sent successfully', email: null },
 		})
 	}
@@ -147,7 +147,7 @@ export default function SignupRoute() {
 					</button>
 				</div>
 			</signupFetcher.Form>
-			{signupFetcher.data?.success ? (
+			{signupFetcher.data?.status === 'success' ? (
 				<div>Great! Check your email for a link to continue.</div>
 			) : null}
 		</div>

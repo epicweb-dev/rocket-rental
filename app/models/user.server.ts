@@ -112,6 +112,20 @@ export function validatePassword(password: string) {
 	return null
 }
 
+export function validateConfirmPassword({
+	password,
+	confirmPassword,
+}: {
+	password: string
+	confirmPassword: string
+}) {
+	return (
+		validatePassword(confirmPassword) ||
+		(password !== confirmPassword && 'Passwords do not match') ||
+		null
+	)
+}
+
 export async function validateEmailIsUnique(email: string) {
 	const user = await getUserByEmail(email)
 	if (user) return 'Email is already in use'

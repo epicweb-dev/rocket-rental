@@ -48,7 +48,7 @@ export async function action({ request }: ActionArgs) {
 	if (!user) {
 		return json(
 			{
-				success: false,
+				status: 'error',
 				errors: { usernameOrEmail: 'User not found', form: null },
 			},
 			{ status: 400 },
@@ -83,10 +83,10 @@ export async function action({ request }: ActionArgs) {
 	})
 
 	if (response.ok) {
-		return json({ success: true, errors: null })
+		return json({ status: 'success', errors: null })
 	} else {
 		return json({
-			success: false,
+			status: 'error',
 			errors: { form: 'Email not sent successfully', usernameOrEmail: null },
 		})
 	}
@@ -148,7 +148,7 @@ export default function SignupRoute() {
 					</button>
 				</div>
 			</forgotPassword.Form>
-			{forgotPassword.data?.success ? (
+			{forgotPassword.data?.status === 'success' ? (
 				<div>Great! Check your email for a link to continue.</div>
 			) : null}
 		</div>
