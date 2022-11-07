@@ -1,6 +1,11 @@
-import type { LoaderArgs } from '@remix-run/node'
+import type { ActionArgs, LoaderArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import { Outlet, useCatch, useLoaderData, useParams } from '@remix-run/react'
+import {
+	useCatch,
+	useFetcher,
+	useLoaderData,
+	useParams,
+} from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
 import { requireUserId } from '~/services/auth.server'
@@ -23,14 +28,79 @@ export async function loader({ request, params }: LoaderArgs) {
 	return json({ chat })
 }
 
+export async function action({ request, params }: ActionArgs) {
+	const userId = await requireUserId(request)
+	invariant(params.chatId, 'Missing chatId')
+	const formData = await request.formData()
+	const { intent, content } = Object.fromEntries(formData)
+	invariant(typeof content === 'string', 'content type invalid')
+
+	switch (intent) {
+		case 'send-message': {
+			await prisma.message.create({
+				data: {
+					senderId: userId,
+					chatId: params.chatId,
+					content,
+				},
+				select: { id: true },
+			})
+			return json({ success: true })
+		}
+		default: {
+			throw new Error(`Unsupported intent: ${intent}`)
+		}
+	}
+}
+
 export default function ChatRoute() {
 	const data = useLoaderData<typeof loader>()
+	const messageFetcher = useFetcher<typeof action>()
 	return (
 		<div>
 			<h2>Chat</h2>
-			<pre>{JSON.stringify(data, null, 2)}</pre>
+			<details>
+				<summary>Chat data</summary>
+				<pre>{JSON.stringify(data, null, 2)}</pre>
+			</details>
 			<hr />
-			<Outlet />
+			<div className="flex flex-col">
+				{data.chat.messages.map(message => {
+					const sender = data.chat.users.find(
+						user => user.id === message.senderId,
+					)
+					return (
+						<div key={message.id} className="flex items-center">
+							<img
+								src={sender?.imageUrl ?? 'TODO: add default image'}
+								alt={sender?.name ?? 'Unknown user'}
+								className="h-8 w-8 rounded-full"
+							/>
+							<div className="ml-2">{message.content}</div>
+						</div>
+					)
+				})}
+			</div>
+			<hr />
+			<messageFetcher.Form
+				method="post"
+				onSubmit={event => {
+					const form = event.currentTarget
+					requestAnimationFrame(() => {
+						form.reset()
+					})
+				}}
+			>
+				<input
+					type="text"
+					name="content"
+					placeholder="Type a message..."
+					className="w-full"
+				/>
+				<button name="intent" value="send-message" type="submit">
+					Send
+				</button>
+			</messageFetcher.Form>
 		</div>
 	)
 }
@@ -44,4 +114,10 @@ export function CatchBoundary() {
 	}
 
 	throw new Error(`Unexpected caught response with status: ${caught.status}`)
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+	console.error(error)
+
+	return <div>An unexpected error occurred: {error.message}</div>
 }

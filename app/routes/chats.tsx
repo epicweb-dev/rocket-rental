@@ -18,7 +18,10 @@ export default function ChatsRoute() {
 	return (
 		<div>
 			<h1>Chats</h1>
-			<pre>{JSON.stringify(data, null, 2)}</pre>
+			<details>
+				<summary>Chats</summary>
+				<pre>{JSON.stringify(data, null, 2)}</pre>
+			</details>
 			<hr />
 			<Outlet />
 		</div>

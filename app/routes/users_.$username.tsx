@@ -89,7 +89,6 @@ export async function action({ request, params }: ActionArgs) {
 				},
 				select: { id: true },
 			})
-			console.log({ existingChat })
 			if (existingChat) {
 				return redirect(`/chats/${existingChat.id}`)
 			}
@@ -134,7 +133,6 @@ export default function UserRoute() {
 					),
 		  )
 		: null
-	console.log({ oneOnOneChat })
 
 	function handleTabChange(index: number) {
 		navigate(index === 0 ? 'host' : 'renter')
