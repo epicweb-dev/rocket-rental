@@ -9,13 +9,13 @@ import {
 } from '@remix-run/react'
 import { useEffect, useRef } from 'react'
 import invariant from 'tiny-invariant'
+import { resetUserPassword } from '~/models/user.server'
 import {
 	MAX_PASSWORD_LENGTH,
 	MIN_PASSWORD_LENGTH,
-	resetUserPassword,
 	validateConfirmPassword,
 	validatePassword,
-} from '~/models/user.server'
+} from '~/utils/user-validation'
 import { authenticator } from '~/services/auth.server'
 import { commitSession, getSession } from '~/services/session.server'
 import { resetPasswordSessionKey } from './forgot-password'

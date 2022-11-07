@@ -1,5 +1,6 @@
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from '@reach/tabs'
-import type { LoaderArgs } from '@remix-run/node'
+import type { ActionArgs, LoaderArgs } from '@remix-run/node'
+import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
 	Form,
@@ -13,7 +14,7 @@ import {
 } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
-import { getUserId } from '~/services/auth.server'
+import { getUserId, requireUserId } from '~/services/auth.server'
 import { useOptionalUser } from '~/utils/misc'
 
 export async function loader({ params, request }: LoaderArgs) {
@@ -44,6 +45,15 @@ export async function loader({ params, request }: LoaderArgs) {
 								},
 							},
 						},
+						select: {
+							id: true,
+							users: {
+								select: {
+									id: true,
+									name: true,
+								},
+							},
+						},
 				  }
 				: false,
 		},
@@ -52,6 +62,52 @@ export async function loader({ params, request }: LoaderArgs) {
 		throw new Response('not found', { status: 404 })
 	}
 	return json({ user })
+}
+
+export async function action({ request, params }: ActionArgs) {
+	const loggedInUserId = await requireUserId(request)
+	invariant(params.username, 'Missing username')
+	const formData = await request.formData()
+	const { intent } = Object.fromEntries(formData)
+	switch (intent) {
+		case 'create-chat': {
+			const currentUser = await prisma.user.findUnique({
+				where: { username: params.username },
+				select: { id: true },
+			})
+			invariant(
+				currentUser,
+				`Cannot create chat with user that does not exist.`,
+			)
+
+			const existingChat = await prisma.chat.findFirst({
+				where: {
+					AND: [
+						{ users: { some: { id: loggedInUserId } } },
+						{ users: { some: { id: currentUser.id } } },
+					],
+				},
+				select: { id: true },
+			})
+			console.log({ existingChat })
+			if (existingChat) {
+				return redirect(`/chats/${existingChat.id}`)
+			}
+
+			const createdChat = await prisma.chat.create({
+				select: { id: true },
+				data: {
+					users: {
+						connect: [{ id: loggedInUserId }, { id: currentUser.id }],
+					},
+				},
+			})
+			return redirect(`/chats/${createdChat.id}`)
+		}
+		default: {
+			throw new Error(`Unsupported intent: ${intent}`)
+		}
+	}
 }
 
 export default function UserRoute() {
@@ -64,6 +120,21 @@ export default function UserRoute() {
 	const onHostTab = lastMatch.id.endsWith('host')
 	const onRenterTab = lastMatch.id.endsWith('renter')
 	const tabIndex = onHostTab ? 0 : onRenterTab ? 1 : -1
+
+	// TODO: figure out why the types are wrong here
+	const oneOnOneChat = loggedInUser
+		? data.user.chats.find(
+				c =>
+					// @ts-expect-error who knows
+					c.users.length === 2 &&
+					// @ts-expect-error who knows
+					c.users.every(
+						// @ts-expect-error who knows
+						u => u.id === loggedInUser?.id || u.id === data.user.id,
+					),
+		  )
+		: null
+	console.log({ oneOnOneChat })
 
 	function handleTabChange(index: number) {
 		navigate(index === 0 ? 'host' : 'renter')
@@ -85,6 +156,24 @@ export default function UserRoute() {
 					alt={data.user.name ?? data.user.username}
 				/>
 			) : null}
+			{isOwnProfile ? (
+				<div>
+					<strong>Chats:</strong>
+					{data.user.chats.map(c => (
+						<Link key={c.id} to={`/chats/${c.id}`}>
+							Chat {c.id}
+						</Link>
+					))}
+				</div>
+			) : oneOnOneChat ? (
+				<Link to={`/chats/${oneOnOneChat.id}`}>Chat</Link>
+			) : (
+				<Form method="post">
+					<button type="submit" name="intent" value="create-chat">
+						Chat
+					</button>
+				</Form>
+			)}
 			<pre>{JSON.stringify(data, null, 2)}</pre>
 			<hr />
 			<Tabs index={tabIndex} onChange={handleTabChange}>
@@ -144,4 +233,10 @@ export function CatchBoundary() {
 	}
 
 	throw new Error(`Unexpected caught response with status: ${caught.status}`)
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+	console.error(error)
+
+	return <div>An unexpected error occurred: {error.message}</div>
 }

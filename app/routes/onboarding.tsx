@@ -9,8 +9,8 @@ import {
 } from '@remix-run/react'
 import * as React from 'react'
 import invariant from 'tiny-invariant'
+import { createUser } from '~/models/user.server'
 import {
-	createUser,
 	MAX_NAME_LENGTH,
 	MAX_PASSWORD_LENGTH,
 	MAX_USERNAME_LENGTH,
@@ -21,7 +21,7 @@ import {
 	validateName,
 	validatePassword,
 	validateUsername,
-} from '~/models/user.server'
+} from '~/utils/user-validation'
 import { authenticator } from '~/services/auth.server'
 import { commitSession, getSession } from '~/services/session.server'
 import { safeRedirect } from '~/utils/misc'
@@ -70,14 +70,21 @@ export async function action({ request }: ActionArgs) {
 	invariant(typeof password === 'string', 'password type invalid')
 	invariant(typeof confirmPassword === 'string', 'confirmPassword type invalid')
 	invariant(
-		typeof agreeToTermsOfServiceAndPrivacyPolicy === 'string',
+		typeof agreeToTermsOfServiceAndPrivacyPolicy === 'string' ||
+			agreeToTermsOfServiceAndPrivacyPolicy == null,
 		'agreeToTermsOfServiceAndPrivacyPolicy type invalid',
 	)
 	invariant(
-		typeof agreeToMailingList === 'string',
+		typeof agreeToMailingList === 'string' || agreeToMailingList == null,
 		'agreeToMailingList type invalid',
 	)
-	invariant(typeof remember === 'string', 'remember type invalid')
+
+	// TODO: the type of remember is wrong after this invariant.
+	// it can be a string or undefined or null, but it's only a string...
+	invariant(
+		typeof remember === 'string' || remember == null,
+		'remember type invalid',
+	)
 	invariant(typeof redirectTo === 'string', 'redirectTo type invalid')
 
 	const errors = {
@@ -98,6 +105,9 @@ export async function action({ request }: ActionArgs) {
 	const user = await createUser({ email, username, password, name })
 	session.set(authenticator.sessionKey, user.id)
 	session.unset(onboardingEmailSessionKey)
+
+	// TODO: add user to mailing list if they agreed to it
+
 	const newCookie = await commitSession(session, {
 		maxAge: remember
 			? 60 * 60 * 24 * 7 // 7 days

@@ -11,7 +11,7 @@ import {
 	MIN_USERNAME_LENGTH,
 	validatePassword,
 	validateUsername,
-} from '~/models/user.server'
+} from '~/utils/user-validation'
 import { authenticator } from '~/services/auth.server'
 import { commitSession, getSession } from '~/services/session.server'
 
