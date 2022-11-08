@@ -6,12 +6,14 @@ import {
 	useLoaderData,
 	useParams,
 } from '@remix-run/react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
 import { requireUserId } from '~/services/auth.server'
 import { chatEmitter, EVENTS } from '~/services/chat.server'
 import { useEventSource, useRevalidator } from '~/utils/hooks'
+import type { Message, NewMessageChange } from './chats.$chatId.events'
+import { isNewMessageChange } from './chats.$chatId.events'
 
 export async function loader({ request, params }: LoaderArgs) {
 	invariant(params.chatId, 'Missing chatId')
@@ -28,7 +30,13 @@ export async function loader({ request, params }: LoaderArgs) {
 	if (!chat) {
 		throw new Response('not found', { status: 404 })
 	}
-	return json({ chat })
+	// type assertion-ish (is there a better way to do this?)
+	// my goal is to ensure that the type we get from prisma for the messages
+	// is the same as the one we get from the emitted changes
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	let messages: Array<Message> = chat.messages
+
+	return json({ chat, timestamp: Date.now() })
 }
 
 export async function action({ request, params }: ActionArgs) {
@@ -40,17 +48,22 @@ export async function action({ request, params }: ActionArgs) {
 
 	switch (intent) {
 		case 'send-message': {
-			await prisma.message.create({
+			const newMessage = await prisma.message.create({
 				data: {
 					senderId: userId,
 					chatId: params.chatId,
 					content,
 				},
-				select: { id: true },
+				select: { id: true, senderId: true, content: true },
 			})
 			// TODO: add json patch as the message
 			// https://www.npmjs.com/package/json8-patch
-			chatEmitter.emit(EVENTS.NEW_MESSAGE, params.chatId)
+			const change: NewMessageChange = {
+				type: 'new',
+				timestamp: Date.now(),
+				message: newMessage,
+			}
+			chatEmitter.emit(`${EVENTS.NEW_MESSAGE}:${params.chatId}`, change)
 			return json({ success: true })
 		}
 		default: {
@@ -65,17 +78,37 @@ export default function ChatRoute() {
 
 	const data = useLoaderData<typeof loader>()
 	const messageFetcher = useFetcher<typeof action>()
-	const chatUpdateData = useEventSource(`/chats/${chatId}/events`)
+	const [changes, setChanges] = useState<Array<NewMessageChange>>([])
 
-	const revalidator = useRevalidator()
-	const mounted = useRef(false)
-	useEffect(() => {
-		if (!mounted.current) {
-			mounted.current = true
-			return
+	useEventSource(`/chats/${chatId}/events`, event => {
+		let change: unknown
+		try {
+			change = JSON.parse(event.data)
+		} catch (error) {
+			console.error(`Unable to parse event data: ${event.data}`)
 		}
-		revalidator.revalidate()
-	}, [chatUpdateData, revalidator])
+		setChanges(changes => {
+			if (isNewMessageChange(change)) {
+				return [...changes, change]
+			} else {
+				console.error(`Cannot process change: ${change}`)
+				return changes
+			}
+		})
+	})
+
+	const relevantChanges = changes.filter(
+		change => change.timestamp > data.timestamp,
+	)
+
+	const messages = [...data.chat.messages]
+	for (const change of relevantChanges) {
+		if (change.type === 'new') {
+			messages.push(change.message)
+		} else {
+			// TODO: Handle other change types
+		}
+	}
 
 	return (
 		<div>
@@ -86,7 +119,7 @@ export default function ChatRoute() {
 			</details>
 			<hr />
 			<ul className="flex flex-col">
-				{data.chat.messages.map(message => {
+				{messages.map(message => {
 					const sender = data.chat.users.find(
 						user => user.id === message.senderId,
 					)

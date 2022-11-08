@@ -1,27 +1,33 @@
 import { useFetcher } from '@remix-run/react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 // TODO: Swap this with react-router's useRevalidator when Remix adds support for it.
 export function useRevalidator() {
-	let { submit } = useFetcher()
+	const { submit } = useFetcher()
 
-	let revalidate = useCallback(() => {
+	const revalidate = useCallback(() => {
 		submit(null, { action: '/', method: 'post' })
 	}, [submit])
 
 	return useMemo(() => ({ revalidate }), [revalidate])
 }
 
-export function useEventSource(href: string) {
-	const [data, setData] = useState(null)
-
+export function useEventSource(
+	href: string,
+	onMessage: (this: EventSource, event: EventSourceEventMap['message']) => void,
+) {
+	const latestOnMessageRef = useLatestRef(onMessage)
 	useEffect(() => {
-		let source = new EventSource(href)
-		source.addEventListener('message', event => {
-			setData(event.data)
-		})
+		const source = new EventSource(href)
+		source.addEventListener('message', latestOnMessageRef.current)
 		return () => source.close()
-	}, [href])
+	}, [href, latestOnMessageRef])
+}
 
-	return data
+function useLatestRef<ThingType>(thing: ThingType) {
+	const latestRef = useRef(thing)
+	useEffect(() => {
+		latestRef.current = thing
+	})
+	return latestRef
 }

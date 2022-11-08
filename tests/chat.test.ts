@@ -23,6 +23,9 @@ test('multi-user chat', async ({ browser, page: page1, baseURL }) => {
 	await page1Textbox.fill(testMessage)
 	await page1Textbox.press('Enter')
 
-	// check that page 2 received the message
+	await expect(page1Textbox).toBeEmpty()
+
+	// check that both pages receive the message
+	await expect(page1.getByRole('listitem').getByText(testMessage)).toBeVisible()
 	await expect(page2.getByRole('listitem').getByText(testMessage)).toBeVisible()
 })

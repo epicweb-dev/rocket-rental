@@ -4,6 +4,38 @@ import { requireUserId } from '~/services/auth.server'
 import { EVENTS, chatEmitter } from '~/services/chat.server'
 import { eventStream } from '~/utils/event-stream.server'
 
+export type Message = {
+	id: string
+	senderId: string
+	content: string
+}
+
+export type NewMessageChange = {
+	type: 'new'
+	timestamp: number
+	message: Message
+}
+
+export function isMessage(message: any): message is Message {
+	return (
+		message &&
+		typeof message === 'object' &&
+		typeof message.id === 'string' &&
+		typeof message.senderId === 'string' &&
+		typeof message.content === 'string'
+	)
+}
+
+export function isNewMessageChange(change: any): change is NewMessageChange {
+	return (
+		change &&
+		typeof change === 'object' &&
+		change.type === 'new' &&
+		typeof change.timestamp === 'number' &&
+		isMessage(change.message)
+	)
+}
+
 export async function loader({ request, params }: LoaderArgs) {
 	const userId = await requireUserId(request)
 	const hasAccess = await prisma.chat.findFirst({
@@ -18,12 +50,16 @@ export async function loader({ request, params }: LoaderArgs) {
 	}
 
 	return eventStream(request, send => {
-		function handler(message: string) {
-			send('message', message)
+		function handler(message: unknown) {
+			if (isNewMessageChange(message)) {
+				console.log('sending message', message)
+				send('message', JSON.stringify(message))
+			}
 		}
-		chatEmitter.addListener(EVENTS.NEW_MESSAGE, handler)
+		const eventType = `${EVENTS.NEW_MESSAGE}:${params.chatId}`
+		chatEmitter.addListener(eventType, handler)
 		return () => {
-			chatEmitter.removeListener(EVENTS.NEW_MESSAGE, handler)
+			chatEmitter.removeListener(eventType, handler)
 		}
 	})
 }
