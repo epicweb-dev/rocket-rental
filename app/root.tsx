@@ -24,6 +24,11 @@ export const meta: MetaFunction = () => ({
 	viewport: 'width=device-width,initial-scale=1',
 })
 
+export function action() {
+	// this is for useRevalidator
+	return { ok: true }
+}
+
 export async function loader({ request }: LoaderArgs) {
 	const userId = await authenticator.isAuthenticated(request)
 

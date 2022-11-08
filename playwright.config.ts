@@ -7,6 +7,8 @@ import { devices } from '@playwright/test'
  */
 // require('dotenv').config();
 
+const PORT = process.env.PORT || 8811
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
@@ -35,7 +37,7 @@ const config: PlaywrightTestConfig = {
 	use: {
 		/* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
 		actionTimeout: 0,
-		baseURL: 'http://localhost:8811/',
+		baseURL: `http://localhost:${PORT}/`,
 		/* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
 		trace: 'on-first-retry',
 	},
@@ -98,9 +100,10 @@ const config: PlaywrightTestConfig = {
 	/* Run your local dev server before starting the tests */
 	webServer: {
 		command: process.env.CI
-			? 'cross-env PORT=8811 RUNNING_E2E=true npm run start:mocks'
-			: 'cross-env PORT=8811 RUNNING_E2E=true npm run dev',
-		port: 8811,
+			? `cross-env PORT=${PORT} RUNNING_E2E=true npm run start:mocks`
+			: `cross-env PORT=${PORT} RUNNING_E2E=true npm run dev`,
+		port: Number(PORT),
+		reuseExistingServer: true,
 	},
 }
 

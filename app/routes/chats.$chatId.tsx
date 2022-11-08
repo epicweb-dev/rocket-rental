@@ -6,9 +6,12 @@ import {
 	useLoaderData,
 	useParams,
 } from '@remix-run/react'
+import { useEffect, useRef } from 'react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
 import { requireUserId } from '~/services/auth.server'
+import { chatEmitter, EVENTS } from '~/services/chat.server'
+import { useEventSource, useRevalidator } from '~/utils/hooks'
 
 export async function loader({ request, params }: LoaderArgs) {
 	invariant(params.chatId, 'Missing chatId')
@@ -45,6 +48,9 @@ export async function action({ request, params }: ActionArgs) {
 				},
 				select: { id: true },
 			})
+			// TODO: add json patch as the message
+			// https://www.npmjs.com/package/json8-patch
+			chatEmitter.emit(EVENTS.NEW_MESSAGE, params.chatId)
 			return json({ success: true })
 		}
 		default: {
@@ -54,8 +60,23 @@ export async function action({ request, params }: ActionArgs) {
 }
 
 export default function ChatRoute() {
+	const { chatId } = useParams()
+	invariant(chatId, 'Missing chatId')
+
 	const data = useLoaderData<typeof loader>()
 	const messageFetcher = useFetcher<typeof action>()
+	const chatUpdateData = useEventSource(`/chats/${chatId}/events`)
+
+	const revalidator = useRevalidator()
+	const mounted = useRef(false)
+	useEffect(() => {
+		if (!mounted.current) {
+			mounted.current = true
+			return
+		}
+		revalidator.revalidate()
+	}, [chatUpdateData, revalidator])
+
 	return (
 		<div>
 			<h2>Chat</h2>
@@ -64,23 +85,23 @@ export default function ChatRoute() {
 				<pre>{JSON.stringify(data, null, 2)}</pre>
 			</details>
 			<hr />
-			<div className="flex flex-col">
+			<ul className="flex flex-col">
 				{data.chat.messages.map(message => {
 					const sender = data.chat.users.find(
 						user => user.id === message.senderId,
 					)
 					return (
-						<div key={message.id} className="flex items-center">
+						<li key={message.id} className="flex items-center">
 							<img
 								src={sender?.imageUrl ?? 'TODO: add default image'}
 								alt={sender?.name ?? 'Unknown user'}
 								className="h-8 w-8 rounded-full"
 							/>
 							<div className="ml-2">{message.content}</div>
-						</div>
+						</li>
 					)
 				})}
-			</div>
+			</ul>
 			<hr />
 			<messageFetcher.Form
 				method="post"

@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test'
 import { test as base } from '@playwright/test'
 import type { LocatorFixtures as TestingLibraryFixtures } from '@playwright-testing-library/test/fixture'
 import { locatorFixtures as fixtures } from '@playwright-testing-library/test/fixture'
@@ -91,28 +92,36 @@ export const test = base.extend<
 	...fixtures,
 	login: [
 		async ({ page, baseURL }, use) => {
-			use(async () => {
-				const user = await insertNewUser()
-				const session = await getSession()
-				session.set(authenticator.sessionKey, user.id)
-				const cookieValue = await commitSession(session)
-				const { _session } = parse(cookieValue)
-				page.context().addCookies([
-					{
-						name: '_session',
-						sameSite: 'Lax',
-						url: baseURL,
-						httpOnly: true,
-						secure: process.env.NODE_ENV === 'production',
-						value: _session,
-					},
-				])
-				return user
-			})
+			use(() => loginPage({ page, baseURL }))
 		},
 		{ auto: true },
 	],
 })
+
+export async function loginPage({
+	page,
+	baseURL,
+}: {
+	page: Page
+	baseURL: string | undefined
+}) {
+	const user = await insertNewUser()
+	const session = await getSession()
+	session.set(authenticator.sessionKey, user.id)
+	const cookieValue = await commitSession(session)
+	const { _session } = parse(cookieValue)
+	page.context().addCookies([
+		{
+			name: '_session',
+			sameSite: 'Lax',
+			url: baseURL,
+			httpOnly: true,
+			secure: process.env.NODE_ENV === 'production',
+			value: _session,
+		},
+	])
+	return user
+}
 
 export const { expect } = test
 

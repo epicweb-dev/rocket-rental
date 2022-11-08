@@ -50,7 +50,7 @@ export async function loader({ params, request }: LoaderArgs) {
 							users: {
 								select: {
 									id: true,
-									name: true,
+									username: true,
 								},
 							},
 						},
@@ -159,7 +159,8 @@ export default function UserRoute() {
 					<strong>Chats:</strong>
 					{data.user.chats.map(c => (
 						<Link key={c.id} to={`/chats/${c.id}`}>
-							Chat {c.id}
+							{/* @ts-expect-error who knows */}
+							Chat {c.users.map(u => u.username).join(', ')}
 						</Link>
 					))}
 				</div>
