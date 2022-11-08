@@ -52,7 +52,6 @@ export async function loader({ request, params }: LoaderArgs) {
 	return eventStream(request, send => {
 		function handler(message: unknown) {
 			if (isNewMessageChange(message)) {
-				console.log('sending message', message)
 				send('message', JSON.stringify(message))
 			}
 		}
