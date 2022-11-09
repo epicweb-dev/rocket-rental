@@ -8,6 +8,7 @@ import { createUser, createContactInfo } from '../prisma/seed-utils'
 import { commitSession, getSession } from '~/services/session.server'
 import { authenticator } from '~/services/auth.server'
 import { parse } from 'cookie'
+import { readFixture } from '../mocks/utils'
 
 const users = new Set<User>()
 
@@ -21,10 +22,11 @@ type Email = {
 
 export async function readEmail(recipient: string) {
 	try {
-		const mswOutput = require('../mocks/msw.local.json')
 		// TODO: add validation
-		return mswOutput.email[recipient] as Email
+		const email = await readFixture(recipient)
+		return email as Email
 	} catch (error) {
+		console.error(`Error reading email`, error)
 		return null
 	}
 }

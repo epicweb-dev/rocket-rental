@@ -15,59 +15,22 @@ export async function isConnectedToTheInternet() {
 	return connected
 }
 
-const mswDataPath = path.join(__dirname, `./msw.local.json`)
+const fixturesDirPath = path.join(__dirname, `./fixtures`)
 
-// !! side effect !!
-const clearingFixture = fs.promises.writeFile(mswDataPath, '{}')
-
-function deferred<Resolved extends unknown>() {
-	let resolve: (value: Resolved) => void
-	let reject: (error: Error) => void
-	const promise = new Promise((res, rej) => {
-		resolve = res
-		reject = rej
-	})
-
-	// @ts-expect-error - promise callack runs synchronously
-	return { promise, resolve, reject }
+export async function readFixture(name: string) {
+	return JSON.parse(
+		await fs.promises.readFile(
+			path.join(fixturesDirPath, `${name}.json`),
+			'utf8',
+		),
+	)
 }
 
-let updating: ReturnType<typeof deferred> | null = null
-
-export async function updateFixture(updates: Record<string, unknown>) {
-	if (updating) {
-		await updating.promise
-	} else {
-		updating = deferred()
-	}
-	try {
-		const mswData = await readFixture()
-		await fs.promises.writeFile(
-			mswDataPath,
-			JSON.stringify({ ...mswData, ...updates }, null, 2),
-		)
-		updating.resolve('finished updating')
-	} catch (error) {
-		updating.reject(error)
-	} finally {
-		updating = null
-	}
-}
-
-export async function readFixture() {
-	await clearingFixture
-	let mswData: Record<string, any> = {}
-	try {
-		const contents = await fs.promises.readFile(mswDataPath)
-		mswData = JSON.parse(contents.toString())
-	} catch (error: unknown) {
-		console.error(
-			`Error reading and parsing the msw fixture. Clearing it.`,
-			(error as { stack?: string }).stack ?? error,
-		)
-		await fs.promises.writeFile(mswDataPath, '{}')
-	}
-	return mswData
+export function createFixture(name: string, data: unknown) {
+	return fs.promises.writeFile(
+		path.join(fixturesDirPath, `./${name}.json`),
+		JSON.stringify(data, null, 2),
+	)
 }
 
 export function requiredParam(params: URLSearchParams, param: string) {
