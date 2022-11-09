@@ -21,16 +21,15 @@ const mswDataPath = path.join(__dirname, `./msw.local.json`)
 const clearingFixture = fs.promises.writeFile(mswDataPath, '{}')
 
 function deferred<Resolved extends unknown>() {
-	const def = {} as {
-		promise: Promise<Resolved>
-		resolve: (value: Resolved) => void
-		reject: (error: unknown) => void
-	}
-	const promise = new Promise((resolve, reject) => {
-		Object.assign(def, { resolve, reject })
+	let resolve: (value: Resolved) => void
+	let reject: (error: Error) => void
+	const promise = new Promise((res, rej) => {
+		resolve = res
+		reject = rej
 	})
-	Object.assign(def, { promise })
-	return def
+
+	// @ts-expect-error - promise callack runs synchronously
+	return { promise, resolve, reject }
 }
 
 let updating: ReturnType<typeof deferred> | null = null
