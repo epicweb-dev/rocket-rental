@@ -1,13 +1,15 @@
 import type { LoaderArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import { Outlet, useLoaderData } from '@remix-run/react'
+import { Link, Outlet, useLoaderData } from '@remix-run/react'
 import { prisma } from '~/db.server'
 import { requireUserId } from '~/services/auth.server'
 
 export async function loader({ request }: LoaderArgs) {
 	const userId = await requireUserId(request)
 	const bookings = await prisma.booking.findMany({
-		where: { renterId: userId },
+		where: {
+			OR: [{ renterId: userId }, { ship: { hostId: userId } }],
+		},
 		select: { id: true },
 	})
 	return json({ bookings })
@@ -18,9 +20,22 @@ export default function BookingsRoute() {
 	return (
 		<div>
 			<h1>Bookings</h1>
-			<pre>{JSON.stringify(data, null, 2)}</pre>
-			<hr />
-			<Outlet />
+			<details>
+				<summary>Data</summary>
+				<pre>{JSON.stringify(data, null, 2)}</pre>
+			</details>
+			<div className="flex gap-12">
+				<ul>
+					{data.bookings.map(booking => (
+						<li key={booking.id}>
+							<Link to={booking.id}>{booking.id}</Link>
+						</li>
+					))}
+				</ul>
+				<div className="flex-1">
+					<Outlet />
+				</div>
+			</div>
 		</div>
 	)
 }

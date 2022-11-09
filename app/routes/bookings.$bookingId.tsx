@@ -9,7 +9,14 @@ export async function loader({ request, params }: LoaderArgs) {
 	invariant(params.bookingId, 'Missing bookingId')
 	const userId = await requireUserId(request)
 	const booking = await prisma.booking.findFirst({
-		where: { id: params.bookingId, renterId: userId },
+		where: {
+			AND: [
+				{ id: params.bookingId },
+				{
+					OR: [{ renterId: userId }, { ship: { hostId: userId } }],
+				},
+			],
+		},
 		select: {
 			id: true,
 			shipId: true,
@@ -22,6 +29,16 @@ export async function loader({ request, params }: LoaderArgs) {
 	if (!booking) {
 		throw new Response('not found', { status: 404 })
 	}
+
+	// you can only review a booking if:
+	// 1. the endDate has past
+	// 2. there's no review yet
+	// 3. it's over two weeks past the endDate
+	const canReview =
+		booking.endDate.getTime() < Date.now() &&
+		!booking.review &&
+		booking.endDate.getTime() + 1000 * 60 * 60 * 24 * 14 < Date.now()
+
 	return json({ booking })
 }
 

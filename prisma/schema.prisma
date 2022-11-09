@@ -34,7 +34,7 @@ model Password {
 }
 
 model ContactInfo {
-  id      String  @id @default(cuid())
+  id      String  @id @unique @default(cuid())
   email   String?
   phone   String?
   address String?
@@ -88,7 +88,7 @@ model Admin {
 }
 
 model ShipBrand {
-  id          String @id @default(cuid())
+  id          String @id @unique @default(cuid())
   name        String
   description String
   imageUrl    String
@@ -96,7 +96,7 @@ model ShipBrand {
 }
 
 model Ship {
-  id          String @id @default(cuid())
+  id          String @id @unique @default(cuid())
   name        String
   capacity    Int
   description String
@@ -121,7 +121,7 @@ model Ship {
 }
 
 model Starport {
-  id          String @id @default(cuid())
+  id          String @id @unique @default(cuid())
   name        String
   description String
   imageUrl    String
@@ -135,7 +135,7 @@ model Starport {
 }
 
 model Booking {
-  id         String   @id @default(cuid())
+  id         String   @id @unique @default(cuid())
   startDate  DateTime
   endDate    DateTime
   totalPrice Int
@@ -151,7 +151,7 @@ model Booking {
 }
 
 model ShipReview {
-  id          String @id @default(cuid())
+  id          String @id @unique @default(cuid())
   rating      Int
   description String
 
@@ -166,7 +166,7 @@ model ShipReview {
 }
 
 model HostReview {
-  id          String @id @default(cuid())
+  id          String @id @unique @default(cuid())
   rating      Int
   description String
 
@@ -181,7 +181,7 @@ model HostReview {
 }
 
 model RenterReview {
-  id          String @id @default(cuid())
+  id          String @id @unique @default(cuid())
   rating      Int
   description String
 
@@ -196,7 +196,7 @@ model RenterReview {
 }
 
 model Chat {
-  id String @id @default(cuid())
+  id String @id @unique @default(cuid())
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -206,7 +206,7 @@ model Chat {
 }
 
 model Message {
-  id        String   @id @default(cuid())
+  id        String   @id @unique @default(cuid())
   content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

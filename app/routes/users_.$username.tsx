@@ -142,11 +142,14 @@ export default function UserRoute() {
 		<div>
 			<h1>{data.user.name ?? data.user.username}</h1>
 			{isOwnProfile ? (
-				<Form action="/logout" method="post">
-					<button className="flex items-center justify-center rounded-md bg-blue-500 px-4 py-3 font-medium text-white hover:bg-blue-600">
-						Logout of {loggedInUser.name}
-					</button>
-				</Form>
+				<>
+					<Form action="/logout" method="post">
+						<button className="flex items-center justify-center rounded-md bg-blue-500 px-4 py-3 font-medium text-white hover:bg-blue-600">
+							Logout of {loggedInUser.name}
+						</button>
+					</Form>
+					<Link to="/bookings">View Your Bookings</Link>
+				</>
 			) : null}
 			{data.user.imageUrl ? (
 				<img
