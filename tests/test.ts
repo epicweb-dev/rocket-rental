@@ -1,7 +1,5 @@
 import type { Page } from '@playwright/test'
 import { test as base } from '@playwright/test'
-import type { LocatorFixtures as TestingLibraryFixtures } from '@playwright-testing-library/test/fixture'
-import { locatorFixtures as fixtures } from '@playwright-testing-library/test/fixture'
 import type { User } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { faker } from '@faker-js/faker'
@@ -84,12 +82,7 @@ export async function deleteUserByUsername(username: string) {
 	await prisma.$disconnect()
 }
 
-export const test = base.extend<
-	TestingLibraryFixtures & {
-		login: () => Promise<User>
-	}
->({
-	...fixtures,
+export const test = base.extend<{ login: () => ReturnType<typeof loginPage> }>({
 	login: [
 		async ({ page, baseURL }, use) => {
 			use(() => loginPage({ page, baseURL }))

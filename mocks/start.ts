@@ -1,6 +1,6 @@
 import { rest } from 'msw'
 import { setupServer } from 'msw/node'
-import { isE2E, readFixture, updateFixture } from './utils'
+import { readFixture, updateFixture } from './utils'
 
 const miscHandlers = [
 	rest.post(
@@ -9,7 +9,7 @@ const miscHandlers = [
 			const body = Object.fromEntries(new URLSearchParams(await req.text()))
 			console.info('🔶 mocked email contents:', body)
 
-			if (isE2E && body.text) {
+			if (body.text) {
 				const fixture = await readFixture()
 				await updateFixture({
 					email: {
@@ -29,7 +29,6 @@ const server = setupServer(...miscHandlers)
 
 server.listen({ onUnhandledRequest: 'warn' })
 console.info('🔶 Mock server installed')
-if (isE2E) console.info('running in E2E mode')
 
 process.once('SIGINT', () => server.close())
 process.once('SIGTERM', () => server.close())

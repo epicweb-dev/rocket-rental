@@ -23,6 +23,11 @@ export async function loader({ params }: LoaderArgs) {
 					userId: true,
 					bio: true,
 					createdAt: true,
+					_count: {
+						select: {
+							bookings: true,
+						},
+					},
 					reviews: {
 						select: {
 							createdAt: true,

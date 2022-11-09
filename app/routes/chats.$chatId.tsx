@@ -6,12 +6,12 @@ import {
 	useLoaderData,
 	useParams,
 } from '@remix-run/react'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
 import { requireUserId } from '~/services/auth.server'
 import { chatEmitter, EVENTS } from '~/services/chat.server'
-import { useEventSource, useRevalidator } from '~/utils/hooks'
+import { useEventSource } from '~/utils/hooks'
 import type { Message, NewMessageChange } from './chats.$chatId.events'
 import { isNewMessageChange } from './chats.$chatId.events'
 

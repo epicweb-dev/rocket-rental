@@ -43,10 +43,6 @@ We use Playwright for our End-to-End tests in this project. You'll find those in
 the `tests` directory. As you make changes, add to an existing file or create a
 new file in the `tests` directory to test your changes.
 
-We use
-[`@playwright-testing-library/test`](https://www.npmjs.com/package/@playwright-testing-library/test)
-for selecting elements on the page semantically.
-
 To run these tests in development, run `npm run test:e2e:dev` which will start
 the dev server for the app and run Playwright on it.
 

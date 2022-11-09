@@ -15,30 +15,26 @@ function extractUrl(text: string) {
 	return match?.groups?.url
 }
 
-test('onboarding', async ({ page, screen }) => {
+test('onboarding', async ({ page }) => {
 	const loginForm = makeLoginForm()
 
 	await page.goto('/')
 
-	await (await screen.findByRole('link', { name: /log in/i })).click()
+	await page.getByRole('link', { name: /log in/i }).click()
 	await expect(page).toHaveURL(`/login`)
 
-	const newHereLink = await screen.findByRole('link', { name: /new here/i })
+	const newHereLink = page.getByRole('link', { name: /new here/i })
 	await newHereLink.click()
 
 	await expect(page).toHaveURL(`/signup`)
 
-	const emailTextbox = await screen.findByRole('textbox', { name: /email/i })
+	const emailTextbox = page.getByRole('textbox', { name: /email/i })
 	await emailTextbox.click()
 	await emailTextbox.fill(loginForm.email)
 
-	await (await screen.findByRole('button', { name: /submit/i })).click()
-	await expect(
-		await screen.findByRole('button', { name: /submitting/i }),
-	).toBeVisible()
-	await expect(
-		await screen.findByRole('button', { name: /submit$/i }),
-	).toBeVisible()
+	await page.getByRole('button', { name: /submit/i }).click()
+	await expect(page.getByRole('button', { name: /submitting/i })).toBeVisible()
+	await expect(page.getByRole('button', { name: /submit$/i })).toBeVisible()
 	const email = await readEmail(loginForm.email)
 	invariant(email, 'Email not found')
 	expect(email.to).toBe(loginForm.email)
@@ -49,57 +45,51 @@ test('onboarding', async ({ page, screen }) => {
 	await page.goto(onboardingUrl)
 
 	await expect(page).toHaveURL(`/onboarding`)
-	await (
-		await screen.findByRole('textbox', { name: /username/i })
-	).fill(loginForm.username)
+	await page
+		.getByRole('textbox', { name: /username/i })
+		.fill(loginForm.username)
 
-	await (
-		await screen.findByRole('textbox', { name: /^name$/i })
-	).fill(loginForm.name)
+	await page.getByRole('textbox', { name: /^name$/i }).fill(loginForm.name)
 
-	await (await screen.findByLabelText(/^password$/i)).fill(loginForm.password)
+	await page.getByLabel(/^password$/i).fill(loginForm.password)
 
-	await (
-		await screen.findByLabelText(/^confirm password$/i)
-	).fill(loginForm.password)
+	await page.getByLabel(/^confirm password$/i).fill(loginForm.password)
 
-	await (await screen.findByRole('checkbox', { name: /terms/i })).check()
+	await page.getByRole('checkbox', { name: /terms/i }).check()
 
-	await (await screen.findByRole('checkbox', { name: /offers/i })).check()
+	await page.getByRole('checkbox', { name: /offers/i }).check()
 
-	await (await screen.findByRole('checkbox', { name: /remember me/i })).check()
+	await page.getByRole('checkbox', { name: /remember me/i }).check()
 
-	await (await screen.findByRole('button', { name: /sign up/i })).click()
+	await page.getByRole('button', { name: /sign up/i }).click()
 
 	await expect(page).toHaveURL(`/`)
 
-	await (await screen.findByRole('link', { name: loginForm.name })).click()
+	await page.getByRole('link', { name: loginForm.name }).click()
 
 	await expect(page).toHaveURL(`/users/${loginForm.username}`)
 
-	await (await screen.findByRole('button', { name: /logout/i })).click()
+	await page.getByRole('button', { name: /logout/i }).click()
 	await expect(page).toHaveURL(`/`)
 
 	await deleteUserByUsername(loginForm.username)
 })
 
-test('login as existing user', async ({ page, screen }) => {
+test('login as existing user', async ({ page }) => {
 	const password = faker.internet.password()
 	const user = await insertNewUser({ password })
 	invariant(user.name, 'User name not found')
 	await page.goto('/login')
-	await (
-		await screen.findByRole('textbox', { name: /username/i })
-	).fill(user.username)
-	await (await screen.findByLabelText(/^password$/i)).fill(password)
-	await (await screen.findByRole('button', { name: /log in/i })).click()
+	await page.getByRole('textbox', { name: /username/i }).fill(user.username)
+	await page.getByLabel(/^password$/i).fill(password)
+	await page.getByRole('button', { name: /log in/i }).click()
 	await expect(page).toHaveURL(`/`)
 
-	await (await screen.findByRole('link', { name: user.name })).click()
+	await page.getByRole('link', { name: user.name }).click()
 
 	await expect(page).toHaveURL(`/users/${user.username}`)
 
-	const logoutButton = await screen.findByRole('button', { name: /logout/i })
+	const logoutButton = page.getByRole('button', { name: /logout/i })
 	await expect(logoutButton).toContainText(user.name)
 	await expect(logoutButton).toBeVisible()
 
@@ -107,28 +97,22 @@ test('login as existing user', async ({ page, screen }) => {
 	await expect(page).toHaveURL(`/`)
 })
 
-test('reset password', async ({ page, screen }) => {
+test('reset password', async ({ page }) => {
 	const originalPassword = faker.internet.password()
 	const user = await insertNewUser({ password: originalPassword })
 	invariant(user.name, 'User name not found')
 	await page.goto('/login')
 
-	await (await screen.findByRole('link', { name: /forgot password/i })).click()
+	await page.getByRole('link', { name: /forgot password/i }).click()
 	await expect(page).toHaveURL('/forgot-password')
 
 	await expect(
-		await screen.findByRole('heading', { name: /forgot password/i }),
+		page.getByRole('heading', { name: /forgot password/i }),
 	).toBeVisible()
-	await (
-		await screen.findByRole('textbox', { name: /username/i })
-	).fill(user.username)
-	await (await screen.findByRole('button', { name: /submit/i })).click()
-	await expect(
-		await screen.findByRole('button', { name: /submitting/i }),
-	).toBeVisible()
-	await expect(
-		await screen.findByRole('button', { name: /submit$/i }),
-	).toBeVisible()
+	await page.getByRole('textbox', { name: /username/i }).fill(user.username)
+	await page.getByRole('button', { name: /submit/i }).click()
+	await expect(page.getByRole('button', { name: /submitting/i })).toBeVisible()
+	await expect(page.getByRole('button', { name: /submit$/i })).toBeVisible()
 
 	const email = await readEmail(user.email)
 	invariant(email, 'Email not found')
@@ -141,32 +125,28 @@ test('reset password', async ({ page, screen }) => {
 
 	await expect(page).toHaveURL(`/reset-password`)
 	const newPassword = faker.internet.password()
-	await (await screen.findByLabelText(/^password$/i)).fill(newPassword)
-	await (await screen.findByLabelText(/^confirm password$/i)).fill(newPassword)
+	await page.getByLabel(/^password$/i).fill(newPassword)
+	await page.getByLabel(/^confirm password$/i).fill(newPassword)
 
-	await (await screen.findByRole('button', { name: /reset password/i })).click()
+	await page.getByRole('button', { name: /reset password/i }).click()
 
 	await expect(page).toHaveURL('/login')
-	await (
-		await screen.findByRole('textbox', { name: /username/i })
-	).fill(user.username)
-	await (await screen.findByLabelText(/^password$/i)).fill(originalPassword)
-	await (await screen.findByRole('button', { name: /log in/i })).click()
+	await page.getByRole('textbox', { name: /username/i }).fill(user.username)
+	await page.getByLabel(/^password$/i).fill(originalPassword)
+	await page.getByRole('button', { name: /log in/i }).click()
 
-	await expect(
-		await screen.findByText(/invalid username or password/i),
-	).toBeVisible()
+	await expect(page.getByText(/invalid username or password/i)).toBeVisible()
 
-	await (await screen.findByLabelText(/^password$/i)).fill(newPassword)
-	await (await screen.findByRole('button', { name: /log in/i })).click()
+	await page.getByLabel(/^password$/i).fill(newPassword)
+	await page.getByRole('button', { name: /log in/i }).click()
 
 	await expect(page).toHaveURL(`/`)
 
-	await (await screen.findByRole('link', { name: user.name })).click()
+	await page.getByRole('link', { name: user.name }).click()
 
 	await expect(page).toHaveURL(`/users/${user.username}`)
 
-	const logoutButton = await screen.findByRole('button', { name: /logout/i })
+	const logoutButton = page.getByRole('button', { name: /logout/i })
 	invariant(user.name, 'User name not found')
 	await expect(logoutButton).toContainText(user.name)
 	await expect(logoutButton).toBeVisible()

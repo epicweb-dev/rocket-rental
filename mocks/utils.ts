@@ -2,8 +2,6 @@ import dns from 'dns'
 import fs from 'fs'
 import path from 'path'
 
-export const isE2E = process.env.RUNNING_E2E === 'true'
-
 let connected: boolean | null = null
 
 export async function isConnectedToTheInternet() {
@@ -22,12 +20,39 @@ const mswDataPath = path.join(__dirname, `./msw.local.json`)
 // !! side effect !!
 const clearingFixture = fs.promises.writeFile(mswDataPath, '{}')
 
+function deferred<Resolved extends unknown>() {
+	const def = {} as {
+		promise: Promise<Resolved>
+		resolve: (value: Resolved) => void
+		reject: (error: unknown) => void
+	}
+	const promise = new Promise((resolve, reject) => {
+		Object.assign(def, { resolve, reject })
+	})
+	Object.assign(def, { promise })
+	return def
+}
+
+let updating: ReturnType<typeof deferred> | null = null
+
 export async function updateFixture(updates: Record<string, unknown>) {
-	const mswData = await readFixture()
-	await fs.promises.writeFile(
-		mswDataPath,
-		JSON.stringify({ ...mswData, ...updates }, null, 2),
-	)
+	if (updating) {
+		await updating.promise
+	} else {
+		updating = deferred()
+	}
+	try {
+		const mswData = await readFixture()
+		await fs.promises.writeFile(
+			mswDataPath,
+			JSON.stringify({ ...mswData, ...updates }, null, 2),
+		)
+		updating.resolve('finished updating')
+	} catch (error) {
+		updating.reject(error)
+	} finally {
+		updating = null
+	}
 }
 
 export async function readFixture() {
