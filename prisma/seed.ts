@@ -3,8 +3,13 @@ import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { faker } from '@faker-js/faker'
 import {
+	createBooking,
+	createBrand,
 	createContactInfo,
 	createDateRange,
+	createPassword,
+	createShip,
+	createStarport,
 	createUser,
 	oneDay,
 	typedBoolean,
@@ -20,32 +25,24 @@ async function seed() {
 	await prisma.ship.deleteMany({ where: {} })
 	await prisma.shipBrand.deleteMany({ where: {} })
 	await prisma.starport.deleteMany({ where: {} })
+	await prisma.booking.deleteMany({ where: {} })
+	await prisma.chat.deleteMany({ where: {} })
 
 	const hashedPassword = await bcrypt.hash('kodylovesyou', 10)
 
 	const brands = await Promise.all(
-		Array.from({ length: 10 }, async () => {
+		Array.from({ length: 30 }, async () => {
 			const brand = await prisma.shipBrand.create({
-				data: {
-					name: faker.company.name(),
-					description: faker.company.bs(),
-					imageUrl: faker.image.nature(512, 512, true),
-				},
+				data: createBrand(),
 			})
 			return brand
 		}),
 	)
 
 	const starports = await Promise.all(
-		Array.from({ length: 30 }, async () => {
+		Array.from({ length: 80 }, async () => {
 			const starport = await prisma.starport.create({
-				data: {
-					name: faker.company.name(),
-					description: faker.lorem.sentences(3),
-					imageUrl: faker.image.business(512, 512, true),
-					latitude: Number(faker.address.latitude()),
-					longitude: Number(faker.address.longitude()),
-				},
+				data: createStarport(),
 			})
 			return starport
 		}),
@@ -55,7 +52,7 @@ async function seed() {
 	// renters with bookings and reviews
 	// hosts who are renters also
 	const users = await Promise.all(
-		Array.from({ length: 100 }, async () => {
+		Array.from({ length: 500 }, async () => {
 			const userData = createUser()
 			const user = await prisma.user.create({
 				data: {
@@ -64,9 +61,7 @@ async function seed() {
 						create: createContactInfo(),
 					},
 					password: {
-						create: {
-							hash: bcrypt.hashSync(userData.username.toUpperCase(), 10),
-						},
+						create: createPassword(),
 					},
 				},
 			})
@@ -74,7 +69,7 @@ async function seed() {
 		}),
 	)
 
-	const adminIds = users.slice(0, 10).map(user => user.id)
+	const adminIds = users.slice(0, 50).map(user => user.id)
 	const admins = await Promise.all(
 		adminIds.map(async id => {
 			const admin = await prisma.admin.create({
@@ -86,10 +81,10 @@ async function seed() {
 		}),
 	)
 
-	const hostIds = users.slice(10, 50).map(user => user.id)
+	const hostIds = users.slice(50, 200).map(user => user.id)
 	const hosts = await Promise.all(
 		hostIds.map(async (id, index) => {
-			const shipCount = faker.datatype.number({ min: 1, max: 5 })
+			const shipCount = faker.datatype.number({ min: 1, max: 15 })
 
 			const host = await prisma.host.create({
 				data: {
@@ -102,11 +97,7 @@ async function seed() {
 								return {
 									brandId: faker.helpers.arrayElement(brands).id,
 									starportId: faker.helpers.arrayElement(starports).id,
-									name: faker.lorem.word(),
-									capacity: faker.datatype.number({ min: 1, max: 10 }),
-									description: faker.lorem.sentences(3),
-									imageUrl: faker.image.transport(512, 512, true),
-									dailyCharge: faker.datatype.number({ min: 100, max: 1000 }),
+									...createShip(),
 								}
 							},
 						),
@@ -120,7 +111,7 @@ async function seed() {
 		}),
 	)
 
-	const renterIds = users.slice(40).map(user => user.id)
+	const renterIds = users.slice(150).map(user => user.id)
 	const renters = await Promise.all(
 		renterIds.map(async id => {
 			const renter = await prisma.renter.create({
@@ -164,28 +155,11 @@ async function seed() {
 
 			const bookings = await Promise.all(
 				dates.map(async ({ start, end, renter }) => {
-					const { startDate, endDate } = createDateRange({
-						start,
-						end,
-						maxDays: 10,
-					})
-					const days = Math.ceil(
-						(endDate.getTime() - startDate.getTime()) / oneDay,
-					)
-
-					const createdAt = faker.date.between(
-						startDate.getTime() - oneDay * 10,
-						startDate.getTime() - oneDay,
-					)
 					const booking = await prisma.booking.create({
 						data: {
-							createdAt,
-							updatedAt: createdAt,
 							renterId: renter.userId,
 							shipId: ship.id,
-							startDate,
-							endDate,
-							totalPrice: days * ship.dailyCharge,
+							...createBooking({ start, end, dailyCharge: ship.dailyCharge }),
 						},
 						include: {
 							ship: true,
@@ -203,36 +177,48 @@ async function seed() {
 	const reviews = await Promise.all(
 		pastBookings.map(async booking => {
 			const createdAt = new Date(booking.endDate.getTime() + oneDay)
-			const shipReview = await prisma.shipReview.create({
-				data: {
-					shipId: booking.shipId,
-					renterId: booking.renterId,
-					rating: faker.datatype.number({ min: 1, max: 5 }),
-					description: faker.lorem.sentences(3),
-					createdAt,
-					updatedAt: createdAt,
-				},
-			})
-			const hostReview = await prisma.hostReview.create({
-				data: {
-					hostId: booking.ship.hostId,
-					renterId: booking.renterId,
-					rating: faker.datatype.number({ min: 1, max: 5 }),
-					description: faker.lorem.sentences(3),
-					createdAt,
-					updatedAt: createdAt,
-				},
-			})
-			const renterReview = await prisma.renterReview.create({
-				data: {
-					renterId: booking.renterId,
-					hostId: booking.ship.hostId,
-					rating: faker.datatype.number({ min: 1, max: 5 }),
-					description: faker.lorem.sentences(3),
-					createdAt,
-					updatedAt: createdAt,
-				},
-			})
+			const shipReview =
+				Math.random() > 0.3
+					? await prisma.shipReview.create({
+							data: {
+								shipId: booking.shipId,
+								renterId: booking.renterId,
+								rating: faker.datatype.number({ min: 1, max: 5 }),
+								description: faker.lorem.sentences(3),
+								createdAt,
+								updatedAt: createdAt,
+								bookingId: booking.id,
+							},
+					  })
+					: null
+			const hostReview =
+				Math.random() > 0.3
+					? await prisma.hostReview.create({
+							data: {
+								hostId: booking.ship.hostId,
+								renterId: booking.renterId,
+								rating: faker.datatype.number({ min: 1, max: 5 }),
+								description: faker.lorem.sentences(3),
+								createdAt,
+								updatedAt: createdAt,
+								bookingId: booking.id,
+							},
+					  })
+					: null
+			const renterReview =
+				Math.random() > 0.3
+					? await prisma.renterReview.create({
+							data: {
+								renterId: booking.renterId,
+								hostId: booking.ship.hostId,
+								rating: faker.datatype.number({ min: 1, max: 5 }),
+								description: faker.lorem.sentences(3),
+								createdAt,
+								updatedAt: createdAt,
+								bookingId: booking.id,
+							},
+					  })
+					: null
 			return [shipReview, hostReview, renterReview]
 		}),
 	).then(reviews => reviews.flat())

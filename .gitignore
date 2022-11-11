@@ -6,6 +6,8 @@ node_modules
 
 /prisma/data.db
 /prisma/data.db-journal
+/prisma/data.test.db
+/prisma/data.test.db-journal
 
 /app/styles/tailwind.css
 *.local.*
@@ -13,3 +15,4 @@ node_modules
 /playwright-report/
 /playwright/.cache/
 /mocks/fixtures/*.json
+/coverage

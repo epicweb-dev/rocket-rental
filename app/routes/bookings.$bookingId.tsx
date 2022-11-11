@@ -23,6 +23,15 @@ export async function loader({ request, params }: LoaderArgs) {
 			totalPrice: true,
 			startDate: true,
 			endDate: true,
+			shipReview: true,
+			renterReview: true,
+			hostReview: true,
+			renterId: true,
+			ship: {
+				select: {
+					hostId: true,
+				},
+			},
 		},
 	})
 
@@ -30,16 +39,32 @@ export async function loader({ request, params }: LoaderArgs) {
 		throw new Response('not found', { status: 404 })
 	}
 
-	// you can only review a booking if:
-	// 1. the endDate has past
-	// 2. there's no review yet
-	// 3. it's over two weeks past the endDate
-	const canReview =
-		booking.endDate.getTime() < Date.now() &&
-		!booking.review &&
+	const bookingIsPast = booking.endDate.getTime() < Date.now()
+	const reviewTimeExpired =
 		booking.endDate.getTime() + 1000 * 60 * 60 * 24 * 14 < Date.now()
+	const allReviewsSubmitted =
+		booking.shipReview && booking.renterReview && booking.hostReview
+	const isHost = booking.ship.hostId === userId
+	const isRenter = booking.renterId === userId
 
-	return json({ booking })
+	return json({
+		booking: {
+			...booking,
+			shipReview:
+				isRenter || allReviewsSubmitted || reviewTimeExpired
+					? booking.shipReview
+					: null,
+			renterReview:
+				isRenter || allReviewsSubmitted || reviewTimeExpired
+					? booking.renterReview
+					: null,
+			hostReview:
+				isHost || allReviewsSubmitted || reviewTimeExpired
+					? booking.hostReview
+					: null,
+		},
+		canReview: bookingIsPast && !allReviewsSubmitted && !reviewTimeExpired,
+	})
 }
 
 export default function BookingRoute() {

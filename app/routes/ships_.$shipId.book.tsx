@@ -133,25 +133,28 @@ export default function ShipBookRoute() {
 	}
 	return (
 		<div>
-			{user ? null : <InlineLogin />}
-			<Form method="post">
-				<input type="hidden" name="shipId" value={data.shipId} />
-				<input type="hidden" name="startDate" value={data.startDate} />
-				<input type="hidden" name="endDate" value={data.endDate} />
-				<p>
-					<strong>Start Date:</strong> {data.startDate}
-				</p>
-				<p>
-					<strong>End Date:</strong> {data.endDate}
-				</p>
-				<p>
-					<strong>Total Price:</strong> {data.totalPrice}
-				</p>
-				{/* TODO: add pricing */}
-				<button type="submit" disabled={!user}>
-					Confirm
-				</button>
-			</Form>
+			{user ? (
+				<Form method="post">
+					<input type="hidden" name="shipId" value={data.shipId} />
+					<input type="hidden" name="startDate" value={data.startDate} />
+					<input type="hidden" name="endDate" value={data.endDate} />
+					<p>
+						<strong>Start Date:</strong> {data.startDate}
+					</p>
+					<p>
+						<strong>End Date:</strong> {data.endDate}
+					</p>
+					<p>
+						<strong>Total Price:</strong> {data.totalPrice}
+					</p>
+					{/* TODO: add pricing */}
+					<button type="submit" disabled={!user}>
+						Confirm
+					</button>
+				</Form>
+			) : (
+				<InlineLogin />
+			)}
 			<Link to="..">Cancel</Link>
 		</div>
 	)

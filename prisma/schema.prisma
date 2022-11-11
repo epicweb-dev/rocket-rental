@@ -148,8 +148,13 @@ model Booking {
 
   ship   Ship   @relation(fields: [shipId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   shipId String
+
+  shipReview   ShipReview?
+  hostReview   HostReview?
+  renterReview RenterReview?
 }
 
+/// A review from a renter to a ship
 model ShipReview {
   id          String @id @unique @default(cuid())
   rating      Int
@@ -158,13 +163,18 @@ model ShipReview {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// the renter who reviewed the ship
   renter   Renter @relation(fields: [renterId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
   renterId String
 
-  ship   Ship   @relation(fields: [shipId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  shipId String
+  /// the ship that was reviewed
+  ship      Ship    @relation(fields: [shipId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  shipId    String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  bookingId String  @unique
 }
 
+/// A review from a renter to a host
 model HostReview {
   id          String @id @unique @default(cuid())
   rating      Int
@@ -173,13 +183,18 @@ model HostReview {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// the renter who reviewed the host
   renter   Renter @relation(fields: [renterId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
   renterId String
 
-  host   Host   @relation(fields: [hostId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
-  hostId String
+  /// the host that was reviewed
+  host      Host    @relation(fields: [hostId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  hostId    String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  bookingId String  @unique
 }
 
+/// A review from a host to a renter
 model RenterReview {
   id          String @id @unique @default(cuid())
   rating      Int
@@ -188,11 +203,15 @@ model RenterReview {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// the host who reviewed the renter
   renter   Renter @relation(fields: [renterId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
   renterId String
 
-  host   Host   @relation(fields: [hostId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
-  hostId String
+  /// the renter that was reviewed
+  host      Host    @relation(fields: [hostId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  hostId    String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  bookingId String  @unique
 }
 
 model Chat {

@@ -50,7 +50,7 @@
     "/public/build"
   ],
   "dependencies": {
-    "@prisma/client": "^4.6.0",
+    "@prisma/client": "^4.6.1",
     "@reach/dialog": "^0.17.0",
     "@reach/tabs": "^0.17.0",
     "@remix-run/node": "^1.7.5",
@@ -97,8 +97,8 @@
     "postcss": "^8.4.16",
     "prettier": "2.7.1",
     "prettier-plugin-tailwindcss": "^0.1.13",
-    "prisma": "^4.6.0",
-    "remix-flat-routes": "^0.4.3",
+    "prisma": "^4.6.1",
+    "remix-flat-routes": "^0.4.4",
     "start-server-and-test": "^1.14.0",
     "tailwindcss": "^3.1.8",
     "ts-node": "^10.9.1",
@@ -106,7 +106,8 @@
     "typescript": "^4.8.3",
     "vite": "^3.1.0",
     "vite-tsconfig-paths": "^3.5.0",
-    "vitest": "^0.23.2"
+    "vitest": "^0.23.2",
+    "vitest-mock-extended": "^1.0.7"
   },
   "engines": {
     "node": ">=18"

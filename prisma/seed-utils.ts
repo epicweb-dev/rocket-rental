@@ -1,5 +1,6 @@
 import type * as P from '@prisma/client'
 import { faker } from '@faker-js/faker'
+import bcrypt from 'bcryptjs'
 
 export function createContactInfo(): Omit<
 	P.ContactInfo,
@@ -23,7 +24,11 @@ export function createUser(): Omit<P.User, 'id' | 'createdAt' | 'updatedAt'> {
 
 	const firstName = faker.name.firstName(gender)
 	const lastName = faker.name.lastName()
-	const username = faker.internet.userName(firstName, lastName).toLowerCase()
+
+	const username = faker.helpers.unique(faker.internet.userName, [
+		firstName.toLowerCase(),
+		lastName.toLowerCase(),
+	])
 	const imageGender = gender === 'female' ? 'women' : 'men'
 	const imageNumber = faker.datatype.number({ min: 0, max: 99 })
 	return {
@@ -50,6 +55,69 @@ export function createDateRange({
 	return {
 		startDate: randomStart,
 		endDate: faker.date.between(endStartRange, endEndRange),
+	}
+}
+
+export function createBrand() {
+	return {
+		name: faker.company.name(),
+		description: faker.company.bs(),
+		imageUrl: faker.image.nature(512, 512, true),
+	}
+}
+
+export function createStarport() {
+	return {
+		name: faker.company.name(),
+		description: faker.lorem.sentences(3),
+		imageUrl: faker.image.business(512, 512, true),
+		latitude: Number(faker.address.latitude()),
+		longitude: Number(faker.address.longitude()),
+	}
+}
+
+export function createPassword(username: string = faker.internet.userName()) {
+	return {
+		hash: bcrypt.hashSync(username.toUpperCase(), 10),
+	}
+}
+
+export function createShip() {
+	return {
+		name: faker.lorem.word(),
+		capacity: faker.datatype.number({ min: 1, max: 10 }),
+		description: faker.lorem.sentences(3),
+		imageUrl: faker.image.transport(512, 512, true),
+		dailyCharge: faker.datatype.number({ min: 100, max: 1000 }),
+	}
+}
+
+export function createBooking({
+	start,
+	end,
+	dailyCharge,
+}: {
+	start: Date
+	end: Date
+	dailyCharge: number
+}) {
+	const { startDate, endDate } = createDateRange({
+		start,
+		end,
+		maxDays: 10,
+	})
+	const days = Math.ceil((endDate.getTime() - startDate.getTime()) / oneDay)
+
+	const createdAt = faker.date.between(
+		startDate.getTime() - oneDay * 10,
+		startDate.getTime() - oneDay,
+	)
+	return {
+		createdAt,
+		updatedAt: createdAt,
+		startDate,
+		endDate,
+		totalPrice: days * dailyCharge,
 	}
 }
 

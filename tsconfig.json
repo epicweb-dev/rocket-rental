@@ -16,7 +16,9 @@
 		"forceConsistentCasingInFileNames": true,
 		"baseUrl": ".",
 		"paths": {
-			"~/*": ["./app/*"]
+			"~/*": ["./app/*"],
+			"prisma/*": ["./prisma/*"],
+			"test/*": ["./test/*"]
 		},
 		"skipLibCheck": true,
 
