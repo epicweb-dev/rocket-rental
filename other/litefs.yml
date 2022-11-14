@@ -4,7 +4,7 @@ mount-dir: '${FLY_LITEFS_DIR}'
 # The path to where the underlying volume mount is.
 data-dir: '/data'
 
-candidate: "${FLY_REGION == 'dfw'}"
+candidate: ${FLY_REGION == 'dfw'}
 
 # These environment variables will be available in your Fly.io application.
 # You must specify "experiement.enable_consul" for FLY_CONSUL_URL to be available.
