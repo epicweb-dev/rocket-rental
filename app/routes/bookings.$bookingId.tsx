@@ -26,13 +26,16 @@ export async function loader({ request, params }: DataFunctionArgs) {
 		select: {
 			id: true,
 			renter: {
-				select: { user: { select: { id: true, name: true } } },
+				select: { user: { select: { id: true, name: true, imageUrl: true } } },
 			},
 			ship: {
 				select: {
 					name: true,
+					imageUrl: true,
 					host: {
-						select: { user: { select: { id: true, name: true } } },
+						select: {
+							user: { select: { id: true, name: true, imageUrl: true } },
+						},
 					},
 				},
 			},
@@ -305,7 +308,16 @@ export default function BookingRoute() {
 					{data.canReview ? (
 						<>
 							<div>
-								<h3>Review {data.booking.ship.name} 🚀</h3>
+								<div className="flex gap-4">
+									{data.booking.ship.imageUrl ? (
+										<img
+											className="h-16 w-16 rounded-full"
+											src={data.booking.ship.imageUrl}
+											alt={data.booking.ship.name}
+										/>
+									) : null}
+									<h3>Review {data.booking.ship.name}</h3>
+								</div>
 								<shipReviewFetcher.Form
 									method="post"
 									noValidate
@@ -361,7 +373,16 @@ export default function BookingRoute() {
 								</shipReviewFetcher.Form>
 							</div>
 							<div>
-								<h3>Review {data.booking.ship.host.user.name} 👤</h3>
+								<div className="flex gap-4">
+									{data.booking.ship.host.user.imageUrl ? (
+										<img
+											className="h-16 w-16 rounded-full"
+											src={data.booking.ship.host.user.imageUrl}
+											alt={data.booking.ship.host.user.name ?? ''}
+										/>
+									) : null}
+									<h3>Review {data.booking.ship.host.user.name}</h3>
+								</div>
 								<hostReviewFetcher.Form
 									method="post"
 									noValidate
@@ -417,16 +438,23 @@ export default function BookingRoute() {
 								</hostReviewFetcher.Form>
 							</div>
 						</>
-					) : (
-						<div>Show reviews here</div>
-					)}
+					) : null}
 				</div>
 			) : null}
 			{isHost ? (
 				<div>
 					{data.canReview ? (
 						<div>
-							<h3>Review {data.booking.renter.user.name} 👤</h3>
+							<div className="flex gap-4">
+								{data.booking.renter.user.imageUrl ? (
+									<img
+										className="h-16 w-16 rounded-full"
+										src={data.booking.renter.user.imageUrl}
+										alt={data.booking.renter.user.name ?? ''}
+									/>
+								) : null}
+								<h3>Review {data.booking.renter.user.name}</h3>
+							</div>
 							<renterReviewFetcher.Form
 								method="post"
 								noValidate
@@ -481,11 +509,85 @@ export default function BookingRoute() {
 								<div>{renterErrorInfo.form.errorUI}</div>
 							</renterReviewFetcher.Form>
 						</div>
-					) : (
-						<div>Show reviews here</div>
-					)}
+					) : null}
 				</div>
 			) : null}
+			{data.canReview ? null : (
+				<div>
+					<h3>Booking Reviews</h3>
+					{data.booking.hostReview ? (
+						<div>
+							<h4>Host Review</h4>
+							<div title={`${data.booking.hostReview.rating} star review`}>
+								{Array.from(
+									{ length: data.booking.hostReview.rating },
+									(_, i) => (
+										<span key={i}>⭐</span>
+									),
+								)}
+							</div>
+							<div className="flex gap-4">
+								{data.booking.renter.user.imageUrl ? (
+									<img
+										className="h-12 w-12 rounded-full"
+										src={data.booking.renter.user.imageUrl}
+										alt={data.booking.renter.user.name ?? ''}
+									/>
+								) : null}{' '}
+								{data.booking.hostReview.description}
+							</div>
+						</div>
+					) : null}
+
+					{data.booking.shipReview ? (
+						<div>
+							<h4>Ship Review</h4>
+							<div title={`${data.booking.shipReview.rating} star review`}>
+								{Array.from(
+									{ length: data.booking.shipReview.rating },
+									(_, i) => (
+										<span key={i}>⭐</span>
+									),
+								)}
+							</div>
+							<div className="flex gap-4">
+								{data.booking.renter.user.imageUrl ? (
+									<img
+										className="h-12 w-12 rounded-full"
+										src={data.booking.renter.user.imageUrl}
+										alt={data.booking.renter.user.name ?? ''}
+									/>
+								) : null}{' '}
+								{data.booking.shipReview.description}
+							</div>
+						</div>
+					) : null}
+
+					{data.booking.renterReview ? (
+						<div>
+							<h4>Renter Review</h4>
+							<div title={`${data.booking.renterReview.rating} star review`}>
+								{Array.from(
+									{ length: data.booking.renterReview.rating },
+									(_, i) => (
+										<span key={i}>⭐</span>
+									),
+								)}
+							</div>
+							<div className="flex gap-4">
+								{data.booking.ship.host.user.imageUrl ? (
+									<img
+										className="h-12 w-12 rounded-full"
+										src={data.booking.ship.host.user.imageUrl}
+										alt={data.booking.ship.host.user.name ?? ''}
+									/>
+								) : null}{' '}
+								{data.booking.renterReview.description}
+							</div>
+						</div>
+					) : null}
+				</div>
+			)}
 		</div>
 	)
 }
