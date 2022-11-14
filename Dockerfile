@@ -1,11 +1,13 @@
+FROM flyio/litefs:sha-99b891e AS litefs
+
 # base node image
-FROM node:18-bullseye-slim as base
+FROM node:16-bullseye-slim as base
 
 # set for base and all layer that inherit from it
 ENV NODE_ENV production
 
 # Install openssl for Prisma
-RUN apt-get update && apt-get install -y openssl sqlite3
+RUN apt-get update && apt-get install -y fuse openssl sqlite3 ca-certificates
 
 # Install all node_modules, including dev dependencies
 FROM base as deps
@@ -40,7 +42,9 @@ RUN npm run build
 # Finally, build the production image with minimal footprint
 FROM base
 
-ENV DATABASE_URL=file:/data/sqlite.db
+ENV FLY="true"
+ENV FLY_LITEFS_DIR="/litefs/data"
+ENV DATABASE_URL="file:$FLY_LITEFS_DIR/sqlite.db"
 ENV PORT="8080"
 ENV NODE_ENV="production"
 
@@ -55,7 +59,12 @@ COPY --from=build /myapp/node_modules/.prisma /myapp/node_modules/.prisma
 COPY --from=build /myapp/build /myapp/build
 COPY --from=build /myapp/public /myapp/public
 COPY --from=build /myapp/package.json /myapp/package.json
-COPY --from=build /myapp/start.sh /myapp/start.sh
+COPY --from=build /myapp/other/start.js /myapp/other/start.js
 COPY --from=build /myapp/prisma /myapp/prisma
 
-ENTRYPOINT [ "./start.sh" ]
+# prepare for litefs
+COPY --from=litefs /usr/local/bin/litefs /usr/local/bin/litefs
+ADD other/litefs.yml /etc/litefs.yml
+RUN mkdir -p /data /litefs/data
+
+CMD ["litefs", "--", "node", "./other/start.js"]
