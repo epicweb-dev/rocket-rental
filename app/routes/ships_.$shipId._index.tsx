@@ -7,7 +7,7 @@ import {
 import { Form, useLoaderData, useParams, useActionData } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import * as df from 'date-fns'
-import { commitSession, getSession } from '~/services/session.server'
+import { commitSession, getSession } from '~/utils/session.server'
 import {
 	Booker,
 	bookingSessionKey,

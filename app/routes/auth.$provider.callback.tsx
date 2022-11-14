@@ -1,6 +1,6 @@
 import type { LoaderArgs } from '@remix-run/server-runtime'
 import invariant from 'tiny-invariant'
-import { authenticator } from '~/services/auth.server'
+import { authenticator } from '~/utils/auth.server'
 
 export function loader({ request, params }: LoaderArgs) {
 	invariant(typeof params.provider === 'string', 'provider is required')

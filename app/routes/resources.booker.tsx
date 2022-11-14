@@ -4,7 +4,7 @@ import type { ActionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
-import { commitSession, getSession } from '~/services/session.server'
+import { commitSession, getSession } from '~/utils/session.server'
 
 export const bookingSessionKey = 'bookingRange'
 

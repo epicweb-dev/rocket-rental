@@ -9,7 +9,7 @@ import {
 	ScrollRestoration,
 } from '@remix-run/react'
 import { getUserById } from './models/user.server'
-import { authenticator } from './services/auth.server'
+import { authenticator } from './utils/auth.server'
 
 import tailwindStylesheetUrl from './styles/tailwind.css'
 import { links as vendorLinks } from './utils/vendor.css'

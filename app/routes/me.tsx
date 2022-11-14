@@ -1,7 +1,7 @@
 import type { LoaderArgs } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { prisma } from '~/db.server'
-import { authenticator, requireUserId } from '~/services/auth.server'
+import { authenticator, requireUserId } from '~/utils/auth.server'
 
 export async function loader({ request }: LoaderArgs) {
 	const userId = await requireUserId(request)

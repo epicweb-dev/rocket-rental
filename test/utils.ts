@@ -1,5 +1,5 @@
-import { authenticator } from '~/services/auth.server'
-import { commitSession, getSession } from '~/services/session.server'
+import { authenticator } from '~/utils/auth.server'
+import { commitSession, getSession } from '~/utils/session.server'
 
 export const BASE_URL = 'https://rocketrental.space'
 

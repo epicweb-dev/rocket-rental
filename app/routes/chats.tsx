@@ -2,7 +2,7 @@ import type { LoaderArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Outlet, useLoaderData } from '@remix-run/react'
 import { prisma } from '~/db.server'
-import { requireUserId } from '~/services/auth.server'
+import { requireUserId } from '~/utils/auth.server'
 
 export async function loader({ request }: LoaderArgs) {
 	const userId = await requireUserId(request)

@@ -1,6 +1,6 @@
 import type { ActionArgs } from '@remix-run/server-runtime'
 import { redirect } from '@remix-run/node'
-import { authenticator } from '~/services/auth.server'
+import { authenticator } from '~/utils/auth.server'
 import invariant from 'tiny-invariant'
 
 export function loader() {

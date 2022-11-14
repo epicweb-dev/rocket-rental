@@ -12,8 +12,8 @@ import {
 	validatePassword,
 	validateUsername,
 } from '~/utils/user-validation'
-import { authenticator } from '~/services/auth.server'
-import { commitSession, getSession } from '~/services/session.server'
+import { authenticator } from '~/utils/auth.server'
+import { commitSession, getSession } from '~/utils/session.server'
 
 export async function action({ request }: ActionArgs) {
 	const formData = await request.clone().formData()

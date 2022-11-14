@@ -14,7 +14,7 @@ import {
 } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
-import { getUserId, requireUserId } from '~/services/auth.server'
+import { getUserId, requireUserId } from '~/utils/auth.server'
 import { useOptionalUser } from '~/utils/misc'
 
 export async function loader({ params, request }: LoaderArgs) {

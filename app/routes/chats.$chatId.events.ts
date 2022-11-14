@@ -1,7 +1,7 @@
 import type { LoaderArgs } from '@remix-run/node'
 import { prisma } from '~/db.server'
-import { requireUserId } from '~/services/auth.server'
-import { EVENTS, chatEmitter } from '~/services/chat.server'
+import { requireUserId } from '~/utils/auth.server'
+import { EVENTS, chatEmitter } from '~/utils/chat.server'
 import { eventStream } from '~/utils/event-stream.server'
 
 export type Message = {
