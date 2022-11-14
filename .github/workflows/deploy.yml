@@ -107,7 +107,7 @@ jobs:
         with:
           useLockFile: false
 
-      - name: Install Playwright Browsers
+      - name: 📥 Install Playwright Browsers
         run: npx playwright install --with-deps
 
       - name: 🛠 Setup Database
