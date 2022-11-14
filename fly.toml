@@ -4,6 +4,7 @@ kill_timeout = 5
 processes = [ ]
 
 [experimental]
+enable_consul = true
 allowed_public_ports = [ ]
 auto_rollback = true
 
