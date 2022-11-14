@@ -1,4 +1,4 @@
-import type { ActionArgs, LoaderArgs } from '@remix-run/node'
+import type { DataFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
 	useCatch,
@@ -11,7 +11,7 @@ import { prisma } from '~/db.server'
 import { requireUserId } from '~/utils/auth.server'
 import { useOptionalUser } from '~/utils/misc'
 
-export async function loader({ params }: LoaderArgs) {
+export async function loader({ params }: DataFunctionArgs) {
 	invariant(params.username, 'Missing username')
 	const user = await prisma.user.findUnique({
 		where: { username: params.username },
@@ -97,7 +97,7 @@ function validateBio(bio: string) {
 	return null
 }
 
-export async function action({ request, params }: ActionArgs) {
+export async function action({ request, params }: DataFunctionArgs) {
 	invariant(typeof params.username === 'string', 'Missing username param')
 	const userId = await requireUserId(request)
 	const user = await prisma.user.findUnique({

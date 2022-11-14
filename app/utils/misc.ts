@@ -1,5 +1,5 @@
 import { useMatches } from '@remix-run/react'
-import { useMemo } from 'react'
+import { cloneElement, useMemo } from 'react'
 
 import type { User } from '~/models/user.server'
 
@@ -70,9 +70,34 @@ export function validateEmail(email: unknown): email is string {
 	return typeof email === 'string' && email.length > 3 && email.includes('@')
 }
 
-// This is a CIF and we can ditch it as soon as TypeScript 4.9.0 is released
-// More info: https://kentcdodds.com/blog/how-to-write-a-constrained-identity-function-in-typescript
-export const constrain =
-	<Given extends unknown>() =>
-	<Inferred extends Given>(item: Inferred) =>
-		item
+export function getErrorInfo<Key extends string>({
+	idPrefix,
+	errors,
+	names,
+	ui,
+}: {
+	idPrefix?: string
+	errors: Record<string, string | null> | null | undefined
+	names: Array<Key>
+	ui: React.ReactElement
+}) {
+	const info = names.reduce((acc, name) => {
+		if (errors?.[name]) {
+			const errorElId = [idPrefix, name, 'error'].filter(Boolean).join('-')
+			acc[name] = {
+				fieldProps: {
+					'aria-invalid': true,
+					'aria-describedby': errorElId,
+				},
+				errorUI: cloneElement(ui, {
+					id: errorElId,
+					children: errors[name],
+				}),
+			}
+		} else {
+			acc[name] = {}
+		}
+		return acc
+	}, {} as Record<Key, { fieldProps?: { 'aria-invalid': true; 'aria-describedby': string }; errorUI?: React.ReactElement }>)
+	return info
+}

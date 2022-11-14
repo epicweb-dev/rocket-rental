@@ -1,4 +1,4 @@
-import type { ActionArgs, LoaderArgs, MetaFunction } from '@remix-run/node'
+import type { DataFunctionArgs, MetaFunction } from '@remix-run/node'
 import { json, redirect } from '@remix-run/node'
 import {
 	Form,
@@ -24,10 +24,10 @@ import {
 } from '~/utils/user-validation'
 import { authenticator } from '~/utils/auth.server'
 import { commitSession, getSession } from '~/utils/session.server'
-import { safeRedirect } from '~/utils/misc'
+import { getErrorInfo, safeRedirect } from '~/utils/misc'
 import { onboardingEmailSessionKey } from './signup'
 
-export async function loader({ request }: LoaderArgs) {
+export async function loader({ request }: DataFunctionArgs) {
 	await authenticator.isAuthenticated(request, {
 		successRedirect: '/',
 	})
@@ -47,7 +47,7 @@ export async function loader({ request }: LoaderArgs) {
 	)
 }
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: DataFunctionArgs) {
 	const session = await getSession(request.headers.get('cookie'))
 	const email = session.get(onboardingEmailSessionKey)
 	if (typeof email !== 'string' || !email) {
@@ -122,35 +122,6 @@ export const meta: MetaFunction = () => {
 	return {
 		title: 'Setup Rocket Rental Account',
 	}
-}
-
-function getErrorInfo<Key extends string>({
-	errors,
-	names,
-	ui,
-}: {
-	errors: Record<string, string | null> | undefined
-	names: Array<Key>
-	ui: React.ReactElement
-}) {
-	const info = names.reduce((acc, name) => {
-		if (errors?.[name]) {
-			acc[name] = {
-				fieldProps: {
-					'aria-invalid': true,
-					'aria-describedby': `${name}-error`,
-				},
-				errorUI: React.cloneElement(ui, {
-					id: `${name}-error`,
-					children: errors[name],
-				}),
-			}
-		} else {
-			acc[name] = {}
-		}
-		return acc
-	}, {} as Record<Key, { fieldProps?: { 'aria-invalid': true; 'aria-describedby': string }; errorUI?: React.ReactElement }>)
-	return info
 }
 
 export default function OnboardingPage() {

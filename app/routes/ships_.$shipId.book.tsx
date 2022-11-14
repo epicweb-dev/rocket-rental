@@ -1,4 +1,4 @@
-import type { ActionArgs, LoaderArgs } from '@remix-run/node'
+import type { DataFunctionArgs } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Form, useActionData, useLoaderData } from '@remix-run/react'
@@ -48,7 +48,7 @@ async function calculateTotalPrice({
 	return Math.ceil(totalPrice)
 }
 
-export async function loader({ request, params }: LoaderArgs) {
+export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.shipId, 'Missing shipId')
 	const session = await getSession(request.headers.get('cookie'))
 	const booking = session.get(bookingSessionKey)
@@ -70,7 +70,7 @@ export async function loader({ request, params }: LoaderArgs) {
 	return json({ startDate, endDate, shipId, totalPrice })
 }
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: DataFunctionArgs) {
 	const userId = await requireUserId(request)
 	const formData = await request.formData()
 	const result = validateBookerForm(formData)

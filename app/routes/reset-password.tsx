@@ -1,4 +1,4 @@
-import type { ActionArgs, LoaderArgs, MetaFunction } from '@remix-run/node'
+import type { DataFunctionArgs, MetaFunction } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
@@ -20,7 +20,7 @@ import { authenticator } from '~/utils/auth.server'
 import { commitSession, getSession } from '~/utils/session.server'
 import { resetPasswordSessionKey } from './forgot-password'
 
-export async function loader({ request }: LoaderArgs) {
+export async function loader({ request }: DataFunctionArgs) {
 	await authenticator.isAuthenticated(request, {
 		successRedirect: '/',
 	})
@@ -40,7 +40,7 @@ export async function loader({ request }: LoaderArgs) {
 	)
 }
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: DataFunctionArgs) {
 	const formData = await request.formData()
 	const { password, confirmPassword } = Object.fromEntries(formData)
 	invariant(typeof password === 'string', 'password type invalid')

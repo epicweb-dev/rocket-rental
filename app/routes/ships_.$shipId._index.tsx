@@ -1,8 +1,8 @@
 import {
 	redirect,
 	json,
-	type ActionArgs,
-	type LoaderArgs,
+	type DataFunctionArgs,
+	type DataFunctionArgs,
 } from '@remix-run/node'
 import { Form, useLoaderData, useParams, useActionData } from '@remix-run/react'
 import invariant from 'tiny-invariant'
@@ -15,7 +15,7 @@ import {
 	validateBookerForm,
 } from './resources.booker'
 
-export async function loader({ request, params }: LoaderArgs) {
+export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.shipId, 'Missing shipId')
 	const session = await getSession(request.headers.get('cookie'))
 	const { startDate, endDate } = session.get(bookingSessionKey) ?? {}
@@ -36,7 +36,7 @@ export async function loader({ request, params }: LoaderArgs) {
 	})
 }
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: DataFunctionArgs) {
 	const formData = await request.formData()
 	const result = validateBookerForm(formData)
 	if (!result.ok) {

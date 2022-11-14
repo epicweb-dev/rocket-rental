@@ -1,4 +1,4 @@
-import type { ActionArgs, LoaderArgs, MetaFunction } from '@remix-run/node'
+import type { DataFunctionArgs, MetaFunction } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
@@ -13,7 +13,7 @@ export const resetPasswordSessionKey = 'resetPasswordToken'
 const resetPasswordTokenQueryParam = 'token'
 const tokenType = 'forgot-password'
 
-export async function loader({ request }: LoaderArgs) {
+export async function loader({ request }: DataFunctionArgs) {
 	const resetPasswordTokenString = new URL(request.url).searchParams.get(
 		resetPasswordTokenQueryParam,
 	)
@@ -34,7 +34,7 @@ export async function loader({ request }: LoaderArgs) {
 	return json({})
 }
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: DataFunctionArgs) {
 	const formData = await request.formData()
 	const { usernameOrEmail } = Object.fromEntries(formData)
 	invariant(typeof usernameOrEmail === 'string', 'usernameOrEmail type invalid')

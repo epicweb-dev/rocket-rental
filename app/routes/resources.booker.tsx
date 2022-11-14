@@ -1,6 +1,6 @@
 import { useFetcher } from '@remix-run/react'
 import * as df from 'date-fns'
-import type { ActionArgs } from '@remix-run/node'
+import type { DataFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
@@ -69,7 +69,7 @@ export function validateBookerForm(formData: FormData) {
 		: { ok: true, data: { shipId, startDate, endDate } as const }
 }
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: DataFunctionArgs) {
 	const formData = await request.formData()
 
 	const result = validateBookerForm(formData)

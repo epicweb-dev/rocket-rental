@@ -1,5 +1,5 @@
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from '@reach/tabs'
-import type { ActionArgs, LoaderArgs } from '@remix-run/node'
+import type { DataFunctionArgs } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
@@ -17,7 +17,7 @@ import { prisma } from '~/db.server'
 import { getUserId, requireUserId } from '~/utils/auth.server'
 import { useOptionalUser } from '~/utils/misc'
 
-export async function loader({ params, request }: LoaderArgs) {
+export async function loader({ params, request }: DataFunctionArgs) {
 	const loggedInUser = await getUserId(request)
 	invariant(params.username, 'Missing username')
 	const user = await prisma.user.findUnique({
@@ -64,7 +64,7 @@ export async function loader({ params, request }: LoaderArgs) {
 	return json({ user })
 }
 
-export async function action({ request, params }: ActionArgs) {
+export async function action({ request, params }: DataFunctionArgs) {
 	const loggedInUserId = await requireUserId(request)
 	invariant(params.username, 'Missing username')
 	const formData = await request.formData()

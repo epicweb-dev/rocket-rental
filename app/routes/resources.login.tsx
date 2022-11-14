@@ -1,4 +1,4 @@
-import type { ActionArgs } from '@remix-run/node'
+import type { DataFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Link, useFetcher } from '@remix-run/react'
 import { useEffect, useRef } from 'react'
@@ -15,7 +15,7 @@ import {
 import { authenticator } from '~/utils/auth.server'
 import { commitSession, getSession } from '~/utils/session.server'
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: DataFunctionArgs) {
 	const formData = await request.clone().formData()
 	const { username, password, redirectTo, remember } =
 		Object.fromEntries(formData)

@@ -1,10 +1,10 @@
-import type { LoaderArgs } from '@remix-run/node'
+import type { DataFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Link, Outlet, useLoaderData } from '@remix-run/react'
 import { prisma } from '~/db.server'
 import { requireUserId } from '~/utils/auth.server'
 
-export async function loader({ request }: LoaderArgs) {
+export async function loader({ request }: DataFunctionArgs) {
 	const userId = await requireUserId(request)
 	const bookings = await prisma.booking.findMany({
 		where: {

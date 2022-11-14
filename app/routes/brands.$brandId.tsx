@@ -1,10 +1,10 @@
-import type { LoaderArgs } from '@remix-run/node'
+import type { DataFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Outlet, useCatch, useLoaderData, useParams } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
 
-export async function loader({ params }: LoaderArgs) {
+export async function loader({ params }: DataFunctionArgs) {
 	invariant(params.brandId, 'Missing brandId')
 	const shipBrand = await prisma.shipBrand.findFirst({
 		where: { id: params.brandId },

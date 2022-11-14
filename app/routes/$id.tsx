@@ -1,9 +1,9 @@
-import type { LoaderArgs } from '@remix-run/node'
+import type { DataFunctionArgs } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
 
-export async function loader({ params }: LoaderArgs) {
+export async function loader({ params }: DataFunctionArgs) {
 	invariant(params.id, 'Missing id')
 	const user = await prisma.user.findUnique({
 		where: { id: params.id },

@@ -1,9 +1,9 @@
-import type { LoaderArgs } from '@remix-run/node'
+import type { DataFunctionArgs } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { prisma } from '~/db.server'
 import { authenticator, requireUserId } from '~/utils/auth.server'
 
-export async function loader({ request }: LoaderArgs) {
+export async function loader({ request }: DataFunctionArgs) {
 	const userId = await requireUserId(request)
 	const user = await prisma.user.findUnique({ where: { id: userId } })
 	if (!user) {

@@ -1,4 +1,4 @@
-import type { LoaderArgs } from '@remix-run/node'
+import type { DataFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
 	Link,
@@ -10,7 +10,7 @@ import {
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
 
-export async function loader({ params }: LoaderArgs) {
+export async function loader({ params }: DataFunctionArgs) {
 	invariant(params.shipId, 'Missing shipId')
 	const ship = await prisma.ship.findUnique({
 		where: { id: params.shipId },

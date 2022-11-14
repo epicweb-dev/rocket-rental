@@ -1,4 +1,4 @@
-import type { LoaderArgs } from '@remix-run/node'
+import type { DataFunctionArgs } from '@remix-run/node'
 import { prisma } from '~/db.server'
 import { requireUserId } from '~/utils/auth.server'
 import { EVENTS, chatEmitter } from '~/utils/chat.server'
@@ -36,7 +36,7 @@ export function isNewMessageChange(change: any): change is NewMessageChange {
 	)
 }
 
-export async function loader({ request, params }: LoaderArgs) {
+export async function loader({ request, params }: DataFunctionArgs) {
 	const userId = await requireUserId(request)
 	const hasAccess = await prisma.chat.findFirst({
 		where: {

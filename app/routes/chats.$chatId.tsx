@@ -1,4 +1,4 @@
-import type { ActionArgs, LoaderArgs } from '@remix-run/node'
+import type { DataFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
 	useCatch,
@@ -15,7 +15,7 @@ import { useEventSource } from '~/utils/hooks'
 import type { Message, NewMessageChange } from './chats.$chatId.events'
 import { isNewMessageChange } from './chats.$chatId.events'
 
-export async function loader({ request, params }: LoaderArgs) {
+export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.chatId, 'Missing chatId')
 	const userId = await requireUserId(request)
 	const chat = await prisma.chat.findFirst({
@@ -39,7 +39,7 @@ export async function loader({ request, params }: LoaderArgs) {
 	return json({ chat, timestamp: Date.now() })
 }
 
-export async function action({ request, params }: ActionArgs) {
+export async function action({ request, params }: DataFunctionArgs) {
 	const userId = await requireUserId(request)
 	invariant(params.chatId, 'Missing chatId')
 	const formData = await request.formData()

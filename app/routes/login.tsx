@@ -1,4 +1,4 @@
-import type { ActionArgs, LoaderArgs, MetaFunction } from '@remix-run/node'
+import type { DataFunctionArgs, MetaFunction } from '@remix-run/node'
 import { redirect, json } from '@remix-run/node'
 import {
 	Form,
@@ -22,7 +22,7 @@ import { authenticator } from '~/utils/auth.server'
 import { commitSession, getSession } from '~/utils/session.server'
 import { safeRedirect } from '~/utils/misc'
 
-export async function loader({ request }: LoaderArgs) {
+export async function loader({ request }: DataFunctionArgs) {
 	await authenticator.isAuthenticated(request, {
 		successRedirect: '/',
 	})
@@ -38,7 +38,7 @@ export async function loader({ request }: LoaderArgs) {
 	)
 }
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: DataFunctionArgs) {
 	const formData = await request.clone().formData()
 	const { username, password, redirectTo, remember } =
 		Object.fromEntries(formData)

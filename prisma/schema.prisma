@@ -154,7 +154,7 @@ model Booking {
   renterReview RenterReview?
 }
 
-/// A review from a renter to a ship
+/// Review of a ship by the renter
 model ShipReview {
   id          String @id @unique @default(cuid())
   rating      Int
@@ -174,7 +174,7 @@ model ShipReview {
   bookingId String  @unique
 }
 
-/// A review from a renter to a host
+/// Review of a host by the renter
 model HostReview {
   id          String @id @unique @default(cuid())
   rating      Int
@@ -194,7 +194,7 @@ model HostReview {
   bookingId String  @unique
 }
 
-/// A review from a host to a renter
+/// Review by the renter by the host
 model RenterReview {
   id          String @id @unique @default(cuid())
   rating      Int

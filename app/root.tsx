@@ -1,4 +1,8 @@
-import type { LinksFunction, LoaderArgs, MetaFunction } from '@remix-run/node'
+import type {
+	LinksFunction,
+	DataFunctionArgs,
+	MetaFunction,
+} from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
 	Links,
@@ -29,7 +33,7 @@ export function action() {
 	return { ok: true }
 }
 
-export async function loader({ request }: LoaderArgs) {
+export async function loader({ request }: DataFunctionArgs) {
 	const userId = await authenticator.isAuthenticated(request)
 
 	let user: Awaited<ReturnType<typeof getUserById>> | null = null
