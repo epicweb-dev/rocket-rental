@@ -16,3 +16,4 @@ node_modules
 /playwright/.cache/
 /mocks/fixtures/*.json
 /coverage
+/prisma/data.db.bkp

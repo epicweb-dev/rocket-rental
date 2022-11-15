@@ -1,6 +1,5 @@
 import type { Page } from '@playwright/test'
 import { test as base } from '@playwright/test'
-import type { User } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { faker } from '@faker-js/faker'
 import { PrismaClient } from '@prisma/client'
@@ -10,7 +9,14 @@ import { authenticator } from '~/utils/auth.server'
 import { parse } from 'cookie'
 import { readFixture } from '../mocks/utils'
 
-const users = new Set<User>()
+export const dataCleanup = {
+	users: new Set<string>(),
+	ships: new Set<string>(),
+	bookings: new Set<string>(),
+	shipBrands: new Set<string>(),
+	starports: new Set<string>(),
+	chats: new Set<string>(),
+}
 
 type Email = {
 	to: string
@@ -55,33 +61,40 @@ export function makeLoginForm(
 }
 
 export async function insertNewUser({ password }: { password?: string } = {}) {
-	const prisma = new PrismaClient()
-	const userData = createUser()
-	const user = await prisma.user.create({
-		data: {
-			...userData,
-			contactInfo: {
-				create: createContactInfo(),
-			},
-			password: {
-				create: {
-					hash: bcrypt.hashSync(
-						password || userData.username.toUpperCase(),
-						10,
-					),
+	return runPrisma(async prisma => {
+		const userData = createUser()
+		const user = await prisma.user.create({
+			data: {
+				...userData,
+				contactInfo: {
+					create: createContactInfo(),
+				},
+				password: {
+					create: {
+						hash: bcrypt.hashSync(
+							password || userData.username.toUpperCase(),
+							10,
+						),
+					},
 				},
 			},
-		},
+		})
+		dataCleanup.users.add(user.id)
+		return user
 	})
-	await prisma.$disconnect()
-	users.add(user)
-	return user
 }
 
-export async function deleteUserByUsername(username: string) {
+export async function runPrisma<ReturnType>(
+	cb: (prisma: PrismaClient) => Promise<ReturnType>,
+) {
 	const prisma = new PrismaClient()
-	await prisma.user.delete({ where: { username } })
+	const ret = await cb(prisma)
 	await prisma.$disconnect()
+	return ret
+}
+
+export function deleteUserByUsername(username: string) {
+	return runPrisma(prisma => prisma.user.delete({ where: { username } }))
 }
 
 export const test = base.extend<{ login: () => ReturnType<typeof loginPage> }>({
@@ -96,11 +109,13 @@ export const test = base.extend<{ login: () => ReturnType<typeof loginPage> }>({
 export async function loginPage({
 	page,
 	baseURL,
+	user,
 }: {
 	page: Page
 	baseURL: string | undefined
+	user?: { id: string; username: string }
 }) {
-	const user = await insertNewUser()
+	user = user ?? (await insertNewUser())
 	const session = await getSession()
 	session.set(authenticator.sessionKey, user.id)
 	const cookieValue = await commitSession(session)
@@ -121,9 +136,24 @@ export async function loginPage({
 export const { expect } = test
 
 test.afterEach(async () => {
-	const prisma = new PrismaClient()
-	await prisma.user.deleteMany({
-		where: { id: { in: [...users].map(u => u.id) } },
+	await runPrisma(async prisma => {
+		type Delegate = {
+			deleteMany: (opts: {
+				where: { id: { in: Array<string> } }
+			}) => Promise<unknown>
+		}
+		async function deleteAll(items: Set<string>, delegate: Delegate) {
+			if (items.size > 0) {
+				await delegate.deleteMany({
+					where: { id: { in: [...items] } },
+				})
+			}
+		}
+		await deleteAll(dataCleanup.users, prisma.user)
+		await deleteAll(dataCleanup.ships, prisma.ship)
+		await deleteAll(dataCleanup.shipBrands, prisma.shipBrand)
+		await deleteAll(dataCleanup.starports, prisma.starport)
+		await deleteAll(dataCleanup.bookings, prisma.booking)
+		await deleteAll(dataCleanup.chats, prisma.chat)
 	})
-	await prisma.$disconnect()
 })
