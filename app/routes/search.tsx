@@ -1,5 +1,4 @@
 import type { DataFunctionArgs } from '@remix-run/node'
-import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
 	Form,
@@ -10,56 +9,65 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
+import { getClosestStarport } from '~/utils/geo.server'
 import { CityCombobox } from './resources.city-combobox'
 import { StarportCombobox } from './resources.starport-combobox'
+
+async function getSearchResultsForStarport(starportId: string) {
+	const ships = await prisma.ship.findMany({
+		where: { starport: { id: starportId } },
+		select: {
+			id: true,
+			brandId: true,
+			hostId: true,
+			starportId: true,
+			imageUrl: true,
+			name: true,
+		},
+		take: 50,
+	})
+	const brands = await prisma.shipBrand.findMany({
+		where: { id: { in: [...new Set(ships.map(ship => ship.brandId))] } },
+		select: { id: true },
+	})
+	const hosts = await prisma.host.findMany({
+		where: { userId: { in: [...new Set(ships.map(ship => ship.hostId))] } },
+		select: { userId: true },
+	})
+	const starports = await prisma.starport.findMany({
+		where: { id: { in: [...new Set(ships.map(ship => ship.starportId))] } },
+		select: { id: true, name: true },
+	})
+	return { ships, brands, hosts, starports }
+}
 
 export async function loader({ request }: DataFunctionArgs) {
 	const searchParams = new URL(request.url).searchParams
 	const searchType = searchParams.get('searchType')
+	const noResults = {
+		searchType: 'none',
+		ships: [],
+		starports: [],
+		brands: [],
+		hosts: [],
+		cities: [],
+		distance: null,
+	} as const
 	if (!searchType) {
-		return json({
-			searchType: 'none',
-			ships: [],
-			starports: [],
-			brands: [],
-			hosts: [],
-			cities: [],
-		} as const)
+		return json(noResults)
 	}
 
 	switch (searchType) {
 		case 'starportName': {
 			const starportId = searchParams.get('starportId')
 			invariant(starportId, 'starportId is required')
-			const ships = await prisma.ship.findMany({
-				where: { starport: { id: starportId } },
-				select: {
-					id: true,
-					brandId: true,
-					hostId: true,
-					starportId: true,
-					imageUrl: true,
-					name: true,
-				},
-				take: 50,
-			})
-			const brands = await prisma.shipBrand.findMany({
-				where: { id: { in: [...new Set(ships.map(ship => ship.brandId))] } },
-				select: { id: true },
-			})
-			const hosts = await prisma.host.findMany({
-				where: { userId: { in: [...new Set(ships.map(ship => ship.hostId))] } },
-				select: { userId: true },
-			})
-			const starports = await prisma.starport.findMany({
-				where: { id: { in: [...new Set(ships.map(ship => ship.starportId))] } },
-				select: { id: true, name: true },
-			})
-			return json({ searchType, ships, brands, hosts, starports, cities: [] })
+			const results = await getSearchResultsForStarport(starportId)
+			return json({ ...noResults, ...results, searchType })
 		}
 		case 'city': {
 			const cityId = searchParams.get('cityId')
-			invariant(cityId, 'cityId is required')
+			if (!cityId) return json(noResults)
+
 			const city = await prisma.city.findUnique({
 				where: { id: cityId },
 				select: {
@@ -70,67 +78,39 @@ export async function loader({ request }: DataFunctionArgs) {
 					longitude: true,
 				},
 			})
-			invariant(city, 'city not found')
-			const ships = await prisma.ship.findMany({
-				where: {
-					starport: {
-						latitude: { gt: city.latitude - 1, lt: city.latitude + 1 },
-						longitude: { gt: city.longitude - 1, lt: city.longitude + 1 },
-					},
-				},
-			})
-			const brands = await prisma.shipBrand.findMany({
-				where: { id: { in: [...new Set(ships.map(ship => ship.brandId))] } },
-				select: { id: true },
-			})
-			const hosts = await prisma.host.findMany({
-				where: { userId: { in: [...new Set(ships.map(ship => ship.hostId))] } },
-				select: { userId: true },
-			})
-			const starports = await prisma.starport.findMany({
-				where: { id: { in: [...new Set(ships.map(ship => ship.starportId))] } },
-				select: { id: true, name: true },
-			})
+			if (!city) return json(noResults)
+
+			const closestStarport = getClosestStarport(city)
+			if (!closestStarport) return json(noResults)
+
+			const results = await getSearchResultsForStarport(closestStarport.id)
 			return json({
+				...noResults,
+				...results,
 				searchType,
-				ships,
-				brands,
-				hosts,
-				starports,
 				cities: [city],
+				distance: closestStarport.distance,
 			})
 		}
 		case 'geolocation': {
 			const latString = searchParams.get('lat')
 			const longString = searchParams.get('long')
-			invariant(latString, 'lat is required')
-			invariant(longString, 'long is required')
-			const lat = Number(latString)
-			const long = Number(longString)
-			invariant(!Number.isNaN(lat), 'lat must be a number')
-			invariant(!Number.isNaN(long), 'long must be a number')
-			// TODO: calculate distance from lat/long
-			const ships = await prisma.ship.findMany({
-				where: {
-					starport: {
-						latitude: { gt: lat - 1, lt: lat + 1 },
-						longitude: { gt: long - 1, lt: long + 1 },
-					},
-				},
+			if (!latString || !longString) return json(noResults)
+
+			const latitude = Number(latString)
+			const longitude = Number(longString)
+			if (isNaN(latitude) || isNaN(longitude)) return json(noResults)
+
+			const closestStarport = getClosestStarport({ latitude, longitude })
+			if (!closestStarport) return json(noResults)
+
+			const results = await getSearchResultsForStarport(closestStarport.id)
+			return json({
+				...noResults,
+				...results,
+				searchType,
+				distance: closestStarport.distance,
 			})
-			const brands = await prisma.shipBrand.findMany({
-				where: { id: { in: [...new Set(ships.map(ship => ship.brandId))] } },
-				select: { id: true },
-			})
-			const hosts = await prisma.host.findMany({
-				where: { userId: { in: [...new Set(ships.map(ship => ship.hostId))] } },
-				select: { userId: true },
-			})
-			const starports = await prisma.starport.findMany({
-				where: { id: { in: [...new Set(ships.map(ship => ship.starportId))] } },
-				select: { id: true, name: true },
-			})
-			return json({ searchType, ships, brands, hosts, starports, cities: [] })
 		}
 		default: {
 			throw new Error(`Invalid search type: ${searchType}`)
@@ -182,8 +162,6 @@ export default function ShipsRoute() {
 		}
 	}, [geoLocation.state, searchType, submit])
 
-	console.log(data.cities.find(c => c.id === searchParams.get('cityId')))
-
 	return (
 		<div>
 			<h1>Search</h1>
@@ -225,23 +203,36 @@ export default function ShipsRoute() {
 				) : null}
 			</Form>
 			{data.ships.length ? (
-				<ul>
-					{data.ships.map(ship => (
-						<li key={ship.id} className="p-6">
-							<a href={`/ships/${ship.id}`} className="flex gap-4 bg-slate-400">
-								<img
-									src={ship.imageUrl}
-									alt=""
-									className="inline aspect-square w-16 rounded-sm"
-								/>
-								<span>
-									{ship.name} (
-									{data.starports.find(s => s.id === ship.starportId)?.name})
-								</span>
-							</a>
-						</li>
-					))}
-				</ul>
+				<>
+					{data.distance === null ? null : searchType === 'geolocation' ? (
+						<p>Distance from your location: {data.distance.toFixed(2)} miles</p>
+					) : searchType === 'city' ? (
+						<p>
+							Distance from {data.cities[0]?.name}: {data.distance.toFixed(2)}{' '}
+							miles
+						</p>
+					) : null}
+					<ul>
+						{data.ships.map(ship => (
+							<li key={ship.id} className="p-6">
+								<a
+									href={`/ships/${ship.id}`}
+									className="flex gap-4 bg-slate-400"
+								>
+									<img
+										src={ship.imageUrl}
+										alt=""
+										className="inline aspect-square w-16 rounded-sm"
+									/>
+									<span>
+										{ship.name} (
+										{data.starports.find(s => s.id === ship.starportId)?.name})
+									</span>
+								</a>
+							</li>
+						))}
+					</ul>
+				</>
 			) : data.searchType === 'none' ? (
 				<p>Enter a search query above</p>
 			) : (

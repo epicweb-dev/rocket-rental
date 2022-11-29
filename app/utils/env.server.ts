@@ -3,6 +3,7 @@ import invariant from 'tiny-invariant'
 declare global {
 	namespace NodeJS {
 		interface ProcessEnv {
+			DATABASE_PATH: string
 			DATABASE_URL: string
 			SESSION_SECRET: string
 			ENCRYPTION_SECRET: string
@@ -15,6 +16,7 @@ declare global {
 export function init() {
 	const requiredServerEnvs = [
 		'NODE_ENV',
+		'DATABASE_PATH',
 		'DATABASE_URL',
 		'SESSION_SECRET',
 		'ENCRYPTION_SECRET',

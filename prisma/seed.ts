@@ -18,9 +18,10 @@ import allTheCities from 'all-the-cities'
 const prisma = new PrismaClient()
 
 async function seed() {
-	const email = 'kody@kcd.dev'
+	console.log('🌱 Seeding...')
+	console.time(`🌱 Database has been seeded`)
 
-	// cleanup the existing database
+	console.time('🧹 Cleaned up the database...')
 	await prisma.user.deleteMany({ where: {} })
 	await prisma.ship.deleteMany({ where: {} })
 	await prisma.shipBrand.deleteMany({ where: {} })
@@ -28,22 +29,26 @@ async function seed() {
 	await prisma.booking.deleteMany({ where: {} })
 	await prisma.chat.deleteMany({ where: {} })
 	await prisma.city.deleteMany({ where: {} })
+	console.timeEnd('🧹 Cleaned up the database...')
 
 	const citiesToCreate = allTheCities
 		.filter(c => c.population > 75_000)
 		.sort((a, z) => z.population - a.population)
 
+	console.time('🌃 Created cities...')
 	for (const city of citiesToCreate) {
 		await prisma.city.create({
 			data: {
 				name: city.name,
 				country: city.country,
-				latitude: city.loc.coordinates[0],
-				longitude: city.loc.coordinates[1],
+				longitude: city.loc.coordinates[0],
+				latitude: city.loc.coordinates[1],
 			},
 		})
 	}
+	console.timeEnd('🌃 Created cities...')
 
+	console.time('✅ Created brands...')
 	const brands = await Promise.all(
 		Array.from({ length: 30 }, async () => {
 			const brand = await prisma.shipBrand.create({
@@ -52,19 +57,28 @@ async function seed() {
 			return brand
 		}),
 	)
+	console.timeEnd('✅ Created brands...')
 
+	console.time('🏢 Created starports...')
 	const starports = await Promise.all(
-		Array.from({ length: 80 }, async () => {
+		Array.from({ length: 80 }, async (_, index) => {
+			const city: typeof citiesToCreate[number] = citiesToCreate[index]
 			const starport = await prisma.starport.create({
-				data: createStarport(),
+				data: {
+					...createStarport(),
+					longitude: city.loc.coordinates[0],
+					latitude: city.loc.coordinates[1],
+				},
 			})
 			return starport
 		}),
 	)
+	console.timeEnd('🏢 Created starports...')
 
 	// hosts with ships and reviews
 	// renters with bookings and reviews
 	// hosts who are renters also
+	console.time('👤 Created users...')
 	const users = await Promise.all(
 		Array.from({ length: 500 }, async () => {
 			const userData = createUser()
@@ -82,7 +96,9 @@ async function seed() {
 			return user
 		}),
 	)
+	console.timeEnd('👤 Created users...')
 
+	console.time('👮 Created admins...')
 	const adminIds = users.slice(0, 50).map(user => user.id)
 	const admins = await Promise.all(
 		adminIds.map(async id => {
@@ -94,7 +110,9 @@ async function seed() {
 			return admin
 		}),
 	)
+	console.timeEnd('👮 Created admins...')
 
+	console.time('🥳 Created hosts...')
 	const hostIds = users.slice(50, 200).map(user => user.id)
 	const hosts = await Promise.all(
 		hostIds.map(async (id, index) => {
@@ -124,7 +142,9 @@ async function seed() {
 			return host
 		}),
 	)
+	console.timeEnd('🥳 Created hosts...')
 
+	console.time('😍 Created renters...')
 	const renterIds = users.slice(150).map(user => user.id)
 	const renters = await Promise.all(
 		renterIds.map(async id => {
@@ -137,7 +157,9 @@ async function seed() {
 			return renter
 		}),
 	)
+	console.timeEnd('😍 Created renters...')
 
+	console.time('📚 Created bookings...')
 	const rentersWithBookings = faker.helpers.arrayElements(renters, 20)
 	const shipsWithBookings = faker.helpers.arrayElements(
 		hosts.flatMap(host => host.ships),
@@ -186,7 +208,9 @@ async function seed() {
 			return bookings
 		}),
 	).then(bookings => bookings.flat())
+	console.timeEnd('📚 Created bookings...')
 
+	console.time('📝 Created reviews...')
 	const pastBookings = bookings.filter(booking => booking.endDate < new Date())
 	const reviews = await Promise.all(
 		pastBookings.map(async booking => {
@@ -236,7 +260,9 @@ async function seed() {
 			return [shipReview, hostReview, renterReview]
 		}),
 	).then(reviews => reviews.flat())
+	console.timeEnd('📝 Created reviews...')
 
+	console.time('💬 Created chats...')
 	const chats = await Promise.all(
 		bookings.map(async booking => {
 			const createdAt = faker.date.between(
@@ -273,12 +299,13 @@ async function seed() {
 			return chat
 		}),
 	)
+	console.timeEnd('💬 Created chats...')
 
 	const kodyUser = createUser()
 
 	await prisma.user.create({
 		data: {
-			email,
+			email: 'kody@kcd.dev',
 			username: 'kody',
 			name: 'Kody',
 			imageUrl: kodyUser.imageUrl,
@@ -293,7 +320,7 @@ async function seed() {
 		},
 	})
 
-	console.log(`Database has been seeded. 🌱`)
+	console.timeEnd(`🌱 Database has been seeded`)
 }
 
 seed()

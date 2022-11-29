@@ -10,11 +10,11 @@ export function init() {
 				heading: 0,
 				speed: 0,
 				// London
-				// latitude: 51.507351,
-				// longitude: -0.127758,
+				latitude: 51.507351,
+				longitude: -0.127758,
 
-				latitude: 6.7952,
-				longitude: 92.5083,
+				// latitude: 6.7952,
+				// longitude: 92.5083,
 			},
 		})
 	}

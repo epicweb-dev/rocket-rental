@@ -1,9 +1,13 @@
 import { PrismaClient } from '@prisma/client'
+import type BetterSqlite3 from 'better-sqlite3'
+import Database from 'better-sqlite3'
 
 let prisma: PrismaClient
+let db: BetterSqlite3.Database
 
 declare global {
-	var __db__: PrismaClient
+	var __prisma__: PrismaClient
+	var __db__: BetterSqlite3.Database
 }
 
 // this is needed because in development we don't want to restart
@@ -12,12 +16,17 @@ declare global {
 // in production we'll have a single connection to the DB.
 if (process.env.NODE_ENV === 'production') {
 	prisma = new PrismaClient()
+	db = new Database(process.env.DATABASE_PATH)
 } else {
-	if (!global.__db__) {
-		global.__db__ = new PrismaClient()
+	if (!global.__prisma__) {
+		global.__prisma__ = new PrismaClient()
 	}
-	prisma = global.__db__
+	if (!global.__db__) {
+		global.__db__ = new Database(process.env.DATABASE_PATH)
+	}
+	prisma = global.__prisma__
+	db = global.__db__
 	prisma.$connect()
 }
 
-export { prisma }
+export { prisma, db }
