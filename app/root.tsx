@@ -11,12 +11,14 @@ import {
 	Outlet,
 	Scripts,
 	ScrollRestoration,
+	useLoaderData,
 } from '@remix-run/react'
 import { getUserById } from './models/user.server'
 import { authenticator } from './utils/auth.server'
 
 import tailwindStylesheetUrl from './styles/tailwind.css'
 import { links as vendorLinks } from './utils/vendor.css'
+import { getEnv } from './utils/env.server'
 
 export const links: LinksFunction = () => {
 	return [{ rel: 'stylesheet', href: tailwindStylesheetUrl }, ...vendorLinks]
@@ -46,10 +48,11 @@ export async function loader({ request }: DataFunctionArgs) {
 		}
 	}
 
-	return json({ user })
+	return json({ user, ENV: getEnv() })
 }
 
 export default function App() {
+	const data = useLoaderData<typeof loader>()
 	return (
 		<html lang="en" className="h-full">
 			<head>
@@ -60,6 +63,11 @@ export default function App() {
 				<Outlet />
 				<ScrollRestoration />
 				<Scripts />
+				<script
+					dangerouslySetInnerHTML={{
+						__html: `window.ENV = ${JSON.stringify(data.ENV)}`,
+					}}
+				/>
 				<LiveReload />
 			</body>
 		</html>

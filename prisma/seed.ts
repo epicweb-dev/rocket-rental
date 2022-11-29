@@ -6,7 +6,6 @@ import {
 	createBooking,
 	createBrand,
 	createContactInfo,
-	createDateRange,
 	createPassword,
 	createShip,
 	createStarport,
@@ -14,6 +13,7 @@ import {
 	oneDay,
 	typedBoolean,
 } from './seed-utils'
+import allTheCities from 'all-the-cities'
 
 const prisma = new PrismaClient()
 
@@ -27,8 +27,22 @@ async function seed() {
 	await prisma.starport.deleteMany({ where: {} })
 	await prisma.booking.deleteMany({ where: {} })
 	await prisma.chat.deleteMany({ where: {} })
+	await prisma.city.deleteMany({ where: {} })
 
-	const hashedPassword = await bcrypt.hash('kodylovesyou', 10)
+	const citiesToCreate = allTheCities
+		.filter(c => c.population > 75_000)
+		.sort((a, z) => z.population - a.population)
+
+	for (const city of citiesToCreate) {
+		await prisma.city.create({
+			data: {
+				name: city.name,
+				country: city.country,
+				latitude: city.loc.coordinates[0],
+				longitude: city.loc.coordinates[1],
+			},
+		})
+	}
 
 	const brands = await Promise.all(
 		Array.from({ length: 30 }, async () => {
@@ -270,7 +284,7 @@ async function seed() {
 			imageUrl: kodyUser.imageUrl,
 			password: {
 				create: {
-					hash: hashedPassword,
+					hash: await bcrypt.hash('kodylovesyou', 10),
 				},
 			},
 			admin: {

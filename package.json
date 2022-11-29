@@ -57,8 +57,11 @@
     "@remix-run/react": "^1.7.5",
     "@remix-run/serve": "^1.7.5",
     "@remix-run/server-runtime": "^1.7.5",
+    "@types/all-the-cities": "^3.1.0",
     "bcryptjs": "^2.4.3",
+    "clsx": "^1.2.1",
     "date-fns": "^2.29.3",
+    "downshift": "^7.0.4",
     "esbuild-register": "^3.3.3",
     "isbot": "^3.5.3",
     "react": "^18.2.0",
@@ -66,6 +69,7 @@
     "remix-auth": "^3.2.2",
     "remix-auth-form": "^1.2.0",
     "remix-auth-socials": "^1.0.2",
+    "spin-delay": "^1.2.0",
     "tiny-invariant": "^1.2.0"
   },
   "devDependencies": {
@@ -84,6 +88,7 @@
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^2.1.0",
     "@vitest/coverage-c8": "^0.23.2",
+    "all-the-cities": "^3.1.0",
     "autoprefixer": "^10.4.10",
     "binode": "^1.0.5",
     "c8": "^7.12.0",
