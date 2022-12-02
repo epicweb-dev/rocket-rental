@@ -3,62 +3,99 @@ import { json } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
 import clsx from 'clsx'
 import { useCombobox } from 'downshift'
-import { useId, useState } from 'react'
+import { useEffect, useId } from 'react'
 import { useSpinDelay } from 'spin-delay'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/db.server'
+import { getClosestStarports } from '~/utils/geo.server'
 
 export async function loader({ request }: LoaderArgs) {
 	const url = new URL(request.url)
 	const query = url.searchParams.get('query')
+	const lat = url.searchParams.get('lat')
+	const long = url.searchParams.get('long')
+	const exclude = url.searchParams.getAll('exclude')
 	invariant(typeof query === 'string', 'query is required')
-	return json({
-		starports: await prisma.starport.findMany({
-			where: { name: { contains: query } },
+
+	let distances: ReturnType<typeof getClosestStarports> | undefined
+	let starports: Array<{ id: string; name: string }>
+	if (lat && long) {
+		distances = getClosestStarports({
+			latitude: Number(lat),
+			longitude: Number(long),
+			limit: 20,
+			query: query,
+			exclude,
+		})
+		starports = (
+			await prisma.starport.findMany({
+				where: { id: { in: distances.map(s => s.id) } },
+				select: { id: true, name: true },
+			})
+		).sort((a, b) => {
+			const aDistance = distances?.find(s => s.id === a.id)
+			const bDistance = distances?.find(s => s.id === b.id)
+			if (!aDistance || !bDistance) return 0
+			return aDistance.distance - bDistance.distance
+		})
+	} else {
+		starports = await prisma.starport.findMany({
+			where: {
+				AND: [{ name: { contains: query } }, { id: { notIn: exclude } }],
+			},
 			select: { id: true, name: true },
 			take: 20,
-		}),
+		})
+	}
+	return json({
+		starports: starports.map(s => ({
+			...s,
+			distance: distances?.find(d => d.id === s.id)?.distance,
+		})),
 	})
 }
 
 type Starport = SerializeFrom<typeof loader>['starports'][number]
 
 export function StarportCombobox({
-	error,
-	name,
-	defaultSelectedStarport,
+	exclude,
+	geolocation,
 	onChange,
 }: {
-	error?: string | null
-	name: string
-	defaultSelectedStarport?: Starport | null
-	onChange?: (selectedStarport: Starport | null | undefined) => void
+	exclude: Array<string>
+	geolocation: { lat: number; long: number } | null
+	onChange: (selectedStarport: Starport | null | undefined) => void
 }) {
-	const starportFetcher = useFetcher<typeof loader>()
+	const { submit: submitFetcher, ...starportFetcher } =
+		useFetcher<typeof loader>()
 	const id = useId()
 	const starports = starportFetcher.data?.starports ?? []
-	const [selectedStarport, setSelectedStarport] = useState<
-		Starport | null | undefined
-	>(defaultSelectedStarport)
 
 	const cb = useCombobox<Starport>({
 		id,
-		onSelectedItemChange: ({ selectedItem }) => {
-			setSelectedStarport(selectedItem)
-			requestAnimationFrame(() => {
-				onChange?.(selectedItem)
-			})
-		},
+		onSelectedItemChange: ({ selectedItem }) => onChange(selectedItem),
 		items: starports,
-		defaultSelectedItem: defaultSelectedStarport,
+		selectedItem: null,
 		itemToString: item => (item ? item.name : ''),
-		onInputValueChange: changes => {
-			starportFetcher.submit(
-				{ query: changes.inputValue ?? '' },
-				{ method: 'get', action: '/resources/starport-combobox' },
-			)
-		},
 	})
+
+	const excludeIds = exclude.join(',')
+	useEffect(() => {
+		const searchParams = new URLSearchParams()
+		searchParams.set('query', cb.inputValue)
+		if (geolocation) {
+			searchParams.set('lat', geolocation.lat.toString())
+			searchParams.set('long', geolocation.long.toString())
+		}
+		for (const ex of excludeIds.split(',')) {
+			searchParams.append('exclude', ex)
+		}
+
+		submitFetcher(searchParams, {
+			method: 'get',
+			action: '/resources/starport-combobox',
+		})
+	}, [cb.inputValue, excludeIds, geolocation, submitFetcher])
 
 	const busy = starportFetcher.state !== 'idle'
 	const showSpinner = useSpinDelay(busy, {
@@ -69,14 +106,8 @@ export function StarportCombobox({
 
 	return (
 		<div className="relative">
-			<input name={name} type="hidden" value={selectedStarport?.id ?? ''} />
 			<div className="flex flex-wrap items-center gap-1">
 				<label {...cb.getLabelProps()}>Starport</label>
-				{error ? (
-					<em id="starport-error" className="text-d-p-xs text-red-600">
-						{error}
-					</em>
-				) : null}
 			</div>
 			<div className="relative">
 				<input
@@ -85,8 +116,6 @@ export function StarportCombobox({
 							'rounded-t rounded-b-0': displayMenu,
 							rounded: !displayMenu,
 						}),
-						'aria-invalid': Boolean(error) || undefined,
-						'aria-errormessage': error ? 'starport-error' : undefined,
 					})}
 				/>
 				<Spinner showSpinner={showSpinner} />
@@ -108,7 +137,10 @@ export function StarportCombobox({
 								key={starport.id}
 								{...cb.getItemProps({ item: starport, index })}
 							>
-								{starport.name}
+								{starport.name}{' '}
+								{starport.distance
+									? `(${starport.distance.toFixed(2)}mi)`
+									: null}
 							</li>
 					  ))
 					: null}

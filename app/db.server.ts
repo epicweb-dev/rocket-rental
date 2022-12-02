@@ -22,7 +22,9 @@ if (process.env.NODE_ENV === 'production') {
 		global.__prisma__ = new PrismaClient()
 	}
 	if (!global.__db__) {
-		global.__db__ = new Database(process.env.DATABASE_PATH)
+		global.__db__ = new Database(process.env.DATABASE_PATH, {
+			verbose: console.log,
+		})
 	}
 	prisma = global.__prisma__
 	db = global.__db__

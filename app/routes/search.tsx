@@ -1,21 +1,81 @@
 import type { DataFunctionArgs } from '@remix-run/node'
+import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
 	Form,
+	Link,
 	useLoaderData,
 	useSearchParams,
 	useSubmit,
 } from '@remix-run/react'
-import { useEffect, useRef, useState } from 'react'
-import invariant from 'tiny-invariant'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { prisma } from '~/db.server'
-import { getClosestStarport } from '~/utils/geo.server'
+import { getClosestStarports } from '~/utils/geo.server'
+import { typedBoolean } from '~/utils/misc'
 import { CityCombobox } from './resources.city-combobox'
 import { StarportCombobox } from './resources.starport-combobox'
 
-async function getSearchResultsForStarport(starportId: string) {
+export async function loader({ request }: DataFunctionArgs) {
+	const searchParams = new URL(request.url).searchParams
+	const searchParamsEmpty = !searchParams.toString()
+	if (searchParamsEmpty) {
+		return json({
+			ships: [],
+			starports: [],
+			brands: [],
+			hosts: [],
+			cities: [],
+		})
+	}
+
+	const starportId = searchParams.getAll('starportId')
+	const cityId = searchParams.getAll('cityId')
+	const brandId = searchParams.getAll('brandId')
+	const hostId = searchParams.getAll('hostId')
+	const capacityMin = searchParams.get('capacityMin')
+	const capacityMax = searchParams.get('capacityMax')
+	const dailyChargeMin = searchParams.get('dailyChargeMin')
+	const dailyChargeMax = searchParams.get('dailyChargeMax')
+
+	const cities = await prisma.city.findMany({
+		where: { id: { in: cityId } },
+		select: {
+			id: true,
+			name: true,
+			country: true,
+			latitude: true,
+			longitude: true,
+		},
+	})
+	const starportsNearCities = cities.flatMap(c => {
+		return getClosestStarports({
+			latitude: c.latitude,
+			longitude: c.longitude,
+			limit: 1,
+		})
+	})
+	const allStarportIds = [...starportId, ...starportsNearCities.map(s => s.id)]
+
 	const ships = await prisma.ship.findMany({
-		where: { starport: { id: starportId } },
+		where: {
+			starportId: allStarportIds.length ? { in: allStarportIds } : undefined,
+			brandId: brandId.length ? { in: brandId } : undefined,
+			hostId: hostId.length ? { in: hostId } : undefined,
+			dailyCharge:
+				dailyChargeMin || dailyChargeMax
+					? {
+							gte: dailyChargeMin ? Number(dailyChargeMin) : undefined,
+							lte: dailyChargeMax ? Number(dailyChargeMax) : undefined,
+					  }
+					: undefined,
+			capacity:
+				capacityMin || capacityMax
+					? {
+							gte: capacityMin ? Number(capacityMin) : undefined,
+							lte: capacityMax ? Number(capacityMax) : undefined,
+					  }
+					: undefined,
+		},
 		select: {
 			id: true,
 			brandId: true,
@@ -38,180 +98,238 @@ async function getSearchResultsForStarport(starportId: string) {
 		where: { id: { in: [...new Set(ships.map(ship => ship.starportId))] } },
 		select: { id: true, name: true },
 	})
-	return { ships, brands, hosts, starports }
+	return json({ ships, brands, hosts, starports, cities })
 }
 
-export async function loader({ request }: DataFunctionArgs) {
-	const searchParams = new URL(request.url).searchParams
-	const searchType = searchParams.get('searchType')
-	const noResults = {
-		searchType: 'none',
-		ships: [],
-		starports: [],
-		brands: [],
-		hosts: [],
-		cities: [],
-		distance: null,
-	} as const
-	if (!searchType) {
-		return json(noResults)
-	}
-
-	switch (searchType) {
-		case 'starportName': {
-			const starportId = searchParams.get('starportId')
-			invariant(starportId, 'starportId is required')
-			const results = await getSearchResultsForStarport(starportId)
-			return json({ ...noResults, ...results, searchType })
-		}
-		case 'city': {
-			const cityId = searchParams.get('cityId')
-			if (!cityId) return json(noResults)
-
-			const city = await prisma.city.findUnique({
-				where: { id: cityId },
-				select: {
-					id: true,
-					name: true,
-					country: true,
-					latitude: true,
-					longitude: true,
-				},
+export async function action({ request }: DataFunctionArgs) {
+	const formData = await request.formData()
+	const intent = formData.get('intent')
+	switch (intent) {
+		case 'add-closest-starport': {
+			const lat = formData.get('lat')
+			const long = formData.get('long')
+			const [closestStarport] = getClosestStarports({
+				latitude: Number(lat),
+				longitude: Number(long),
+				limit: 1,
 			})
-			if (!city) return json(noResults)
-
-			const closestStarport = getClosestStarport(city)
-			if (!closestStarport) return json(noResults)
-
-			const results = await getSearchResultsForStarport(closestStarport.id)
-			return json({
-				...noResults,
-				...results,
-				searchType,
-				cities: [city],
-				distance: closestStarport.distance,
-			})
-		}
-		case 'geolocation': {
-			const latString = searchParams.get('lat')
-			const longString = searchParams.get('long')
-			if (!latString || !longString) return json(noResults)
-
-			const latitude = Number(latString)
-			const longitude = Number(longString)
-			if (isNaN(latitude) || isNaN(longitude)) return json(noResults)
-
-			const closestStarport = getClosestStarport({ latitude, longitude })
-			if (!closestStarport) return json(noResults)
-
-			const results = await getSearchResultsForStarport(closestStarport.id)
-			return json({
-				...noResults,
-				...results,
-				searchType,
-				distance: closestStarport.distance,
-			})
+			const url = new URL(request.url)
+			addParamToSet(url.searchParams, 'starportId', closestStarport.id)
+			return redirect(`${url.pathname}?${url.searchParams.toString()}`)
 		}
 		default: {
-			throw new Error(`Invalid search type: ${searchType}`)
+			throw new Error(`Invalid intent: ${intent}`)
 		}
 	}
+}
+
+function addParamToSet(
+	searchParams: URLSearchParams,
+	key: string,
+	value: string,
+) {
+	const values = searchParams.getAll(key)
+	if (!values.includes(value)) {
+		searchParams.append(key, value)
+	}
+	return searchParams
+}
+
+function unappend(searchParams: URLSearchParams, key: string, value: string) {
+	const values = searchParams.getAll(key).filter(v => v !== value)
+	searchParams.delete(key)
+	for (const value of values) {
+		searchParams.append(key, value)
+	}
+	return searchParams
+}
+
+type Geo =
+	| {
+			state: 'resolved'
+			lat: number
+			long: number
+	  }
+	| {
+			state: 'rejected'
+			reason: string
+	  }
+
+function getGeo() {
+	return new Promise<Geo>((res, rej) => {
+		navigator.geolocation.getCurrentPosition(
+			position => {
+				const geo = {
+					state: 'resolved',
+					lat: position.coords.latitude,
+					long: position.coords.longitude,
+				} as const
+				res(geo)
+			},
+			error => {
+				const geo = {
+					state: 'rejected',
+					reason: error.message,
+				} as const
+				rej(geo)
+			},
+		)
+	})
 }
 
 export default function ShipsRoute() {
 	const data = useLoaderData<typeof loader>()
-	const [searchParams] = useSearchParams()
-	const [searchType, setSearchType] = useState(
-		searchParams.get('searchType') ?? 'starportName',
-	)
+	const [searchParams, setSearchParams] = useSearchParams()
 	const formRef = useRef<HTMLFormElement>(null)
 	const submit = useSubmit()
-	const defaultLat = Number(searchParams.get('lat'))
-	const defaultLong = Number(searchParams.get('long'))
-	const [geoLocation, setGeoLocation] = useState<
-		| { lat: Number; long: Number; state: 'resolved' }
-		| { state: 'pending' }
-		| { state: 'rejected'; reason: string }
-	>(() => {
-		if (defaultLat && defaultLong) {
-			return { lat: defaultLat, long: defaultLong, state: 'resolved' }
-		}
-		return { state: 'pending' }
-	})
+	const [geolocationEnabled, setGeolocationEnabled] = useState(false)
+	const [geolocation, setGeolocation] = useState<{ state: 'pending' } | Geo>(
+		() => {
+			const defaultLat = Number(searchParams.get('lat'))
+			const defaultLong = Number(searchParams.get('long'))
+			if (defaultLat && defaultLong) {
+				return { lat: defaultLat, long: defaultLong, state: 'resolved' }
+			}
+			return { state: 'pending' }
+		},
+	)
 
-	useEffect(() => {
-		if (searchType === 'geolocation' && geoLocation.state === 'pending') {
-			navigator.geolocation.getCurrentPosition(
-				position => {
-					submit(
-						{
-							searchType: 'geolocation',
-							lat: position.coords.latitude.toString(),
-							long: position.coords.longitude.toString(),
-						},
-						{ action: '/search' },
-					)
-				},
-				error => {
-					setGeoLocation({
-						state: 'rejected',
-						reason: error.message,
-					})
-				},
-			)
+	const toggleGeolocation = useCallback(function toggleGeolocation(
+		enabled: boolean,
+	): Promise<typeof geolocation> {
+		setGeolocationEnabled(enabled)
+		if (!enabled) {
+			setGeolocation(g => (g.state === 'pending' ? g : { state: 'pending' }))
+			return new Promise(res => res({ state: 'pending' }))
 		}
-	}, [geoLocation.state, searchType, submit])
+		return getGeo().then(
+			geo => {
+				setGeolocation(geo)
+				return geo
+			},
+			geo => {
+				setGeolocation(geo)
+				return geo
+			},
+		)
+	},
+	[])
+
+	// if we already have permission, then we can go ahead and get the location
+	// and not worry about having to ask.
+	useEffect(() => {
+		navigator.permissions.query({ name: 'geolocation' }).then(result => {
+			toggleGeolocation(result.state === 'granted')
+		})
+	}, [toggleGeolocation])
 
 	return (
 		<div>
 			<h1>Search</h1>
+			<label>
+				<input
+					type="checkbox"
+					checked={geolocationEnabled}
+					onChange={e => {
+						toggleGeolocation(e.currentTarget.checked).then(geo => {
+							if (geo.state !== 'resolved') return
+
+							submit(
+								{
+									intent: 'add-closest-starport',
+									lat: geo.lat.toString(),
+									long: geo.long.toString(),
+								},
+								{ method: 'post' },
+							)
+						})
+					}}
+				/>{' '}
+				Enable Geolocation
+			</label>
+			<StarportCombobox
+				exclude={searchParams.getAll('starportId')}
+				geolocation={
+					geolocationEnabled && geolocation.state === 'resolved'
+						? geolocation
+						: null
+				}
+				onChange={selectedStarport => {
+					if (selectedStarport) {
+						const newSP = addParamToSet(
+							new URLSearchParams(searchParams),
+							'starportId',
+							selectedStarport.id,
+						)
+						setSearchParams(newSP)
+					}
+				}}
+			/>
+			<CityCombobox
+				exclude={searchParams.getAll('cityId')}
+				geolocation={
+					geolocationEnabled && geolocation.state === 'resolved'
+						? geolocation
+						: null
+				}
+				onChange={selectedCity => {
+					if (selectedCity) {
+						const newSP = addParamToSet(
+							new URLSearchParams(searchParams),
+							'cityId',
+							selectedCity.id,
+						)
+						setSearchParams(newSP)
+					}
+				}}
+			/>
 			<Form action="/search" ref={formRef}>
-				<select
-					name="searchType"
-					value={searchType}
-					onChange={e => setSearchType(e.currentTarget.value)}
-				>
-					<option value="starportName">Starport Name</option>
-					<option value="city">City</option>
-					<option value="geolocation">Current Location</option>
-				</select>
-				{searchType === 'starportName' ? (
-					<StarportCombobox
-						name="starportId"
-						defaultSelectedStarport={data.starports.find(
-							s => s.id === searchParams.get('starportId'),
-						)}
-						onChange={selectedStarport => {
-							if (selectedStarport) {
-								submit(formRef.current)
-							}
-						}}
-					/>
-				) : null}
-				{searchType === 'city' ? (
-					<CityCombobox
-						name="cityId"
-						defaultSelectedCity={data.cities.find(
-							c => c.id === searchParams.get('cityId'),
-						)}
-						onChange={selectedCity => {
-							if (selectedCity) {
-								submit(formRef.current)
-							}
-						}}
-					/>
-				) : null}
+				<ul>
+					{searchParams
+						.getAll('starportId')
+						.map(id => data.starports.find(s => id === s.id))
+						.filter(typedBoolean)
+						.map(starport => {
+							const newSP = unappend(
+								new URLSearchParams(searchParams),
+								'starportId',
+								starport.id,
+							)
+
+							return (
+								<li key={starport.id}>
+									<Link to={`/search?${newSP}`}>{starport.name} ❌</Link>
+								</li>
+							)
+						})}
+				</ul>
+				<ul>
+					{searchParams
+						.getAll('cityId')
+						.map(id => data.cities.find(s => id === s.id))
+						.filter(typedBoolean)
+						.map(city => {
+							const newSP = unappend(
+								new URLSearchParams(searchParams),
+								'cityId',
+								city.id,
+							)
+
+							return (
+								<li key={city.id}>
+									<Link to={`/search?${newSP}`}>
+										{city.name} ({city.country}) ❌
+									</Link>
+								</li>
+							)
+						})}
+				</ul>
+				<fieldset>
+					<legend>Filters</legend>
+				</fieldset>
 			</Form>
 			{data.ships.length ? (
 				<>
-					{data.distance === null ? null : searchType === 'geolocation' ? (
-						<p>Distance from your location: {data.distance.toFixed(2)} miles</p>
-					) : searchType === 'city' ? (
-						<p>
-							Distance from {data.cities[0]?.name}: {data.distance.toFixed(2)}{' '}
-							miles
-						</p>
-					) : null}
 					<ul>
 						{data.ships.map(ship => (
 							<li key={ship.id} className="p-6">
@@ -233,8 +351,6 @@ export default function ShipsRoute() {
 						))}
 					</ul>
 				</>
-			) : data.searchType === 'none' ? (
-				<p>Enter a search query above</p>
 			) : (
 				<p>No ships found</p>
 			)}

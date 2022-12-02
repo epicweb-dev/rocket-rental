@@ -101,3 +101,9 @@ export function getErrorInfo<Key extends string>({
 	}, {} as Record<Key, { fieldProps?: { 'aria-invalid': true; 'aria-describedby': string }; errorUI?: React.ReactElement }>)
 	return info
 }
+
+export function typedBoolean<T>(
+	value: T,
+): value is Exclude<T, false | null | undefined | '' | 0> {
+	return Boolean(value)
+}

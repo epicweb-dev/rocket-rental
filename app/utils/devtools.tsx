@@ -18,4 +18,10 @@ export function init() {
 			},
 		})
 	}
+
+	// @ts-expect-error
+	navigator.permissions.query = function (options) {
+		return Promise.resolve({ state: 'granted' })
+		// return Promise.resolve({ state: 'denied' })
+	}
 }

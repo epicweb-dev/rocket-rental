@@ -11,9 +11,9 @@ import {
 	createStarport,
 	createUser,
 	oneDay,
-	typedBoolean,
 } from './seed-utils'
 import allTheCities from 'all-the-cities'
+import { typedBoolean } from '~/utils/misc'
 
 const prisma = new PrismaClient()
 
