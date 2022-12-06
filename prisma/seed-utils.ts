@@ -58,11 +58,14 @@ export function createDateRange({
 	}
 }
 
+const lockifyImage = (imageUrl: string) =>
+	imageUrl.replace(/\?(\d+)/, '?lock=$1')
+
 export function createBrand() {
 	return {
 		name: faker.company.name(),
 		description: faker.company.bs(),
-		imageUrl: faker.image.nature(512, 512, true),
+		imageUrl: lockifyImage(faker.image.nature(512, 512, true)),
 	}
 }
 
@@ -70,7 +73,7 @@ export function createStarport() {
 	return {
 		name: faker.company.name(),
 		description: faker.lorem.sentences(3),
-		imageUrl: faker.image.business(512, 512, true),
+		imageUrl: lockifyImage(faker.image.business(512, 512, true)),
 		latitude: Number(faker.address.latitude()),
 		longitude: Number(faker.address.longitude()),
 	}
@@ -87,7 +90,7 @@ export function createShip() {
 		name: faker.lorem.word(),
 		capacity: faker.datatype.number({ min: 1, max: 10 }),
 		description: faker.lorem.sentences(3),
-		imageUrl: faker.image.transport(512, 512, true),
+		imageUrl: lockifyImage(faker.image.transport(512, 512, true)),
 		dailyCharge: faker.datatype.number({ min: 100, max: 1000 }),
 	}
 }

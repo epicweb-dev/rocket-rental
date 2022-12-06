@@ -8,7 +8,7 @@ import {
 	useParams,
 } from '@remix-run/react'
 import invariant from 'tiny-invariant'
-import { prisma } from '~/db.server'
+import { prisma } from '~/utils/db.server'
 
 export async function loader({ params }: DataFunctionArgs) {
 	invariant(params.shipId, 'Missing shipId')

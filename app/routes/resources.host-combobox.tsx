@@ -7,106 +7,83 @@ import { useEffect, useId } from 'react'
 import { useSpinDelay } from 'spin-delay'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server'
-import { getClosestCitiesByName } from '~/utils/geo.server'
 
 export async function loader({ request }: LoaderArgs) {
 	const url = new URL(request.url)
 	const query = url.searchParams.get('query')
-	const lat = url.searchParams.get('lat')
-	const long = url.searchParams.get('long')
 	const exclude = url.searchParams.getAll('exclude')
 	invariant(typeof query === 'string', 'query is required')
-
-	let distances: ReturnType<typeof getClosestCitiesByName> | undefined
-	let cities: Array<{ id: string; name: string; country: string }>
-	if (lat && long) {
-		distances = getClosestCitiesByName({
-			latitude: Number(lat),
-			longitude: Number(long),
-			limit: 20,
-			query: query,
-			exclude,
-		})
-		cities = (
-			await prisma.city.findMany({
-				where: { id: { in: distances.map(s => s.id) } },
-				select: { id: true, name: true, country: true },
-			})
-		).sort((a, b) => {
-			const aDistance = distances?.find(s => s.id === a.id)
-			const bDistance = distances?.find(s => s.id === b.id)
-			if (!aDistance || !bDistance) return 0
-			return aDistance.distance - bDistance.distance
-		})
-	} else {
-		cities = await prisma.city.findMany({
-			where: {
-				AND: [{ name: { contains: query } }, { id: { notIn: exclude } }],
+	const hosts = await prisma.host.findMany({
+		where: {
+			AND: [
+				{
+					OR: [
+						{ user: { name: { contains: query } } },
+						{ user: { email: { contains: query } } },
+					],
+				},
+				{ userId: { notIn: exclude } },
+			],
+		},
+		select: {
+			user: {
+				select: {
+					id: true,
+					name: true,
+					imageUrl: true,
+				},
 			},
-			select: { id: true, name: true, country: true },
-			take: 20,
-		})
-	}
-	return json({
-		cities: cities.map(s => ({
-			...s,
-			distance: distances?.find(d => d.id === s.id)?.distance,
-		})),
+		},
 	})
+	return json({ hosts })
 }
 
-type City = SerializeFrom<typeof loader>['cities'][number]
+type Host = SerializeFrom<typeof loader>['hosts'][number]
 
-export function CityCombobox({
+export function HostCombobox({
 	exclude,
-	geolocation,
 	onChange,
 }: {
 	exclude: Array<string>
-	geolocation: { lat: number; long: number } | null
-	onChange: (selectedStarport: City | null | undefined) => void
+	onChange: (selectedHost: Host | null | undefined) => void
 }) {
-	const { submit: submitFetcher, ...cityFetcher } = useFetcher<typeof loader>()
+	const { submit: submitFetcher, ...hostFetcher } = useFetcher<typeof loader>()
 	const id = useId()
-	const cities = cityFetcher.data?.cities ?? []
+	const hosts = hostFetcher.data?.hosts ?? []
 
-	const cb = useCombobox<City>({
+	const cb = useCombobox<Host>({
 		id,
 		onSelectedItemChange: ({ selectedItem }) => onChange(selectedItem),
-		items: cities,
+		items: hosts,
 		selectedItem: null,
-		itemToString: item => (item ? `${item.name} (${item.country})` : ''),
+		itemToString: item => (item ? item.user.name ?? 'Unnamed host' : ''),
 	})
 
 	const excludeIds = exclude.join(',')
 	useEffect(() => {
 		const searchParams = new URLSearchParams()
 		searchParams.set('query', cb.inputValue)
-		if (geolocation) {
-			searchParams.set('lat', geolocation.lat.toString())
-			searchParams.set('long', geolocation.long.toString())
-		}
 		for (const ex of excludeIds.split(',')) {
 			searchParams.append('exclude', ex)
 		}
 
 		submitFetcher(searchParams, {
 			method: 'get',
-			action: '/resources/city-combobox',
+			action: '/resources/host-combobox',
 		})
-	}, [cb.inputValue, excludeIds, geolocation, submitFetcher])
+	}, [cb.inputValue, excludeIds, submitFetcher])
 
-	const busy = cityFetcher.state !== 'idle'
+	const busy = hostFetcher.state !== 'idle'
 	const showSpinner = useSpinDelay(busy, {
 		delay: 150,
 		minDuration: 300,
 	})
-	const displayMenu = cb.isOpen && cities.length > 0
+	const displayMenu = cb.isOpen && hosts.length > 0
 
 	return (
 		<div className="relative">
 			<div className="flex flex-wrap items-center gap-1">
-				<label {...cb.getLabelProps()}>City</label>
+				<label {...cb.getLabelProps()}>Host</label>
 			</div>
 			<div className="relative">
 				<input
@@ -128,16 +105,23 @@ export function CityCombobox({
 				})}
 			>
 				{displayMenu
-					? cities.map((city, index) => (
+					? hosts.map((host, index) => (
 							<li
-								className={clsx('cursor-pointer py-1 px-2', {
-									'bg-green-200': cb.highlightedIndex === index,
-								})}
-								key={city.id}
-								{...cb.getItemProps({ item: city, index })}
+								className={clsx(
+									'flex cursor-pointer items-center gap-2 py-1 px-2',
+									{ 'bg-green-200': cb.highlightedIndex === index },
+								)}
+								key={host.user.id}
+								{...cb.getItemProps({ item: host, index })}
 							>
-								{city.name} ({city.country}
-								{city.distance ? ` ${city.distance.toFixed(2)}mi` : null})
+								{host.user.imageUrl ? (
+									<img
+										src={host.user.imageUrl}
+										alt={host.user.name ?? 'Unnamed host'}
+										className="h-8 w-8 rounded-full"
+									/>
+								) : null}
+								{host.user.name ?? 'Unnamed host'}
 							</li>
 					  ))
 					: null}

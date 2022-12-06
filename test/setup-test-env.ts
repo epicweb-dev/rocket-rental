@@ -2,7 +2,7 @@ import './init-env-vars'
 import { installGlobals } from '@remix-run/node'
 import '@testing-library/jest-dom/extend-expect'
 import 'dotenv/config'
-import { prisma } from '~/db.server'
+import { prisma } from '~/utils/db.server'
 
 installGlobals()
 

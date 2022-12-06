@@ -2,7 +2,7 @@ import type { DataFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
 import invariant from 'tiny-invariant'
-import { prisma } from '~/db.server'
+import { prisma } from '~/utils/db.server'
 import { requireUserId } from '~/utils/auth.server'
 import { getErrorInfo } from '~/utils/misc'
 

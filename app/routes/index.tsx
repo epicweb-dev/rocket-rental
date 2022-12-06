@@ -9,6 +9,9 @@ export default function Index() {
 			<nav>
 				<ul>
 					<li>
+						<Link to="search">Search</Link>
+					</li>
+					<li>
 						<Link to="starports">Starports</Link>
 					</li>
 					<li>

@@ -8,7 +8,7 @@ import {
 } from '@remix-run/react'
 import { useState } from 'react'
 import invariant from 'tiny-invariant'
-import { prisma } from '~/db.server'
+import { prisma } from '~/utils/db.server'
 import { requireUserId } from '~/utils/auth.server'
 import { chatEmitter, EVENTS } from '~/utils/chat.server'
 import { useEventSource } from '~/utils/hooks'

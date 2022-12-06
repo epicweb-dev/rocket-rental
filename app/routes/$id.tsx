@@ -1,7 +1,7 @@
 import type { DataFunctionArgs } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import invariant from 'tiny-invariant'
-import { prisma } from '~/db.server'
+import { prisma } from '~/utils/db.server'
 
 export async function loader({ params }: DataFunctionArgs) {
 	invariant(params.id, 'Missing id')
@@ -22,6 +22,12 @@ export async function loader({ params }: DataFunctionArgs) {
 		select: { id: true },
 	})
 	if (starport) return redirect(`/starports/${starport.id}`)
+
+	const shipBrand = await prisma.shipBrand.findUnique({
+		where: { id: params.id },
+		select: { id: true },
+	})
+	if (shipBrand) return redirect(`/brands/${shipBrand.id}`)
 
 	const chat = await prisma.chat.findUnique({
 		where: { id: params.id },

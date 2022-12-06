@@ -22,13 +22,20 @@ if (process.env.NODE_ENV === 'production') {
 		global.__prisma__ = new PrismaClient()
 	}
 	if (!global.__db__) {
-		global.__db__ = new Database(process.env.DATABASE_PATH, {
-			verbose: console.log,
-		})
+		global.__db__ = new Database(process.env.DATABASE_PATH)
 	}
 	prisma = global.__prisma__
 	db = global.__db__
 	prisma.$connect()
+}
+
+export function interpolateArray(array: Array<string>, key: string) {
+	const query = array.map((e, i) => `@${key}${i}`).join(',')
+	const interpolations: Record<string, string> = {}
+	for (let index = 0; index < array.length; index++) {
+		interpolations[`${key}${index}`] = array[index]
+	}
+	return { query, interpolations }
 }
 
 export { prisma, db }

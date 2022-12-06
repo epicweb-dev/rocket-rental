@@ -6,7 +6,7 @@ import { useCombobox } from 'downshift'
 import { useEffect, useId } from 'react'
 import { useSpinDelay } from 'spin-delay'
 import invariant from 'tiny-invariant'
-import { prisma } from '~/db.server'
+import { prisma } from '~/utils/db.server'
 import { getClosestStarports } from '~/utils/geo.server'
 
 export async function loader({ request }: LoaderArgs) {

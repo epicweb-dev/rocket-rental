@@ -7,7 +7,7 @@ import {
 	oneDay,
 } from 'prisma/seed-utils'
 import { test } from 'vitest'
-import { prisma } from '~/db.server'
+import { prisma } from '~/utils/db.server'
 import { loader } from './bookings.$bookingId'
 import invariant from 'tiny-invariant'
 import { BASE_URL, getUserCookie } from 'test/utils'

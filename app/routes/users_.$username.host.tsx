@@ -7,7 +7,7 @@ import {
 	useParams,
 } from '@remix-run/react'
 import invariant from 'tiny-invariant'
-import { prisma } from '~/db.server'
+import { prisma } from '~/utils/db.server'
 import { requireUserId } from '~/utils/auth.server'
 import { useOptionalUser } from '~/utils/misc'
 
@@ -49,6 +49,7 @@ export async function loader({ params }: DataFunctionArgs) {
 							createdAt: true,
 							id: true,
 							description: true,
+							rating: true,
 							host: {
 								select: {
 									user: {
@@ -67,6 +68,7 @@ export async function loader({ params }: DataFunctionArgs) {
 							createdAt: true,
 							id: true,
 							description: true,
+							rating: true,
 							renter: {
 								select: {
 									user: {

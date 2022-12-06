@@ -13,7 +13,7 @@ import {
 	useParams,
 } from '@remix-run/react'
 import invariant from 'tiny-invariant'
-import { prisma } from '~/db.server'
+import { prisma } from '~/utils/db.server'
 import { getUserId, requireUserId } from '~/utils/auth.server'
 import { useOptionalUser } from '~/utils/misc'
 

@@ -8,7 +8,7 @@ import {
 } from 'prisma/seed-utils'
 import { BASE_URL } from 'test/utils'
 import { test } from 'vitest'
-import { prisma } from '~/db.server'
+import { prisma } from '~/utils/db.server'
 import { commitSession, getSession } from '~/utils/session.server'
 import { bookingSessionKey } from './resources.booker'
 import { loader } from './ships_.$shipId.book'

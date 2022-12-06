@@ -1,4 +1,4 @@
-import { db } from '~/db.server'
+import { db, interpolateArray } from '~/utils/db.server'
 import { typedBoolean } from './misc'
 
 export function getClosestStarports({
@@ -14,7 +14,7 @@ export function getClosestStarports({
 	exclude?: Array<string>
 	limit: number
 }) {
-	const excludeInter = interpolateArray(exclude)
+	const excludeInter = interpolateArray(exclude, 'exclude')
 	const wheres = [
 		query ? `name LIKE @query` : null,
 		exclude.length ? `id NOT IN (${excludeInter.query})` : null,
@@ -70,7 +70,7 @@ export function getClosestCitiesByName({
 	exclude: Array<string>
 	limit: number
 }) {
-	const excludeInter = interpolateArray(exclude)
+	const excludeInter = interpolateArray(exclude, 'exclude')
 	const wheres = [
 		query ? `(name LIKE @query OR country LIKE @query)` : null,
 		exclude.length ? `id NOT IN (${excludeInter.query})` : null,
@@ -113,15 +113,6 @@ LIMIT @limit
 		.all(interpolations)
 	assertArrayOfGeoResults(results)
 	return results
-}
-
-function interpolateArray(array: Array<string>) {
-	const query = array.map((e, i) => `@array${i}`).join(',')
-	const interpolations: Record<string, string> = {}
-	for (let index = 0; index < array.length; index++) {
-		interpolations[`array${index}`] = array[index]
-	}
-	return { query, interpolations }
 }
 
 type GeoResult = {

@@ -7,106 +7,71 @@ import { useEffect, useId } from 'react'
 import { useSpinDelay } from 'spin-delay'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server'
-import { getClosestCitiesByName } from '~/utils/geo.server'
 
 export async function loader({ request }: LoaderArgs) {
 	const url = new URL(request.url)
 	const query = url.searchParams.get('query')
-	const lat = url.searchParams.get('lat')
-	const long = url.searchParams.get('long')
 	const exclude = url.searchParams.getAll('exclude')
 	invariant(typeof query === 'string', 'query is required')
-
-	let distances: ReturnType<typeof getClosestCitiesByName> | undefined
-	let cities: Array<{ id: string; name: string; country: string }>
-	if (lat && long) {
-		distances = getClosestCitiesByName({
-			latitude: Number(lat),
-			longitude: Number(long),
-			limit: 20,
-			query: query,
-			exclude,
-		})
-		cities = (
-			await prisma.city.findMany({
-				where: { id: { in: distances.map(s => s.id) } },
-				select: { id: true, name: true, country: true },
-			})
-		).sort((a, b) => {
-			const aDistance = distances?.find(s => s.id === a.id)
-			const bDistance = distances?.find(s => s.id === b.id)
-			if (!aDistance || !bDistance) return 0
-			return aDistance.distance - bDistance.distance
-		})
-	} else {
-		cities = await prisma.city.findMany({
-			where: {
-				AND: [{ name: { contains: query } }, { id: { notIn: exclude } }],
-			},
-			select: { id: true, name: true, country: true },
-			take: 20,
-		})
-	}
-	return json({
-		cities: cities.map(s => ({
-			...s,
-			distance: distances?.find(d => d.id === s.id)?.distance,
-		})),
+	const brands = await prisma.shipBrand.findMany({
+		where: {
+			AND: [{ name: { contains: query } }, { id: { notIn: exclude } }],
+		},
+		select: {
+			id: true,
+			imageUrl: true,
+			name: true,
+		},
 	})
+	return json({ brands })
 }
 
-type City = SerializeFrom<typeof loader>['cities'][number]
+type Brand = SerializeFrom<typeof loader>['brands'][number]
 
-export function CityCombobox({
+export function BrandCombobox({
 	exclude,
-	geolocation,
 	onChange,
 }: {
 	exclude: Array<string>
-	geolocation: { lat: number; long: number } | null
-	onChange: (selectedStarport: City | null | undefined) => void
+	onChange: (selectedBrand: Brand | null | undefined) => void
 }) {
-	const { submit: submitFetcher, ...cityFetcher } = useFetcher<typeof loader>()
+	const { submit: submitFetcher, ...brandFetcher } = useFetcher<typeof loader>()
 	const id = useId()
-	const cities = cityFetcher.data?.cities ?? []
+	const brands = brandFetcher.data?.brands ?? []
 
-	const cb = useCombobox<City>({
+	const cb = useCombobox<Brand>({
 		id,
 		onSelectedItemChange: ({ selectedItem }) => onChange(selectedItem),
-		items: cities,
+		items: brands,
 		selectedItem: null,
-		itemToString: item => (item ? `${item.name} (${item.country})` : ''),
+		itemToString: item => (item ? item.name : ''),
 	})
 
 	const excludeIds = exclude.join(',')
 	useEffect(() => {
 		const searchParams = new URLSearchParams()
 		searchParams.set('query', cb.inputValue)
-		if (geolocation) {
-			searchParams.set('lat', geolocation.lat.toString())
-			searchParams.set('long', geolocation.long.toString())
-		}
 		for (const ex of excludeIds.split(',')) {
 			searchParams.append('exclude', ex)
 		}
 
 		submitFetcher(searchParams, {
 			method: 'get',
-			action: '/resources/city-combobox',
+			action: '/resources/brand-combobox',
 		})
-	}, [cb.inputValue, excludeIds, geolocation, submitFetcher])
+	}, [cb.inputValue, excludeIds, submitFetcher])
 
-	const busy = cityFetcher.state !== 'idle'
+	const busy = brandFetcher.state !== 'idle'
 	const showSpinner = useSpinDelay(busy, {
 		delay: 150,
 		minDuration: 300,
 	})
-	const displayMenu = cb.isOpen && cities.length > 0
+	const displayMenu = cb.isOpen && brands.length > 0
 
 	return (
 		<div className="relative">
 			<div className="flex flex-wrap items-center gap-1">
-				<label {...cb.getLabelProps()}>City</label>
+				<label {...cb.getLabelProps()}>Brand</label>
 			</div>
 			<div className="relative">
 				<input
@@ -128,16 +93,25 @@ export function CityCombobox({
 				})}
 			>
 				{displayMenu
-					? cities.map((city, index) => (
+					? brands.map((brand, index) => (
 							<li
-								className={clsx('cursor-pointer py-1 px-2', {
-									'bg-green-200': cb.highlightedIndex === index,
-								})}
-								key={city.id}
-								{...cb.getItemProps({ item: city, index })}
+								className={clsx(
+									'flex cursor-pointer items-center gap-2 py-1 px-2',
+									{
+										'bg-green-200': cb.highlightedIndex === index,
+									},
+								)}
+								key={brand.id}
+								{...cb.getItemProps({ item: brand, index })}
 							>
-								{city.name} ({city.country}
-								{city.distance ? ` ${city.distance.toFixed(2)}mi` : null})
+								{brand.imageUrl ? (
+									<img
+										src={brand.imageUrl}
+										alt={brand.name}
+										className="h-8 w-8 rounded-full"
+									/>
+								) : null}
+								{brand.name}
 							</li>
 					  ))
 					: null}
