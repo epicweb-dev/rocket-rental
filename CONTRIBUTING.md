@@ -52,7 +52,6 @@ npm install
 
 # setup database
 prisma migrate reset --force
-prisma db seed
 
 # Install playwright browsers
 npm run test:e2e:install

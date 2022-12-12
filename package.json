@@ -14,7 +14,7 @@
     "format": "prettier --write .",
     "generate:css": "tailwindcss -o ./app/styles/tailwind.css",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
-    "setup": "npm install && prisma migrate reset --force && prisma db seed && npm run test:e2e:install && npm run validate",
+    "setup": "npm install && prisma migrate reset --force && npm run test:e2e:install && npm run validate",
     "start": "remix-serve build",
     "start:mocks": "binode --require ./mocks --require ./node_modules/dotenv/config -- @remix-run/serve:remix-serve build",
     "test": "vitest",
