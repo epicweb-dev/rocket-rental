@@ -9,7 +9,7 @@ import {
 	oneDay,
 } from 'prisma/seed-utils'
 import invariant from 'tiny-invariant'
-import type { Locator, Page } from '@playwright/test'
+import type { Locator } from '@playwright/test'
 
 test('Users can leave reviews and view them when they are all submitted', async ({
 	page: renterPage,

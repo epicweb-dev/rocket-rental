@@ -8,7 +8,6 @@ import { FormStrategy } from 'remix-auth-form'
 import invariant from 'tiny-invariant'
 import { sessionStorage } from './session.server'
 import { verifyLogin } from '~/models/user.server'
-import { redirect } from '@remix-run/server-runtime'
 
 export const authenticator = new Authenticator<string>(sessionStorage, {
 	sessionKey: 'token',

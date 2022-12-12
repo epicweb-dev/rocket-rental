@@ -48,7 +48,8 @@
   "eslintIgnore": [
     "/node_modules",
     "/build",
-    "/public/build"
+    "/public/build",
+    "/playwright-report"
   ],
   "dependencies": {
     "@prisma/client": "^4.6.1",
