@@ -69,6 +69,14 @@ export function createBrand() {
 	}
 }
 
+export function createShipModel() {
+	return {
+		name: faker.company.name(),
+		description: faker.company.bs(),
+		imageUrl: lockifyImage(faker.image.nature(512, 512, true)),
+	}
+}
+
 export function createStarport() {
 	return {
 		name: faker.company.name(),

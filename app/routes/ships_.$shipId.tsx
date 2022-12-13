@@ -31,11 +31,20 @@ export async function loader({ params }: DataFunctionArgs) {
 					},
 				},
 			},
-			brand: {
+			model: {
 				select: {
 					id: true,
 					name: true,
+					description: true,
 					imageUrl: true,
+					brand: {
+						select: {
+							id: true,
+							name: true,
+							description: true,
+							imageUrl: true,
+						},
+					},
 				},
 			},
 			capacity: true,
@@ -103,16 +112,16 @@ export default function ShipRoute() {
 						</Link>
 					</p>
 					<p>
-						<Link to={`/brands/${data.ship.brand.id}`}>
-							{data.ship.brand.imageUrl ? (
+						<Link to={`/models/${data.ship.model.id}`}>
+							{data.ship.model.imageUrl ? (
 								<img
-									src={data.ship.brand.imageUrl}
-									alt={data.ship.brand.name ?? "Ship's brand"}
-									title={data.ship.brand.name ?? "Ship's brand"}
+									src={data.ship.model.imageUrl}
+									alt={data.ship.model.name ?? "Ship's model"}
+									title={data.ship.model.name ?? "Ship's model"}
 									className="aspect-square w-12"
 								/>
 							) : (
-								`Brand: ${data.ship.brand.name}`
+								`Model: ${data.ship.model.name}`
 							)}
 						</Link>
 					</p>
@@ -142,7 +151,7 @@ export default function ShipRoute() {
 													className="aspect-square w-12"
 												/>
 											) : (
-												`Brand: ${review.renter.user.name}`
+												`Renter Name: ${review.renter.user.name}`
 											)}
 										</Link>
 									</p>

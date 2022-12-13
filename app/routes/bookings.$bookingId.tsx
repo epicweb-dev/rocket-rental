@@ -165,7 +165,7 @@ export function CatchBoundary() {
 	const params = useParams()
 
 	if (caught.status === 404) {
-		return <div>Booking "{params.starportId}" not found</div>
+		return <div>Booking "{params.bookingId}" not found</div>
 	}
 
 	throw new Error(`Unexpected caught response with status: ${caught.status}`)

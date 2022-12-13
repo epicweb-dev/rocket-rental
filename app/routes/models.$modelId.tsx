@@ -5,22 +5,22 @@ import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server'
 
 export async function loader({ params }: DataFunctionArgs) {
-	invariant(params.brandId, 'Missing brandId')
-	const shipBrand = await prisma.shipBrand.findFirst({
-		where: { id: params.brandId },
+	invariant(params.modelId, 'Missing modelId')
+	const shipModel = await prisma.shipModel.findFirst({
+		where: { id: params.modelId },
 	})
 
-	if (!shipBrand) {
+	if (!shipModel) {
 		throw new Response('not found', { status: 404 })
 	}
-	return json({ shipBrand })
+	return json({ shipModel })
 }
 
-export default function BrandRoute() {
+export default function ModelRoute() {
 	const data = useLoaderData<typeof loader>()
 	return (
 		<div>
-			<h1>Ship Brand</h1>
+			<h1>Ship Model</h1>
 			<pre>{JSON.stringify(data, null, 2)}</pre>
 			<hr />
 			<Outlet />
@@ -33,7 +33,7 @@ export function CatchBoundary() {
 	const params = useParams()
 
 	if (caught.status === 404) {
-		return <div>Brand "{params.brandId}" not found</div>
+		return <div>Model "{params.modelId}" not found</div>
 	}
 
 	throw new Error(`Unexpected caught response with status: ${caught.status}`)

@@ -23,6 +23,12 @@ export async function loader({ params }: DataFunctionArgs) {
 	})
 	if (starport) return redirect(`/starports/${starport.id}`)
 
+	const shipModel = await prisma.shipModel.findUnique({
+		where: { id: params.id },
+		select: { id: true },
+	})
+	if (shipModel) return redirect(`/models/${shipModel.id}`)
+
 	const shipBrand = await prisma.shipBrand.findUnique({
 		where: { id: params.id },
 		select: { id: true },

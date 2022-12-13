@@ -7,6 +7,7 @@ import {
 	createStarport,
 	createUser,
 	oneDay,
+	createShipModel,
 } from 'prisma/seed-utils'
 import invariant from 'tiny-invariant'
 import type { Locator } from '@playwright/test'
@@ -34,7 +35,14 @@ test('Users can leave reviews and view them when they are all submitted', async 
 						ships: {
 							create: [
 								{
-									brand: { create: createBrand() },
+									model: {
+										create: {
+											...createShipModel(),
+											brand: {
+												create: createBrand(),
+											},
+										},
+									},
 									starport: { create: createStarport() },
 									...shipData,
 									bookings: {

@@ -15,6 +15,7 @@ import { typedBoolean } from '~/utils/misc'
 import { BrandCombobox } from './resources.brand-combobox'
 import { CityCombobox } from './resources.city-combobox'
 import { HostCombobox } from './resources.host-combobox'
+import { ModelCombobox } from './resources.model-combobox'
 import { StarportCombobox } from './resources.starport-combobox'
 
 const MAX_RESULTS = 50
@@ -26,6 +27,7 @@ export async function loader({ request }: DataFunctionArgs) {
 		return json({
 			ships: [],
 			starports: [],
+			models: [],
 			brands: [],
 			hosts: [],
 			cities: [],
@@ -37,13 +39,18 @@ export async function loader({ request }: DataFunctionArgs) {
 	const starportIds = searchParams.getAll('starportId')
 	const cityIds = searchParams.getAll('cityId')
 	const brandIds = searchParams.getAll('brandId')
+	const modelIds = searchParams.getAll('modelId')
 	const hostIds = searchParams.getAll('hostId')
-	const capacityMin = searchParams.get('capacityMin')
-	const capacityMax = searchParams.get('capacityMax')
-	const dailyChargeMin = searchParams.get('dailyChargeMin')
-	const dailyChargeMax = searchParams.get('dailyChargeMax')
-	const hostRatingMin = searchParams.get('hostRatingMin')
-	const shipRatingMin = searchParams.get('shipRatingMin')
+	const {
+		capacityMin,
+		capacityMax,
+		dailyChargeMin,
+		dailyChargeMax,
+		hostRatingMin,
+		shipRatingMin,
+		availabilityStartDate,
+		availabilityEndDate,
+	} = Object.fromEntries(searchParams)
 
 	const cities = await prisma.city.findMany({
 		where: { id: { in: cityIds } },
@@ -71,7 +78,13 @@ export async function loader({ request }: DataFunctionArgs) {
 	let ships = await prisma.ship.findMany({
 		where: {
 			starportId: allStarportIds.length ? { in: allStarportIds } : undefined,
-			brandId: brandIds.length ? { in: brandIds } : undefined,
+			model:
+				modelIds.length || brandIds.length
+					? {
+							id: modelIds.length ? { in: modelIds } : undefined,
+							brandId: brandIds.length ? { in: brandIds } : undefined,
+					  }
+					: undefined,
 			hostId: hostIds.length ? { in: hostIds } : undefined,
 			dailyCharge:
 				dailyChargeMin || dailyChargeMax
@@ -106,7 +119,12 @@ export async function loader({ request }: DataFunctionArgs) {
 		},
 		select: {
 			id: true,
-			brandId: true,
+			modelId: true,
+			model: {
+				select: {
+					brandId: true,
+				},
+			},
 			hostId: true,
 			starportId: true,
 			imageUrl: true,
@@ -131,9 +149,17 @@ export async function loader({ request }: DataFunctionArgs) {
 		ships = ships.filter(s => hostAverageRatings.some(hr => hr.id === s.hostId))
 	}
 
+	const models = await prisma.shipModel.findMany({
+		where: {
+			id: { in: [...new Set(ships.map(ship => ship.modelId)), ...modelIds] },
+		},
+		select: { id: true, name: true, imageUrl: true },
+	})
 	const brands = await prisma.shipBrand.findMany({
 		where: {
-			id: { in: [...new Set(ships.map(ship => ship.brandId)), ...brandIds] },
+			id: {
+				in: [...new Set(ships.map(ship => ship.model.brandId)), ...brandIds],
+			},
 		},
 		select: { id: true, name: true, imageUrl: true },
 	})
@@ -155,6 +181,7 @@ export async function loader({ request }: DataFunctionArgs) {
 	return json({
 		ships,
 		brands,
+		models,
 		hosts,
 		starports,
 		cities,
@@ -181,11 +208,12 @@ function getHostAverageRatings({
 	const hostAverageRatings = db
 		.prepare(
 			/* sql */ `
-SELECT s.id, AVG(hr.rating) AS avgRating
+SELECT h.userId AS id, AVG(hr.rating) AS avgRating
 FROM Ship s
 INNER JOIN Host h ON s.hostId = h.userId
 INNER JOIN HostReview hr ON hr.hostId = h.userId
-GROUP BY s.id
+WHERE s.id IN (${shipInter.query})
+GROUP BY h.userId
 ${havingClause ? `HAVING ${havingClause}` : ''}
 LIMIT @limit
 ;`,
@@ -531,6 +559,57 @@ export default function ShipsRoute() {
 											/>
 										) : null}
 										{brand.name}
+									</Link>
+									<Link to={`/search?${newSP}`}>❌</Link>
+								</div>
+							</li>
+						)
+					})}
+			</ul>
+			<ModelCombobox
+				exclude={searchParams.getAll('modelId')}
+				onChange={selectedModel => {
+					if (selectedModel) {
+						const newSP = addParamToSet(
+							new URLSearchParams(searchParams),
+							'modelId',
+							selectedModel.id,
+						)
+						setSearchParams(newSP)
+					}
+				}}
+			/>
+			<ul>
+				{searchParams
+					.getAll('modelId')
+					.map(id => {
+						const model = data.models.find(b => id === b.id)
+						if (!model) {
+							console.warn(`Model ${id} not found`)
+							return null
+						}
+						return model
+					})
+					.filter(typedBoolean)
+					.map(model => {
+						const newSP = unappend(
+							new URLSearchParams(searchParams),
+							'modelId',
+							model.id,
+						)
+
+						return (
+							<li key={model.id}>
+								<div className="flex items-center gap-2">
+									<Link to={`/${model.id}`} className="flex items-center gap-2">
+										{model.imageUrl ? (
+											<img
+												src={model.imageUrl}
+												alt={model.name ?? 'Unnamed host'}
+												className="h-8 w-8 rounded-full"
+											/>
+										) : null}
+										{model.name}
 									</Link>
 									<Link to={`/search?${newSP}`}>❌</Link>
 								</div>

@@ -8,6 +8,7 @@ import {
 	createContactInfo,
 	createPassword,
 	createShip,
+	createShipModel,
 	createStarport,
 	createUser,
 	oneDay,
@@ -58,6 +59,19 @@ async function seed() {
 		}),
 	)
 	console.timeEnd('✅ Created brands...')
+
+	console.time('⭐ Creating ship models...')
+	const shipModels = await Promise.all(
+		Array.from({ length: 100 }, async () => {
+			const shipModel = await prisma.shipModel.create({
+				data: {
+					brandId: faker.helpers.arrayElement(brands).id,
+					...createShipModel(),
+				},
+			})
+			return shipModel
+		}),
+	)
 
 	console.time('🏢 Created starports...')
 	const starports = await Promise.all(
@@ -127,7 +141,7 @@ async function seed() {
 							{ length: shipCount },
 							(): Omit<P.Ship, 'id' | 'createdAt' | 'updatedAt' | 'hostId'> => {
 								return {
-									brandId: faker.helpers.arrayElement(brands).id,
+									modelId: faker.helpers.arrayElement(shipModels).id,
 									starportId: faker.helpers.arrayElement(starports).id,
 									...createShip(),
 								}

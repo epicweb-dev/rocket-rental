@@ -88,11 +88,23 @@ model Admin {
 }
 
 model ShipBrand {
+  id          String      @id @unique @default(cuid())
+  name        String
+  description String
+  imageUrl    String
+  shipModels  ShipModel[]
+}
+
+model ShipModel {
   id          String @id @unique @default(cuid())
   name        String
   description String
   imageUrl    String
-  ships       Ship[]
+
+  brand   ShipBrand @relation(fields: [brandId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  brandId String
+
+  ships Ship[]
 }
 
 model Ship {
@@ -107,8 +119,8 @@ model Ship {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  brand   ShipBrand @relation(fields: [brandId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  brandId String
+  model   ShipModel @relation(fields: [modelId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  modelId String
 
   host   Host   @relation(fields: [hostId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
   hostId String

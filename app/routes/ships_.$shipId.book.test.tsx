@@ -1,6 +1,6 @@
 import { differenceInDays } from 'date-fns'
 import {
-	createBrand,
+	createShipBrand,
 	createShip,
 	createStarport,
 	createUser,
@@ -28,7 +28,7 @@ test('returns booking data from the session', async () => {
 	const ship = await prisma.ship.create({
 		data: {
 			...createShip(),
-			brand: { create: createBrand() },
+			brand: { create: createShipBrand() },
 			host: { create: { user: { create: createUser() } } },
 			starport: { create: createStarport() },
 		},

@@ -5,6 +5,7 @@ import {
 	createStarport,
 	createUser,
 	oneDay,
+	createShipModel,
 } from 'prisma/seed-utils'
 import { test } from 'vitest'
 import { prisma } from '~/utils/db.server'
@@ -140,7 +141,14 @@ async function setupBooking({
 					ships: {
 						create: [
 							{
-								brand: { create: createBrand() },
+								model: {
+									create: {
+										...createShipModel(),
+										brand: {
+											create: createBrand(),
+										},
+									},
+								},
 								starport: { create: createStarport() },
 								...shipData,
 								bookings: {
