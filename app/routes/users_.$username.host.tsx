@@ -34,11 +34,18 @@ export async function loader({ params }: DataFunctionArgs) {
 									bookings: true,
 								},
 							},
-							brand: {
+							model: {
 								select: {
 									id: true,
 									name: true,
 									imageUrl: true,
+									brand: {
+										select: {
+											id: true,
+											name: true,
+											imageUrl: true,
+										},
+									},
 								},
 							},
 						},

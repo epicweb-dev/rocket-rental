@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { db, interpolateArray, prisma } from '~/utils/db.server'
 import { getClosestStarports } from '~/utils/geo.server'
 import { typedBoolean } from '~/utils/misc'
+import { getIsShipAvailable } from './resources.booker'
 import { BrandCombobox } from './resources.brand-combobox'
 import { CityCombobox } from './resources.city-combobox'
 import { HostCombobox } from './resources.host-combobox'
@@ -62,92 +63,24 @@ export async function loader({ request }: DataFunctionArgs) {
 			longitude: true,
 		},
 	})
-	const starportsNearCities = cities.flatMap(c => {
-		return getClosestStarports({
-			latitude: c.latitude,
-			longitude: c.longitude,
-			limit: 1,
-		})
+
+	const ships = searchShips({
+		cityIds,
+		starportIds,
+		brandIds,
+		modelIds,
+		hostIds,
+		capacityMin: capacityMin ? Number(capacityMin) : undefined,
+		capacityMax: capacityMax ? Number(capacityMax) : undefined,
+		dailyChargeMin: dailyChargeMin ? Number(dailyChargeMin) : undefined,
+		dailyChargeMax: dailyChargeMax ? Number(dailyChargeMax) : undefined,
+		hostRatingMin: hostRatingMin ? Number(hostRatingMin) : undefined,
+		shipRatingMin: shipRatingMin ? Number(shipRatingMin) : undefined,
+		availabilityStartDate: availabilityStartDate
+			? availabilityStartDate
+			: undefined,
+		availabilityEndDate: availabilityEndDate ? availabilityEndDate : undefined,
 	})
-
-	const allStarportIds = [...starportIds, ...starportsNearCities.map(s => s.id)]
-
-	// TODO: Why are we not getting any ships back.
-	// I just finished adding host rating support and ships aren't coming back...
-
-	let ships = await prisma.ship.findMany({
-		where: {
-			starportId: allStarportIds.length ? { in: allStarportIds } : undefined,
-			model:
-				modelIds.length || brandIds.length
-					? {
-							id: modelIds.length ? { in: modelIds } : undefined,
-							brandId: brandIds.length ? { in: brandIds } : undefined,
-					  }
-					: undefined,
-			hostId: hostIds.length ? { in: hostIds } : undefined,
-			dailyCharge:
-				dailyChargeMin || dailyChargeMax
-					? {
-							gte: dailyChargeMin ? Number(dailyChargeMin) : undefined,
-							lte: dailyChargeMax ? Number(dailyChargeMax) : undefined,
-					  }
-					: undefined,
-			capacity:
-				capacityMin || capacityMax
-					? {
-							gte: capacityMin ? Number(capacityMin) : undefined,
-							lte: capacityMax ? Number(capacityMax) : undefined,
-					  }
-					: undefined,
-			reviews: shipRatingMin
-				? {
-						some: {
-							rating: {},
-						},
-				  }
-				: undefined,
-			host: hostRatingMin
-				? {
-						reviews: {
-							some: {
-								rating: {},
-							},
-						},
-				  }
-				: undefined,
-		},
-		select: {
-			id: true,
-			modelId: true,
-			model: {
-				select: {
-					brandId: true,
-				},
-			},
-			hostId: true,
-			starportId: true,
-			imageUrl: true,
-			name: true,
-		},
-		take: MAX_RESULTS,
-	})
-
-	const shipAverageRatings = getShipAverageRatings({
-		shipRatingMin: Number(shipRatingMin),
-		include: ships.map(s => s.id),
-	})
-	if (shipRatingMin) {
-		ships = ships.filter(s => shipAverageRatings.some(sr => sr.id === s.id))
-	}
-
-	const hostAverageRatings = getHostAverageRatings({
-		hostRatingMin: Number(hostRatingMin),
-		include: ships.map(s => s.hostId),
-	})
-	if (hostRatingMin) {
-		ships = ships.filter(s => hostAverageRatings.some(hr => hr.id === s.hostId))
-	}
 
 	const models = await prisma.shipModel.findMany({
 		where: {
@@ -158,7 +91,7 @@ export async function loader({ request }: DataFunctionArgs) {
 	const brands = await prisma.shipBrand.findMany({
 		where: {
 			id: {
-				in: [...new Set(ships.map(ship => ship.model.brandId)), ...brandIds],
+				in: [...new Set(ships.map(ship => ship.brandId)), ...brandIds],
 			},
 		},
 		select: { id: true, name: true, imageUrl: true },
@@ -172,7 +105,7 @@ export async function loader({ request }: DataFunctionArgs) {
 	const starports = await prisma.starport.findMany({
 		where: {
 			id: {
-				in: [...new Set(ships.map(ship => ship.starportId)), ...allStarportIds],
+				in: [...new Set(ships.map(ship => ship.starportId))],
 			},
 		},
 		select: { id: true, name: true },
@@ -185,100 +118,275 @@ export async function loader({ request }: DataFunctionArgs) {
 		hosts,
 		starports,
 		cities,
-		shipAverageRatings,
-		hostAverageRatings,
 	})
 }
 
-function getHostAverageRatings({
+function searchShips({
+	cityIds,
+	starportIds,
+	hostIds,
+	modelIds,
+	brandIds,
+	dailyChargeMin,
+	dailyChargeMax,
+	capacityMin,
+	capacityMax,
+	shipRatingMin,
 	hostRatingMin,
-	include,
+	availabilityStartDate,
+	availabilityEndDate,
 }: {
-	hostRatingMin: number
-	include: Array<string>
+	cityIds: Array<string>
+	starportIds: Array<string>
+	hostIds: Array<string>
+	modelIds: Array<string>
+	brandIds: Array<string>
+	dailyChargeMin?: number
+	dailyChargeMax?: number
+	capacityMin?: number
+	capacityMax?: number
+	shipRatingMin?: number
+	hostRatingMin?: number
+	availabilityStartDate?: string
+	availabilityEndDate?: string
 }) {
-	const shipInter = interpolateArray(include, 'include')
-	const havingClause = [
-		'avgRating NOT NULL',
-		hostRatingMin ? 'avgRating >= @hostRatingMin' : null,
+	const cityIdInter = interpolateArray(cityIds, 'cid')
+	const hostIdInter = interpolateArray(hostIds, 'hid')
+	const starportIdInter = interpolateArray(starportIds, 'spid')
+	const modelIdInter = interpolateArray(modelIds, 'mid')
+	const brandIdInter = interpolateArray(brandIds, 'brid')
+
+	const hostRatingSubqueryWhereClauses = [
+		hostIds.length ? `h.userId IN (${hostIdInter.query})` : null,
+		starportIds.length ? `ship.starportId IN (${starportIdInter.query})` : null,
+		modelIds.length ? `ship.modelId IN (${modelIdInter.query})` : null,
+		brandIds.length ? `m.brandId IN (${brandIdInter.query})` : null,
+		typeof dailyChargeMin === 'number'
+			? `ship.dailyCharge >= ${dailyChargeMin}`
+			: null,
+		typeof dailyChargeMax === 'number'
+			? `ship.dailyCharge <= ${dailyChargeMax}`
+			: null,
+		typeof capacityMin === 'number' ? `ship.capacity >= ${capacityMin}` : null,
+		typeof capacityMax === 'number' ? `ship.capacity <= ${capacityMax}` : null,
 	]
 		.filter(typedBoolean)
 		.join(' AND ')
 
-	const hostAverageRatings = db
-		.prepare(
-			/* sql */ `
-SELECT h.userId AS id, AVG(hr.rating) AS avgRating
-FROM Ship s
-INNER JOIN Host h ON s.hostId = h.userId
+	const hostRatingSubquery = /* sql */ `
+SELECT h.userId, AVG(hr.rating) AS avgRating
+FROM Host h
 INNER JOIN HostReview hr ON hr.hostId = h.userId
-WHERE s.id IN (${shipInter.query})
+${
+	starportIds.length ||
+	typeof dailyChargeMin === 'number' ||
+	typeof dailyChargeMax === 'number' ||
+	typeof capacityMin === 'number' ||
+	typeof capacityMax === 'number'
+		? 'INNER JOIN Ship ship ON ship.hostId = h.userId'
+		: ''
+}
+${
+	modelIds.length || brandIds.length
+		? 'INNER JOIN ShipModel m ON m.id = ship.modelId'
+		: ''
+}
+${
+	hostRatingSubqueryWhereClauses
+		? `WHERE ${hostRatingSubqueryWhereClauses}`
+		: ''
+}
 GROUP BY h.userId
-${havingClause ? `HAVING ${havingClause}` : ''}
-LIMIT @limit
-;`,
-		)
-		.all({ hostRatingMin, limit: MAX_RESULTS, ...shipInter.interpolations })
+	`
 
-	assertAvgRating(hostAverageRatings)
+	const shipRatingSubqueryWhereClauses = [
+		starportIds.length ? `ship.starportId IN (${starportIdInter.query})` : null,
+		hostIds.length ? `ship.hostId IN (${hostIdInter.query})` : null,
+		modelIds.length ? `ship.modelId IN (${modelIdInter.query})` : null,
+		brandIds.length ? `m.brandId IN (${brandIdInter.query})` : null,
+		typeof capacityMin === 'number' ? `ship.capacity >= ${capacityMin}` : null,
+		typeof capacityMax === 'number' ? `ship.capacity <= ${capacityMax}` : null,
+	]
+		.filter(typedBoolean)
+		.join(' AND ')
 
-	return hostAverageRatings
+	const shipRatingSubquery = /* sql */ `
+SELECT ship.id, AVG(sr.rating) AS avgRating
+FROM Ship ship
+INNER JOIN ShipReview sr ON sr.shipId = ship.id
+${starportIds.length ? 'INNER JOIN Starport sp ON sp.id = ship.starportId' : ''}
+${hostIds.length ? 'INNER JOIN Host h ON h.userId = ship.hostId' : ''}
+${
+	modelIds.length || brandIds.length
+		? 'INNER JOIN ShipModel m ON m.id = ship.modelId'
+		: ''
+}
+${
+	shipRatingSubqueryWhereClauses
+		? `WHERE ${shipRatingSubqueryWhereClauses}`
+		: ''
+}
+GROUP BY ship.id
+	`
+
+	const availabilitySubquery = /* sql */ `
+SELECT ship.id
+FROM Ship ship
+LEFT JOIN Booking booking ON booking.shipId = ship.id
+WHERE NOT EXISTS (
+		SELECT 1
+		FROM Booking
+		WHERE Booking.shipId = ship.id
+				AND Booking.startDate > '2022-12-14'
+				AND Booking.endDate < '2022-12-15'
+)
+	`
+
+	const whereClauses = [
+		typeof dailyChargeMin === 'number'
+			? 'ship.dailyCharge >= @dailyChargeMin'
+			: null,
+		typeof dailyChargeMax === 'number'
+			? 'ship.dailyCharge <= @dailyChargeMax'
+			: null,
+		typeof capacityMin === 'number' ? `ship.capacity >= ${capacityMin}` : null,
+		typeof capacityMax === 'number' ? `ship.capacity <= ${capacityMax}` : null,
+		typeof hostRatingMin === 'number'
+			? 'hostAvgRating >= @hostRatingMin'
+			: null,
+		typeof shipRatingMin === 'number'
+			? 'shipAvgRating >= @shipRatingMin'
+			: null,
+		starportIds.length ? `ship.starportId IN (${starportIdInter.query})` : null,
+		hostIds.length ? `ship.hostId IN (${hostIdInter.query})` : null,
+		modelIds.length ? `ship.modelId IN (${modelIdInter.query})` : null,
+		brandIds.length ? `m.brandId IN (${brandIdInter.query})` : null,
+		cityIds.length ? `closestStarport.id = ship.starportId` : null,
+		/* sql */
+		`
+			NOT EXISTS (
+				SELECT 1
+				FROM Booking
+				WHERE Booking.shipId = ship.id
+						AND Booking.endDate > @availabilityStartDate
+						AND Booking.startDate < @availabilityEndDate
+			)
+		`,
+	]
+		.filter(typedBoolean)
+		.join(' AND ')
+
+	const closestStarportSubquery = /* sql */ `
+SELECT
+starport.id,
+acos(
+	sin(city.latitude * PI()/180)
+	* sin(starport.latitude * PI()/180)
+	+ cos(city.latitude * PI()/180)
+	* cos(starport.latitude * PI()/180)
+	* cos((city.longitude - starport.longitude) * PI()/180)
+)
+* 180/PI() * 60
+-- convert from nautical miles to miles
+* 1.1515
+AS distance
+FROM starport
+JOIN city
+ON city.id IN (${cityIdInter.query})
+ORDER BY distance ASC
+LIMIT @cityCount
+`
+
+	const query =
+		/* sql */
+		`
+SELECT
+	ship.id,
+	ship.modelId,
+	ship.hostId,
+	ship.starportId,
+	m.brandId,
+	ship.imageUrl,
+	ship.name,
+	ship.dailyCharge,
+	ship.capacity,
+	(
+		SELECT avgRating
+		FROM (${hostRatingSubquery}) AS hostRatings
+		WHERE hostRatings.userId = ship.hostId
+	) as hostAvgRating,
+	(
+		SELECT avgRating
+		FROM (${shipRatingSubquery}) AS shipRatings
+		WHERE shipRatings.id = ship.id
+	) as shipAvgRating
+
+FROM Ship ship
+
+INNER JOIN ShipModel m ON m.id = ship.modelId
+${
+	cityIds.length
+		? `INNER JOIN (${closestStarportSubquery}) AS closestStarport ON closestStarport.id = ship.starportId`
+		: ''
 }
 
-function getShipAverageRatings({
-	shipRatingMin,
-	include,
-}: {
-	shipRatingMin: number
-	include: Array<string>
-}) {
-	const shipInter = interpolateArray(include, 'include')
-	const havingClause = [
-		'avgRating NOT NULL',
-		shipRatingMin ? 'avgRating >= @shipRatingMin' : null,
-	]
-		.filter(typedBoolean)
-		.join(' AND ')
-	const shipAverageRatings = db
-		.prepare(
-			/* sql */ `
-SELECT s.id, AVG(sr.rating) AS avgRating
-FROM Ship s
-LEFT JOIN ShipReview sr ON sr.shipId = s.id
-WHERE s.id IN (${shipInter.query})
-GROUP BY s.id
-${havingClause ? `HAVING ${havingClause}` : ''}
+${whereClauses ? `WHERE ${whereClauses}` : ''}
+
 LIMIT @limit
 ;
-	`,
-		)
-		.all({
-			shipRatingMin: shipRatingMin,
-			limit: MAX_RESULTS,
-			...shipInter.interpolations,
-		})
+	`
 
-	assertAvgRating(shipAverageRatings)
+	const preparedStatement = db.prepare(query)
 
-	return shipAverageRatings
+	const results = preparedStatement.all({
+		limit: MAX_RESULTS,
+		cityCount: cityIds.length,
+		hostRatingMin,
+		shipRatingMin,
+		dailyChargeMin,
+		dailyChargeMax,
+		availabilityStartDate,
+		availabilityEndDate,
+		...cityIdInter.interpolations,
+		...starportIdInter.interpolations,
+		...hostIdInter.interpolations,
+		...modelIdInter.interpolations,
+		...brandIdInter.interpolations,
+	})
+
+	return results
 }
 
-function assertAvgRating(
-	avgRating: any,
-): asserts avgRating is Array<{ id: string; avgRating: number }> {
-	if (!Array.isArray(avgRating)) {
-		throw new Error('avgRating is not an array')
-	}
-	if (
-		avgRating.some(
-			r => typeof r.id !== 'string' || typeof r.avgRating !== 'number',
-		)
-	) {
-		throw new Error(
-			'avgRating is not an array of { id: string; avgRating: number }',
-		)
-	}
-}
+console.time('search')
+// const results = searchShips({
+// 	cityIds: [],
+// 	starportIds: [],
+// 	hostIds: [],
+// 	modelIds: [],
+// 	brandIds: [],
+// 	availabilityStartDate: '2020-12-14',
+// 	availabilityEndDate: '2023-12-15',
+// })
+// const results = db
+// 	.prepare(
+// 		/* sql */
+// 		`
+// SELECT ship.id
+// FROM Ship ship
+// LEFT JOIN Booking booking ON booking.shipId = ship.id
+// WHERE NOT EXISTS (
+// 		SELECT 1
+// 		FROM Booking
+// 		WHERE Booking.shipId = ship.id
+// 				AND Booking.startDate > '2022-12-14'
+// 				AND Booking.endDate < '2022-12-15'
+// )
+// LIMIT 5
+// `,
+// 	)
+// 	.all()
+// console.log({ results, length: results.length })
+console.timeEnd('search')
 
 export async function action({ request }: DataFunctionArgs) {
 	const formData = await request.formData()
@@ -673,11 +781,33 @@ export default function ShipsRoute() {
 			</ul>
 			<Form
 				onChange={event => {
-					const form = event.currentTarget
-					requestAnimationFrame(() => submit(form))
+					const newSP = new URLSearchParams(searchParams)
+					const { target } = event
+					if (target instanceof HTMLInputElement) {
+						newSP.set(target.name, target.value)
+						setSearchParams(newSP)
+					} else {
+						console.warn('Unexpected change event from target', target)
+					}
 				}}
 			>
 				<div className="flex flex-wrap gap-6">
+					<label>
+						<span>Trip Start Date</span>
+						<input
+							type="date"
+							name="startDate"
+							defaultValue={searchParams.get('startDate') ?? ''}
+						/>
+					</label>
+					<label>
+						<span>Trip End Date</span>
+						<input
+							type="date"
+							name="endDate"
+							defaultValue={searchParams.get('endDate') ?? ''}
+						/>
+					</label>
 					<label>
 						Capacity Min:{' '}
 						<input
