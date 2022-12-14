@@ -12,7 +12,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { db, interpolateArray, prisma } from '~/utils/db.server'
 import { getClosestStarports } from '~/utils/geo.server'
 import { typedBoolean } from '~/utils/misc'
-import { getIsShipAvailable } from './resources.booker'
+import { z } from 'zod'
 import { BrandCombobox } from './resources.brand-combobox'
 import { CityCombobox } from './resources.city-combobox'
 import { HostCombobox } from './resources.host-combobox'
@@ -120,6 +120,22 @@ export async function loader({ request }: DataFunctionArgs) {
 		cities,
 	})
 }
+
+const SearchShipsResult = z.array(
+	z.object({
+		id: z.string(),
+		modelId: z.string(),
+		hostId: z.string(),
+		starportId: z.string(),
+		brandId: z.string(),
+		imageUrl: z.string().url(),
+		name: z.string(),
+		dailyCharge: z.number().positive(),
+		capacity: z.number().positive(),
+		hostAvgRating: z.number().min(0).max(5).nullable(),
+		shipAvgRating: z.number().min(0).max(5).nullable(),
+	}),
+)
 
 function searchShips({
 	cityIds,
@@ -238,10 +254,10 @@ GROUP BY ship.id
 			: null,
 		typeof capacityMin === 'number' ? `ship.capacity >= ${capacityMin}` : null,
 		typeof capacityMax === 'number' ? `ship.capacity <= ${capacityMax}` : null,
-		typeof hostRatingMin === 'number'
+		typeof hostRatingMin === 'number' && hostRatingMin > 0
 			? 'hostAvgRating >= @hostRatingMin'
 			: null,
-		typeof shipRatingMin === 'number'
+		typeof shipRatingMin === 'number' && shipRatingMin > 0
 			? 'shipAvgRating >= @shipRatingMin'
 			: null,
 		starportIds.length ? `ship.starportId IN (${starportIdInter.query})` : null,
@@ -325,7 +341,7 @@ LIMIT @limit
 
 	const preparedStatement = db.prepare(query)
 
-	const results = preparedStatement.all({
+	const rawResults = preparedStatement.all({
 		limit: MAX_RESULTS,
 		cityCount: cityIds.length,
 		hostRatingMin,
@@ -341,39 +357,10 @@ LIMIT @limit
 		...brandIdInter.interpolations,
 	})
 
+	const results = SearchShipsResult.parse(rawResults)
+
 	return results
 }
-
-console.time('search')
-// const results = searchShips({
-// 	cityIds: [],
-// 	starportIds: [],
-// 	hostIds: [],
-// 	modelIds: [],
-// 	brandIds: [],
-// 	availabilityStartDate: '2020-12-14',
-// 	availabilityEndDate: '2023-12-15',
-// })
-// const results = db
-// 	.prepare(
-// 		/* sql */
-// 		`
-// SELECT ship.id
-// FROM Ship ship
-// LEFT JOIN Booking booking ON booking.shipId = ship.id
-// WHERE NOT EXISTS (
-// 		SELECT 1
-// 		FROM Booking
-// 		WHERE Booking.shipId = ship.id
-// 				AND Booking.startDate > '2022-12-14'
-// 				AND Booking.endDate < '2022-12-15'
-// )
-// LIMIT 5
-// `,
-// 	)
-// 	.all()
-// console.log({ results, length: results.length })
-console.timeEnd('search')
 
 export async function action({ request }: DataFunctionArgs) {
 	const formData = await request.formData()
