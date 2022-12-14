@@ -24,7 +24,7 @@ if (process.env.NODE_ENV === 'production') {
 	if (!global.__db__) {
 		global.__db__ = new Database(process.env.DATABASE_PATH, {
 			// Turn this on for help with db queries:
-			verbose: console.log,
+			// verbose: console.log,
 		})
 	}
 	prisma = global.__prisma__

@@ -39,8 +39,8 @@ acos(
 }
 
 type BaseOptions = {
-	latitude: number
-	longitude: number
+	lat: number
+	long: number
 	query?: string
 	exclude?: Array<string>
 	limit: number
@@ -70,8 +70,8 @@ export function getClosestStarports(options: BaseOptions) {
  * @returns
  */
 function getClosestWithQuery({
-	latitude,
-	longitude,
+	lat,
+	long,
 	query,
 	limit,
 	exclude = [],
@@ -92,15 +92,15 @@ function getClosestWithQuery({
 		.filter(typedBoolean)
 		.join(' AND ')
 	const interpolations = {
-		latitude,
-		longitude,
+		lat,
+		long,
 		query: `%${query}%`,
 		...excludeInter.interpolations,
 		limit,
 	}
 
 	const distanceCalculation = getDistanceCalculation({
-		from: { lat: '@latitude', long: '@longitude' },
+		from: { lat: '@lat', long: '@long' },
 		to: { lat: 'latitude', long: 'longitude' },
 	})
 

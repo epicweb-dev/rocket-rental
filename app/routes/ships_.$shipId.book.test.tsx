@@ -1,10 +1,11 @@
 import { differenceInDays } from 'date-fns'
 import {
-	createShipBrand,
 	createShip,
 	createStarport,
 	createUser,
 	oneDay,
+	createShipModel,
+	createBrand,
 } from 'prisma/seed-utils'
 import { BASE_URL } from 'test/utils'
 import { test } from 'vitest'
@@ -28,7 +29,14 @@ test('returns booking data from the session', async () => {
 	const ship = await prisma.ship.create({
 		data: {
 			...createShip(),
-			brand: { create: createShipBrand() },
+			model: {
+				create: {
+					...createShipModel(),
+					brand: {
+						create: createBrand(),
+					},
+				},
+			},
 			host: { create: { user: { create: createUser() } } },
 			starport: { create: createStarport() },
 		},

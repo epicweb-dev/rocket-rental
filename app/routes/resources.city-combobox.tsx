@@ -5,35 +5,41 @@ import clsx from 'clsx'
 import { useCombobox } from 'downshift'
 import { useEffect, useId } from 'react'
 import { useSpinDelay } from 'spin-delay'
-import invariant from 'tiny-invariant'
 import { z } from 'zod'
 import { Spinner } from '~/components/spinner'
 import { prisma } from '~/utils/db.server'
 import { getClosestCities } from '~/utils/geo.server'
+import { parseSearchParams } from '~/utils/search-params'
 
-const NullableNumber = z.union([z.coerce.number(), z.null()])
+const NullableNumber = z
+	.string()
+	.nullable()
+	.optional()
+	.transform(s => {
+		const number = s ? Number(s) : null
+		return number === null || Number.isNaN(number) ? null : number
+	})
+
+const SearchParamsSchema = z.object({
+	query: z.string().default(''),
+	lat: NullableNumber,
+	long: NullableNumber,
+	exclude: z.array(z.string()).default([]),
+})
 
 export async function loader({ request }: LoaderArgs) {
-	const url = new URL(request.url)
-	const query = url.searchParams.get('query')
-	const latitude = NullableNumber.parse(url.searchParams.get('lat'))
-	const longitude = NullableNumber.parse(url.searchParams.get('long'))
-	const exclude = url.searchParams.getAll('exclude')
-	invariant(typeof query === 'string', 'query is required')
+	const { query, lat, long, exclude } = parseSearchParams(
+		new URL(request.url).searchParams,
+		SearchParamsSchema,
+	)
 
 	let cities: Array<{
 		id: string
 		displayName: string
 		distance: number | null
 	}>
-	if (latitude !== null && longitude !== null) {
-		cities = getClosestCities({
-			latitude,
-			longitude,
-			limit: 20,
-			query,
-			exclude,
-		})
+	if (lat !== null && long !== null) {
+		cities = getClosestCities({ lat, long, query, exclude, limit: 20 })
 	} else {
 		cities = (
 			await prisma.city.findMany({
@@ -79,7 +85,7 @@ export function CityCombobox({
 	const excludeIds = exclude.join(',')
 	useEffect(() => {
 		const searchParams = new URLSearchParams()
-		searchParams.set('query', cb.inputValue)
+		searchParams.set('query', cb.inputValue ?? '')
 		if (geolocation) {
 			searchParams.set('lat', geolocation.lat.toString())
 			searchParams.set('long', geolocation.long.toString())

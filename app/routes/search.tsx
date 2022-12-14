@@ -9,25 +9,29 @@ import {
 	useSubmit,
 } from '@remix-run/react'
 import { useCallback, useEffect, useState } from 'react'
+import { z } from 'zod'
 import { db, interpolateArray, prisma } from '~/utils/db.server'
 import { getClosestStarports, getDistanceCalculation } from '~/utils/geo.server'
 import { typedBoolean } from '~/utils/misc'
-import { z } from 'zod'
+import {
+	addParamToSet,
+	parseSearchParams,
+	unappend,
+} from '~/utils/search-params'
 import { BrandCombobox } from './resources.brand-combobox'
 import { CityCombobox } from './resources.city-combobox'
 import { HostCombobox } from './resources.host-combobox'
 import { ModelCombobox } from './resources.model-combobox'
 import { StarportCombobox } from './resources.starport-combobox'
-import { parseSearchParams } from '~/utils/zod'
 
 const MAX_RESULTS = 50
 
-const SearchFormSchema = z.object({
-	starportIds: z.array(z.string()).default([]),
-	cityIds: z.array(z.string()).default([]),
-	brandIds: z.array(z.string()).default([]),
-	modelIds: z.array(z.string()).default([]),
-	hostIds: z.array(z.string()).default([]),
+const SearchParamsSchema = z.object({
+	starportId: z.array(z.string()).default([]),
+	cityId: z.array(z.string()).default([]),
+	brandId: z.array(z.string()).default([]),
+	modelId: z.array(z.string()).default([]),
+	hostId: z.array(z.string()).default([]),
 	capacityMin: z.coerce.number().positive().optional(),
 	capacityMax: z.coerce.number().positive().optional(),
 	dailyChargeMin: z.coerce.number().positive().optional(),
@@ -53,41 +57,41 @@ const SearchFormSchema = z.object({
 export async function loader({ request }: DataFunctionArgs) {
 	const searchParameters = parseSearchParams(
 		new URL(request.url).searchParams,
-		SearchFormSchema,
+		SearchParamsSchema,
 	)
-	const { cityIds, brandIds, modelIds, hostIds } = searchParameters
+	const { starportId, cityId, brandId, modelId, hostId } = searchParameters
 
 	const ships = searchShips(searchParameters)
 
 	const cities = await prisma.city.findMany({
-		where: { id: { in: cityIds } },
+		where: { id: { in: cityId } },
 		select: { id: true, name: true, country: true },
 	})
 
 	const models = await prisma.shipModel.findMany({
 		where: {
-			id: { in: [...new Set(ships.map(ship => ship.modelId)), ...modelIds] },
+			id: { in: [...new Set(ships.map(ship => ship.modelId)), ...modelId] },
 		},
 		select: { id: true, name: true, imageUrl: true },
 	})
 	const brands = await prisma.shipBrand.findMany({
 		where: {
 			id: {
-				in: [...new Set(ships.map(ship => ship.brandId)), ...brandIds],
+				in: [...new Set(ships.map(ship => ship.brandId)), ...brandId],
 			},
 		},
 		select: { id: true, name: true, imageUrl: true },
 	})
 	const hosts = await prisma.host.findMany({
 		where: {
-			userId: { in: [...new Set(ships.map(ship => ship.hostId)), ...hostIds] },
+			userId: { in: [...new Set(ships.map(ship => ship.hostId)), ...hostId] },
 		},
 		select: { user: { select: { id: true, name: true, imageUrl: true } } },
 	})
 	const starports = await prisma.starport.findMany({
 		where: {
 			id: {
-				in: [...new Set(ships.map(ship => ship.starportId))],
+				in: [...new Set(ships.map(ship => ship.starportId)), ...starportId],
 			},
 		},
 		select: { id: true, name: true },
@@ -113,11 +117,11 @@ const SearchShipsResult = z.array(
 )
 
 function searchShips({
-	cityIds,
-	starportIds,
-	hostIds,
-	modelIds,
-	brandIds,
+	cityId,
+	starportId,
+	hostId,
+	modelId,
+	brandId,
 	dailyChargeMin,
 	dailyChargeMax,
 	capacityMin,
@@ -126,18 +130,18 @@ function searchShips({
 	hostRatingMin,
 	availabilityStartDate,
 	availabilityEndDate,
-}: z.infer<typeof SearchFormSchema>) {
-	const cityIdInter = interpolateArray(cityIds, 'cid')
-	const hostIdInter = interpolateArray(hostIds, 'hid')
-	const starportIdInter = interpolateArray(starportIds, 'spid')
-	const modelIdInter = interpolateArray(modelIds, 'mid')
-	const brandIdInter = interpolateArray(brandIds, 'brid')
+}: z.infer<typeof SearchParamsSchema>) {
+	const cityIdInter = interpolateArray(cityId, 'cid')
+	const hostIdInter = interpolateArray(hostId, 'hid')
+	const starportIdInter = interpolateArray(starportId, 'spid')
+	const modelIdInter = interpolateArray(modelId, 'mid')
+	const brandIdInter = interpolateArray(brandId, 'brid')
 
 	const hostRatingSubqueryWhereClauses = [
-		hostIds.length ? `h.userId IN (${hostIdInter.query})` : null,
-		starportIds.length ? `ship.starportId IN (${starportIdInter.query})` : null,
-		modelIds.length ? `ship.modelId IN (${modelIdInter.query})` : null,
-		brandIds.length ? `m.brandId IN (${brandIdInter.query})` : null,
+		hostId.length ? `h.userId IN (${hostIdInter.query})` : null,
+		starportId.length ? `ship.starportId IN (${starportIdInter.query})` : null,
+		modelId.length ? `ship.modelId IN (${modelIdInter.query})` : null,
+		brandId.length ? `m.brandId IN (${brandIdInter.query})` : null,
 		typeof dailyChargeMin === 'number'
 			? `ship.dailyCharge >= ${dailyChargeMin}`
 			: null,
@@ -155,7 +159,7 @@ function searchShips({
 		FROM Host h
 		INNER JOIN HostReview hr ON hr.hostId = h.userId
 		${
-			starportIds.length ||
+			starportId.length ||
 			typeof dailyChargeMin === 'number' ||
 			typeof dailyChargeMax === 'number' ||
 			typeof capacityMin === 'number' ||
@@ -164,7 +168,7 @@ function searchShips({
 				: ''
 		}
 		${
-			modelIds.length || brandIds.length
+			modelId.length || brandId.length
 				? 'INNER JOIN ShipModel m ON m.id = ship.modelId'
 				: ''
 		}
@@ -177,10 +181,10 @@ function searchShips({
 	`
 
 	const shipRatingSubqueryWhereClauses = [
-		starportIds.length ? `ship.starportId IN (${starportIdInter.query})` : null,
-		hostIds.length ? `ship.hostId IN (${hostIdInter.query})` : null,
-		modelIds.length ? `ship.modelId IN (${modelIdInter.query})` : null,
-		brandIds.length ? `m.brandId IN (${brandIdInter.query})` : null,
+		starportId.length ? `ship.starportId IN (${starportIdInter.query})` : null,
+		hostId.length ? `ship.hostId IN (${hostIdInter.query})` : null,
+		modelId.length ? `ship.modelId IN (${modelIdInter.query})` : null,
+		brandId.length ? `m.brandId IN (${brandIdInter.query})` : null,
 		typeof capacityMin === 'number' ? `ship.capacity >= ${capacityMin}` : null,
 		typeof capacityMax === 'number' ? `ship.capacity <= ${capacityMax}` : null,
 	]
@@ -191,10 +195,10 @@ function searchShips({
 		SELECT ship.id, AVG(sr.rating) AS avgRating
 		FROM Ship ship
 		INNER JOIN ShipReview sr ON sr.shipId = ship.id
-		${starportIds.length ? 'INNER JOIN Starport sp ON sp.id = ship.starportId' : ''}
-		${hostIds.length ? 'INNER JOIN Host h ON h.userId = ship.hostId' : ''}
+		${starportId.length ? 'INNER JOIN Starport sp ON sp.id = ship.starportId' : ''}
+		${hostId.length ? 'INNER JOIN Host h ON h.userId = ship.hostId' : ''}
 		${
-			modelIds.length || brandIds.length
+			modelId.length || brandId.length
 				? 'INNER JOIN ShipModel m ON m.id = ship.modelId'
 				: ''
 		}
@@ -221,11 +225,11 @@ function searchShips({
 		typeof shipRatingMin === 'number' && shipRatingMin > 0
 			? 'shipAvgRating >= @shipRatingMin'
 			: null,
-		starportIds.length ? `ship.starportId IN (${starportIdInter.query})` : null,
-		hostIds.length ? `ship.hostId IN (${hostIdInter.query})` : null,
-		modelIds.length ? `ship.modelId IN (${modelIdInter.query})` : null,
-		brandIds.length ? `m.brandId IN (${brandIdInter.query})` : null,
-		cityIds.length ? `closestStarport.id = ship.starportId` : null,
+		starportId.length ? `ship.starportId IN (${starportIdInter.query})` : null,
+		hostId.length ? `ship.hostId IN (${hostIdInter.query})` : null,
+		modelId.length ? `ship.modelId IN (${modelIdInter.query})` : null,
+		brandId.length ? `m.brandId IN (${brandIdInter.query})` : null,
+		cityId.length ? `closestStarport.id = ship.starportId` : null,
 		availabilityStartDate || availabilityEndDate
 			? /* sql */ `
 			NOT EXISTS (
@@ -283,7 +287,7 @@ function searchShips({
 
 		INNER JOIN ShipModel m ON m.id = ship.modelId
 		${
-			cityIds.length
+			cityId.length
 				? `INNER JOIN (${closestStarportSubquery}) AS closestStarport ON closestStarport.id = ship.starportId`
 				: ''
 		}
@@ -297,7 +301,7 @@ function searchShips({
 
 	const rawResults = preparedStatement.all({
 		limit: MAX_RESULTS,
-		cityCount: cityIds.length,
+		cityCount: cityId.length,
 		hostRatingMin,
 		shipRatingMin,
 		dailyChargeMin,
@@ -324,8 +328,8 @@ export async function action({ request }: DataFunctionArgs) {
 			const lat = formData.get('lat')
 			const long = formData.get('long')
 			const [closestStarport] = getClosestStarports({
-				latitude: Number(lat),
-				longitude: Number(long),
+				lat: Number(lat),
+				long: Number(long),
 				limit: 1,
 			})
 			const url = new URL(request.url)
@@ -336,27 +340,6 @@ export async function action({ request }: DataFunctionArgs) {
 			throw new Error(`Invalid intent: ${intent}`)
 		}
 	}
-}
-
-function addParamToSet(
-	searchParams: URLSearchParams,
-	key: string,
-	value: string,
-) {
-	const values = searchParams.getAll(key)
-	if (!values.includes(value)) {
-		searchParams.append(key, value)
-	}
-	return searchParams
-}
-
-function unappend(searchParams: URLSearchParams, key: string, value: string) {
-	const values = searchParams.getAll(key).filter(v => v !== value)
-	searchParams.delete(key)
-	for (const value of values) {
-		searchParams.append(key, value)
-	}
-	return searchParams
 }
 
 type Geo =
