@@ -10,7 +10,7 @@ import {
 } from '@remix-run/react'
 import { useCallback, useEffect, useState } from 'react'
 import { db, interpolateArray, prisma } from '~/utils/db.server'
-import { getClosestStarports } from '~/utils/geo.server'
+import { getClosestStarports, getDistanceCalculation } from '~/utils/geo.server'
 import { typedBoolean } from '~/utils/misc'
 import { z } from 'zod'
 import { BrandCombobox } from './resources.brand-combobox'
@@ -18,68 +18,50 @@ import { CityCombobox } from './resources.city-combobox'
 import { HostCombobox } from './resources.host-combobox'
 import { ModelCombobox } from './resources.model-combobox'
 import { StarportCombobox } from './resources.starport-combobox'
+import { parseSearchParams } from '~/utils/zod'
 
 const MAX_RESULTS = 50
 
-export async function loader({ request }: DataFunctionArgs) {
-	const searchParams = new URL(request.url).searchParams
-	const searchParamsEmpty = !searchParams.toString()
-	if (searchParamsEmpty) {
-		return json({
-			ships: [],
-			starports: [],
-			models: [],
-			brands: [],
-			hosts: [],
-			cities: [],
-			shipAverageRatings: [],
-			hostAverageRatings: [],
-		})
-	}
+const SearchFormSchema = z.object({
+	starportIds: z.array(z.string()).default([]),
+	cityIds: z.array(z.string()).default([]),
+	brandIds: z.array(z.string()).default([]),
+	modelIds: z.array(z.string()).default([]),
+	hostIds: z.array(z.string()).default([]),
+	capacityMin: z.coerce.number().positive().optional(),
+	capacityMax: z.coerce.number().positive().optional(),
+	dailyChargeMin: z.coerce.number().positive().optional(),
+	dailyChargeMax: z.coerce.number().positive().optional(),
+	hostRatingMin: z.coerce.number().min(0).max(5).optional(),
+	shipRatingMin: z.coerce.number().min(0).max(5).optional(),
+	availabilityStartDate: z
+		.string()
+		.refine(
+			v => /\d{4}-\d{2}-\d{2}/.test(v),
+			val => ({ message: `Invalid date: ${val}` }),
+		)
+		.optional(),
+	availabilityEndDate: z
+		.string()
+		.refine(
+			v => /\d{4}-\d{2}-\d{2}/.test(v),
+			val => ({ message: `Invalid date: ${val}` }),
+		)
+		.optional(),
+})
 
-	const starportIds = searchParams.getAll('starportId')
-	const cityIds = searchParams.getAll('cityId')
-	const brandIds = searchParams.getAll('brandId')
-	const modelIds = searchParams.getAll('modelId')
-	const hostIds = searchParams.getAll('hostId')
-	const {
-		capacityMin,
-		capacityMax,
-		dailyChargeMin,
-		dailyChargeMax,
-		hostRatingMin,
-		shipRatingMin,
-		availabilityStartDate,
-		availabilityEndDate,
-	} = Object.fromEntries(searchParams)
+export async function loader({ request }: DataFunctionArgs) {
+	const searchParameters = parseSearchParams(
+		new URL(request.url).searchParams,
+		SearchFormSchema,
+	)
+	const { cityIds, brandIds, modelIds, hostIds } = searchParameters
+
+	const ships = searchShips(searchParameters)
 
 	const cities = await prisma.city.findMany({
 		where: { id: { in: cityIds } },
-		select: {
-			id: true,
-			name: true,
-			country: true,
-			latitude: true,
-			longitude: true,
-		},
-	})
-
-	const ships = searchShips({
-		cityIds,
-		starportIds,
-		brandIds,
-		modelIds,
-		hostIds,
-		capacityMin: capacityMin ? Number(capacityMin) : undefined,
-		capacityMax: capacityMax ? Number(capacityMax) : undefined,
-		dailyChargeMin: dailyChargeMin ? Number(dailyChargeMin) : undefined,
-		dailyChargeMax: dailyChargeMax ? Number(dailyChargeMax) : undefined,
-		hostRatingMin: hostRatingMin ? Number(hostRatingMin) : undefined,
-		shipRatingMin: shipRatingMin ? Number(shipRatingMin) : undefined,
-		availabilityStartDate: availabilityStartDate
-			? availabilityStartDate
-			: undefined,
-		availabilityEndDate: availabilityEndDate ? availabilityEndDate : undefined,
+		select: { id: true, name: true, country: true },
 	})
 
 	const models = await prisma.shipModel.findMany({
@@ -111,14 +93,7 @@ export async function loader({ request }: DataFunctionArgs) {
 		select: { id: true, name: true },
 	})
 
-	return json({
-		ships,
-		brands,
-		models,
-		hosts,
-		starports,
-		cities,
-	})
+	return json({ ships, brands, models, hosts, starports, cities })
 }
 
 const SearchShipsResult = z.array(
@@ -151,21 +126,7 @@ function searchShips({
 	hostRatingMin,
 	availabilityStartDate,
 	availabilityEndDate,
-}: {
-	cityIds: Array<string>
-	starportIds: Array<string>
-	hostIds: Array<string>
-	modelIds: Array<string>
-	brandIds: Array<string>
-	dailyChargeMin?: number
-	dailyChargeMax?: number
-	capacityMin?: number
-	capacityMax?: number
-	shipRatingMin?: number
-	hostRatingMin?: number
-	availabilityStartDate?: string
-	availabilityEndDate?: string
-}) {
+}: z.infer<typeof SearchFormSchema>) {
 	const cityIdInter = interpolateArray(cityIds, 'cid')
 	const hostIdInter = interpolateArray(hostIds, 'hid')
 	const starportIdInter = interpolateArray(starportIds, 'spid')
@@ -190,29 +151,29 @@ function searchShips({
 		.join(' AND ')
 
 	const hostRatingSubquery = /* sql */ `
-SELECT h.userId, AVG(hr.rating) AS avgRating
-FROM Host h
-INNER JOIN HostReview hr ON hr.hostId = h.userId
-${
-	starportIds.length ||
-	typeof dailyChargeMin === 'number' ||
-	typeof dailyChargeMax === 'number' ||
-	typeof capacityMin === 'number' ||
-	typeof capacityMax === 'number'
-		? 'INNER JOIN Ship ship ON ship.hostId = h.userId'
-		: ''
-}
-${
-	modelIds.length || brandIds.length
-		? 'INNER JOIN ShipModel m ON m.id = ship.modelId'
-		: ''
-}
-${
-	hostRatingSubqueryWhereClauses
-		? `WHERE ${hostRatingSubqueryWhereClauses}`
-		: ''
-}
-GROUP BY h.userId
+		SELECT h.userId, AVG(hr.rating) AS avgRating
+		FROM Host h
+		INNER JOIN HostReview hr ON hr.hostId = h.userId
+		${
+			starportIds.length ||
+			typeof dailyChargeMin === 'number' ||
+			typeof dailyChargeMax === 'number' ||
+			typeof capacityMin === 'number' ||
+			typeof capacityMax === 'number'
+				? 'INNER JOIN Ship ship ON ship.hostId = h.userId'
+				: ''
+		}
+		${
+			modelIds.length || brandIds.length
+				? 'INNER JOIN ShipModel m ON m.id = ship.modelId'
+				: ''
+		}
+		${
+			hostRatingSubqueryWhereClauses
+				? `WHERE ${hostRatingSubqueryWhereClauses}`
+				: ''
+		}
+		GROUP BY h.userId
 	`
 
 	const shipRatingSubqueryWhereClauses = [
@@ -227,22 +188,22 @@ GROUP BY h.userId
 		.join(' AND ')
 
 	const shipRatingSubquery = /* sql */ `
-SELECT ship.id, AVG(sr.rating) AS avgRating
-FROM Ship ship
-INNER JOIN ShipReview sr ON sr.shipId = ship.id
-${starportIds.length ? 'INNER JOIN Starport sp ON sp.id = ship.starportId' : ''}
-${hostIds.length ? 'INNER JOIN Host h ON h.userId = ship.hostId' : ''}
-${
-	modelIds.length || brandIds.length
-		? 'INNER JOIN ShipModel m ON m.id = ship.modelId'
-		: ''
-}
-${
-	shipRatingSubqueryWhereClauses
-		? `WHERE ${shipRatingSubqueryWhereClauses}`
-		: ''
-}
-GROUP BY ship.id
+		SELECT ship.id, AVG(sr.rating) AS avgRating
+		FROM Ship ship
+		INNER JOIN ShipReview sr ON sr.shipId = ship.id
+		${starportIds.length ? 'INNER JOIN Starport sp ON sp.id = ship.starportId' : ''}
+		${hostIds.length ? 'INNER JOIN Host h ON h.userId = ship.hostId' : ''}
+		${
+			modelIds.length || brandIds.length
+				? 'INNER JOIN ShipModel m ON m.id = ship.modelId'
+				: ''
+		}
+		${
+			shipRatingSubqueryWhereClauses
+				? `WHERE ${shipRatingSubqueryWhereClauses}`
+				: ''
+		}
+		GROUP BY ship.id
 	`
 
 	const whereClauses = [
@@ -265,8 +226,8 @@ GROUP BY ship.id
 		modelIds.length ? `ship.modelId IN (${modelIdInter.query})` : null,
 		brandIds.length ? `m.brandId IN (${brandIdInter.query})` : null,
 		cityIds.length ? `closestStarport.id = ship.starportId` : null,
-		/* sql */
-		`
+		availabilityStartDate || availabilityEndDate
+			? /* sql */ `
 			NOT EXISTS (
 				SELECT 1
 				FROM Booking
@@ -274,69 +235,62 @@ GROUP BY ship.id
 						AND Booking.endDate > @availabilityStartDate
 						AND Booking.startDate < @availabilityEndDate
 			)
-		`,
+			`
+			: null,
 	]
 		.filter(typedBoolean)
 		.join(' AND ')
 
+	const distanceCalculation = getDistanceCalculation({
+		to: { lat: 'city.latitude', long: 'city.longitude' },
+		from: { lat: 'starport.latitude', long: 'starport.longitude' },
+	})
+
 	const closestStarportSubquery = /* sql */ `
-SELECT
-starport.id,
-acos(
-	sin(city.latitude * PI()/180)
-	* sin(starport.latitude * PI()/180)
-	+ cos(city.latitude * PI()/180)
-	* cos(starport.latitude * PI()/180)
-	* cos((city.longitude - starport.longitude) * PI()/180)
-)
-* 180/PI() * 60
--- convert from nautical miles to miles
-* 1.1515
-AS distance
-FROM starport
-JOIN city
-ON city.id IN (${cityIdInter.query})
-ORDER BY distance ASC
-LIMIT @cityCount
+		SELECT
+		starport.id,
+		${distanceCalculation} AS distance
+		FROM starport
+		JOIN city
+		ON city.id IN (${cityIdInter.query})
+		ORDER BY distance ASC
+		LIMIT @cityCount
 `
 
-	const query =
-		/* sql */
-		`
-SELECT
-	ship.id,
-	ship.modelId,
-	ship.hostId,
-	ship.starportId,
-	m.brandId,
-	ship.imageUrl,
-	ship.name,
-	ship.dailyCharge,
-	ship.capacity,
-	(
-		SELECT avgRating
-		FROM (${hostRatingSubquery}) AS hostRatings
-		WHERE hostRatings.userId = ship.hostId
-	) as hostAvgRating,
-	(
-		SELECT avgRating
-		FROM (${shipRatingSubquery}) AS shipRatings
-		WHERE shipRatings.id = ship.id
-	) as shipAvgRating
+	const query = /* sql */ `
+		SELECT
+			ship.id,
+			ship.modelId,
+			ship.hostId,
+			ship.starportId,
+			m.brandId,
+			ship.imageUrl,
+			ship.name,
+			ship.dailyCharge,
+			ship.capacity,
+			(
+				SELECT avgRating
+				FROM (${hostRatingSubquery}) AS hostRatings
+				WHERE hostRatings.userId = ship.hostId
+			) as hostAvgRating,
+			(
+				SELECT avgRating
+				FROM (${shipRatingSubquery}) AS shipRatings
+				WHERE shipRatings.id = ship.id
+			) as shipAvgRating
 
-FROM Ship ship
+		FROM Ship ship
 
-INNER JOIN ShipModel m ON m.id = ship.modelId
-${
-	cityIds.length
-		? `INNER JOIN (${closestStarportSubquery}) AS closestStarport ON closestStarport.id = ship.starportId`
-		: ''
-}
+		INNER JOIN ShipModel m ON m.id = ship.modelId
+		${
+			cityIds.length
+				? `INNER JOIN (${closestStarportSubquery}) AS closestStarport ON closestStarport.id = ship.starportId`
+				: ''
+		}
 
-${whereClauses ? `WHERE ${whereClauses}` : ''}
+		${whereClauses ? `WHERE ${whereClauses}` : ''}
 
-LIMIT @limit
-;
+		LIMIT @limit;
 	`
 
 	const preparedStatement = db.prepare(query)
@@ -454,26 +408,26 @@ export default function ShipsRoute() {
 		},
 	)
 
-	const toggleGeolocation = useCallback(function toggleGeolocation(
-		enabled: boolean,
-	): Promise<typeof geolocation> {
-		setGeolocationEnabled(enabled)
-		if (!enabled) {
-			setGeolocation(g => (g.state === 'pending' ? g : { state: 'pending' }))
-			return new Promise(res => res({ state: 'pending' }))
-		}
-		return getGeo().then(
-			geo => {
-				setGeolocation(geo)
-				return geo
-			},
-			geo => {
-				setGeolocation(geo)
-				return geo
-			},
-		)
-	},
-	[])
+	const toggleGeolocation = useCallback(
+		(enabled: boolean): Promise<typeof geolocation> => {
+			setGeolocationEnabled(enabled)
+			if (!enabled) {
+				setGeolocation(g => (g.state === 'pending' ? g : { state: 'pending' }))
+				return new Promise(res => res({ state: 'pending' }))
+			}
+			return getGeo().then(
+				geo => {
+					setGeolocation(geo)
+					return geo
+				},
+				geo => {
+					setGeolocation(geo)
+					return geo
+				},
+			)
+		},
+		[],
+	)
 
 	// if we already have permission, then we can go ahead and get the location
 	// and not worry about having to ask.
@@ -770,16 +724,16 @@ export default function ShipsRoute() {
 						<span>Trip Start Date</span>
 						<input
 							type="date"
-							name="startDate"
-							defaultValue={searchParams.get('startDate') ?? ''}
+							name="availabilityStartDate"
+							defaultValue={searchParams.get('availabilityStartDate') ?? ''}
 						/>
 					</label>
 					<label>
 						<span>Trip End Date</span>
 						<input
 							type="date"
-							name="endDate"
-							defaultValue={searchParams.get('endDate') ?? ''}
+							name="availabilityEndDate"
+							defaultValue={searchParams.get('availabilityEndDate') ?? ''}
 						/>
 					</label>
 					<label>

@@ -6,53 +6,51 @@ import { useCombobox } from 'downshift'
 import { useEffect, useId } from 'react'
 import { useSpinDelay } from 'spin-delay'
 import invariant from 'tiny-invariant'
+import { z } from 'zod'
+import { Spinner } from '~/components/spinner'
 import { prisma } from '~/utils/db.server'
-import { getClosestCitiesByName } from '~/utils/geo.server'
+import { getClosestCities } from '~/utils/geo.server'
+
+const NullableNumber = z.union([z.coerce.number(), z.null()])
 
 export async function loader({ request }: LoaderArgs) {
 	const url = new URL(request.url)
 	const query = url.searchParams.get('query')
-	const lat = url.searchParams.get('lat')
-	const long = url.searchParams.get('long')
+	const latitude = NullableNumber.parse(url.searchParams.get('lat'))
+	const longitude = NullableNumber.parse(url.searchParams.get('long'))
 	const exclude = url.searchParams.getAll('exclude')
 	invariant(typeof query === 'string', 'query is required')
 
-	let distances: ReturnType<typeof getClosestCitiesByName> | undefined
-	let cities: Array<{ id: string; name: string; country: string }>
-	if (lat && long) {
-		distances = getClosestCitiesByName({
-			latitude: Number(lat),
-			longitude: Number(long),
+	let cities: Array<{
+		id: string
+		displayName: string
+		distance: number | null
+	}>
+	if (latitude !== null && longitude !== null) {
+		cities = getClosestCities({
+			latitude,
+			longitude,
 			limit: 20,
-			query: query,
+			query,
 			exclude,
 		})
+	} else {
 		cities = (
 			await prisma.city.findMany({
-				where: { id: { in: distances.map(s => s.id) } },
+				where: {
+					AND: [{ name: { contains: query } }, { id: { notIn: exclude } }],
+				},
 				select: { id: true, name: true, country: true },
+				take: 20,
 			})
-		).sort((a, b) => {
-			const aDistance = distances?.find(s => s.id === a.id)
-			const bDistance = distances?.find(s => s.id === b.id)
-			if (!aDistance || !bDistance) return 0
-			return aDistance.distance - bDistance.distance
-		})
-	} else {
-		cities = await prisma.city.findMany({
-			where: {
-				AND: [{ name: { contains: query } }, { id: { notIn: exclude } }],
-			},
-			select: { id: true, name: true, country: true },
-			take: 20,
-		})
+		).map(c => ({
+			id: c.id,
+			displayName: `${c.name}, ${c.country}`,
+			distance: null,
+		}))
 	}
-	return json({
-		cities: cities.map(s => ({
-			...s,
-			distance: distances?.find(d => d.id === s.id)?.distance,
-		})),
-	})
+
+	return json({ cities })
 }
 
 type City = SerializeFrom<typeof loader>['cities'][number]
@@ -75,7 +73,7 @@ export function CityCombobox({
 		onSelectedItemChange: ({ selectedItem }) => onChange(selectedItem),
 		items: cities,
 		selectedItem: null,
-		itemToString: item => (item ? `${item.name} (${item.country})` : ''),
+		itemToString: item => (item ? item.displayName : ''),
 	})
 
 	const excludeIds = exclude.join(',')
@@ -136,45 +134,12 @@ export function CityCombobox({
 								key={city.id}
 								{...cb.getItemProps({ item: city, index })}
 							>
-								{city.name} ({city.country}
-								{city.distance ? ` ${city.distance.toFixed(2)}mi` : null})
+								{city.displayName}
+								{city.distance ? ` (${city.distance.toFixed(2)}mi)` : null}
 							</li>
 					  ))
 					: null}
 			</ul>
-		</div>
-	)
-}
-
-function Spinner({ showSpinner }: { showSpinner: boolean }) {
-	return (
-		<div
-			className={`absolute right-0 top-[6px] transition-opacity ${
-				showSpinner ? 'opacity-100' : 'opacity-0'
-			}`}
-		>
-			<svg
-				className="-ml-1 mr-3 h-5 w-5 animate-spin"
-				xmlns="http://www.w3.org/2000/svg"
-				fill="none"
-				viewBox="0 0 24 24"
-				width="1em"
-				height="1em"
-			>
-				<circle
-					className="opacity-25"
-					cx={12}
-					cy={12}
-					r={10}
-					stroke="currentColor"
-					strokeWidth={4}
-				/>
-				<path
-					className="opacity-75"
-					fill="currentColor"
-					d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-				/>
-			</svg>
 		</div>
 	)
 }

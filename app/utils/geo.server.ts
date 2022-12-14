@@ -1,78 +1,92 @@
 import { db, interpolateArray } from '~/utils/db.server'
+import { z } from 'zod'
 import { typedBoolean } from './misc'
 
-export function getClosestStarports({
-	latitude,
-	longitude,
-	query,
-	limit,
-	exclude = [],
+const GeoResults = z.array(
+	z.object({
+		id: z.string(),
+		displayName: z.string(),
+		distance: z.number(),
+	}),
+)
+
+/**
+ * Make 100% certain that this function is never called with user input as it
+ * is used to generate a part of a SQL query.
+ *
+ * IDEA: Maybe figure out how to sanitize the inputs?
+ * @returns
+ */
+export function getDistanceCalculation({
+	from,
+	to,
 }: {
+	from: { lat: string; long: string }
+	to: { lat: string; long: string }
+}) {
+	return /* sql */ `
+acos(
+	sin(${from.lat} * PI()/180)
+	* sin(${to.lat} * PI()/180)
+	+ cos(${from.lat} * PI()/180)
+	* cos(${to.lat} * PI()/180)
+	* cos((${from.long} - ${to.long}) * PI()/180)
+)
+* 180/PI() * 60
+-- convert from nautical miles to miles
+* 1.1515
+	`.trim()
+}
+
+type BaseOptions = {
 	latitude: number
 	longitude: number
 	query?: string
 	exclude?: Array<string>
 	limit: number
-}) {
-	const excludeInter = interpolateArray(exclude, 'exclude')
-	const wheres = [
-		query ? `name LIKE @query` : null,
-		exclude.length ? `id NOT IN (${excludeInter.query})` : null,
-	]
-		.filter(typedBoolean)
-		.join(' AND ')
-	const interpolations = {
-		latitude,
-		longitude,
-		query: `%${query}%`,
-		...excludeInter.interpolations,
-		limit,
-	}
-
-	const results = db
-		.prepare(
-			/*sql*/ `
-SELECT
-id,
-acos(
-  sin(@latitude * PI()/180)
-  * sin(latitude * PI()/180)
-  + cos(@latitude * PI()/180)
-  * cos(latitude * PI()/180)
-  * cos((@longitude - longitude) * PI()/180)
-)
-* 180/PI() * 60
--- convert from nautical miles to miles
-* 1.1515
-AS distance
-FROM starport
-${wheres ? `WHERE ${wheres}` : ''}
-ORDER BY distance ASC
-LIMIT @limit
-;
-`,
-		)
-		.all(interpolations)
-	assertArrayOfGeoResults(results)
-	return results
 }
 
-export function getClosestCitiesByName({
+export function getClosestCities(options: BaseOptions) {
+	return getClosestWithQuery({
+		...options,
+		queryProperties: ['name', 'country'],
+		displayNameSelect: `name || ', ' || country`,
+		table: 'city',
+	})
+}
+
+export function getClosestStarports(options: BaseOptions) {
+	return getClosestWithQuery({
+		...options,
+		queryProperties: ['name'],
+		displayNameSelect: `name`,
+		table: 'starport',
+	})
+}
+
+/**
+ * This is a bit of a tight abstraction, so please do not export it. Duplicate instead.
+ * All usages of this function should be within this file.
+ * @returns
+ */
+function getClosestWithQuery({
 	latitude,
 	longitude,
 	query,
 	limit,
-	exclude,
-}: {
-	latitude: number
-	longitude: number
-	query: string
-	exclude: Array<string>
-	limit: number
+	exclude = [],
+	queryProperties,
+	displayNameSelect,
+	table,
+}: BaseOptions & {
+	queryProperties: Array<string>
+	displayNameSelect: string
+	table: string
 }) {
 	const excludeInter = interpolateArray(exclude, 'exclude')
+	const queries = queryProperties.map(p => `${p} LIKE @query`).join(' OR ')
 	const wheres = [
-		query ? `(name LIKE @query OR country LIKE @query)` : null,
+		query ? `(${queries})` : null,
 		exclude.length ? `id NOT IN (${excludeInter.query})` : null,
 	]
 		.filter(typedBoolean)
@@ -85,47 +99,22 @@ export function getClosestCitiesByName({
 		limit,
 	}
 
-	const results = db
-		.prepare(
-			/*sql*/ `
-SELECT
-id,
-name,
-country,
-acos(
-  sin(@latitude * PI()/180)
-  * sin(latitude * PI()/180)
-  + cos(@latitude * PI()/180)
-  * cos(latitude * PI()/180)
-  * cos((@longitude - longitude) * PI()/180)
-)
-* 180/PI() * 60
--- convert from nautical miles to miles
-* 1.1515
-AS distance
-FROM city
-${wheres ? `WHERE ${wheres}` : ''}
-ORDER BY distance ASC
-LIMIT @limit
-;
-`,
-		)
-		.all(interpolations)
-	assertArrayOfGeoResults(results)
-	return results
-}
+	const distanceCalculation = getDistanceCalculation({
+		from: { lat: '@latitude', long: '@longitude' },
+		to: { lat: 'latitude', long: 'longitude' },
+	})
 
-type GeoResult = {
-	id: string
-	distance: number
-}
+	const sql = /*sql*/ `
+		SELECT
+			id,
+			${displayNameSelect} as displayName,
+			${distanceCalculation} AS distance
+		FROM ${table}
+		${wheres ? `WHERE ${wheres}` : ''}
+		ORDER BY distance ASC
+		LIMIT @limit;
+	`
 
-function isGeoResult(obj: any): obj is GeoResult {
-	return obj && typeof obj.id === 'string' && typeof obj.distance === 'number'
-}
-
-function assertArrayOfGeoResults(obj: any): asserts obj is Array<GeoResult> {
-	if (!Array.isArray(obj) || !obj.every(isGeoResult)) {
-		throw new Error('geo server did not return GeoResults')
-	}
+	const results = db.prepare(sql).all(interpolations)
+	return GeoResults.parse(results)
 }
