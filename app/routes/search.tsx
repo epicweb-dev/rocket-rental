@@ -229,19 +229,6 @@ ${
 GROUP BY ship.id
 	`
 
-	const availabilitySubquery = /* sql */ `
-SELECT ship.id
-FROM Ship ship
-LEFT JOIN Booking booking ON booking.shipId = ship.id
-WHERE NOT EXISTS (
-		SELECT 1
-		FROM Booking
-		WHERE Booking.shipId = ship.id
-				AND Booking.startDate > '2022-12-14'
-				AND Booking.endDate < '2022-12-15'
-)
-	`
-
 	const whereClauses = [
 		typeof dailyChargeMin === 'number'
 			? 'ship.dailyCharge >= @dailyChargeMin'
