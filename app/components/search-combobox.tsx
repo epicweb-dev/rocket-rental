@@ -1,7 +1,7 @@
 import { useFetcher } from '@remix-run/react'
 import clsx from 'clsx'
 import { useCombobox } from 'downshift'
-import { useEffect, useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { useSpinDelay } from 'spin-delay'
 import { z } from 'zod'
 import { Spinner } from './spinner'
@@ -31,7 +31,7 @@ export function SearchCombobox<Item>({
 	renderItemInList: (item: Item) => React.ReactNode
 	resourceUrl: string
 }) {
-	const { submit: submitFetcher, ...fetcher } = useFetcher()
+	const fetcher = useFetcher()
 	const id = useId()
 	// TODO: make this type better
 	const items = (fetcher.data?.items ?? []) as Array<Item>
@@ -46,6 +46,12 @@ export function SearchCombobox<Item>({
 
 	const excludeIds = exclude.join(',')
 
+	// https://github.com/remix-run/remix/issues/4872
+	const submitRef = useRef(fetcher.submit)
+	useEffect(() => {
+		submitRef.current = fetcher.submit
+	})
+
 	useEffect(() => {
 		const searchParams = new URLSearchParams()
 		searchParams.set('query', cb.inputValue)
@@ -53,11 +59,11 @@ export function SearchCombobox<Item>({
 			searchParams.append('exclude', ex)
 		}
 
-		submitFetcher(searchParams, {
+		submitRef.current(searchParams, {
 			method: 'get',
 			action: resourceUrl,
 		})
-	}, [cb.inputValue, excludeIds, resourceUrl, submitFetcher])
+	}, [cb.inputValue, excludeIds, resourceUrl])
 
 	const busy = fetcher.state !== 'idle'
 	const showSpinner = useSpinDelay(busy, {

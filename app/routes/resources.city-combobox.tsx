@@ -3,7 +3,7 @@ import { json } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
 import clsx from 'clsx'
 import { useCombobox } from 'downshift'
-import { useEffect, useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { useSpinDelay } from 'spin-delay'
 import { z } from 'zod'
 import { Spinner } from '~/components/spinner'
@@ -70,9 +70,9 @@ export function CityCombobox({
 	geolocation: { lat: number; long: number } | null
 	onChange: (selectedStarport: City | null | undefined) => void
 }) {
-	const { submit: submitFetcher, ...cityFetcher } = useFetcher<typeof loader>()
+	const fetcher = useFetcher<typeof loader>()
 	const id = useId()
-	const cities = cityFetcher.data?.cities ?? []
+	const cities = fetcher.data?.cities ?? []
 
 	const cb = useCombobox<City>({
 		id,
@@ -83,6 +83,13 @@ export function CityCombobox({
 	})
 
 	const excludeIds = exclude.join(',')
+
+	// https://github.com/remix-run/remix/issues/4872
+	const submitRef = useRef(fetcher.submit)
+	useEffect(() => {
+		submitRef.current = fetcher.submit
+	})
+
 	useEffect(() => {
 		const searchParams = new URLSearchParams()
 		searchParams.set('query', cb.inputValue ?? '')
@@ -94,13 +101,13 @@ export function CityCombobox({
 			searchParams.append('exclude', ex)
 		}
 
-		submitFetcher(searchParams, {
+		submitRef.current(searchParams, {
 			method: 'get',
 			action: '/resources/city-combobox',
 		})
-	}, [cb.inputValue, excludeIds, geolocation, submitFetcher])
+	}, [cb.inputValue, excludeIds, geolocation])
 
-	const busy = cityFetcher.state !== 'idle'
+	const busy = fetcher.state !== 'idle'
 	const showSpinner = useSpinDelay(busy, {
 		delay: 150,
 		minDuration: 300,

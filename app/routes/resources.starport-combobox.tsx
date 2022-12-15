@@ -3,7 +3,7 @@ import { json } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
 import clsx from 'clsx'
 import { useCombobox } from 'downshift'
-import { useEffect, useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { useSpinDelay } from 'spin-delay'
 import { Spinner } from '~/components/spinner'
 import { prisma } from '~/utils/db.server'
@@ -66,10 +66,9 @@ export function StarportCombobox({
 	geolocation: { lat: number; long: number } | null
 	onChange: (selectedStarport: Starport | null | undefined) => void
 }) {
-	const { submit: submitFetcher, ...starportFetcher } =
-		useFetcher<typeof loader>()
+	const fetcher = useFetcher<typeof loader>()
 	const id = useId()
-	const starports = starportFetcher.data?.starports ?? []
+	const starports = fetcher.data?.starports ?? []
 
 	const cb = useCombobox<Starport>({
 		id,
@@ -80,6 +79,13 @@ export function StarportCombobox({
 	})
 
 	const excludeIds = exclude.join(',')
+
+	// https://github.com/remix-run/remix/issues/4872
+	const submitRef = useRef(fetcher.submit)
+	useEffect(() => {
+		submitRef.current = fetcher.submit
+	})
+
 	useEffect(() => {
 		const searchParams = new URLSearchParams()
 		searchParams.set('query', cb.inputValue ?? '')
@@ -91,13 +97,13 @@ export function StarportCombobox({
 			searchParams.append('exclude', ex)
 		}
 
-		submitFetcher(searchParams, {
+		submitRef.current(searchParams, {
 			method: 'get',
 			action: '/resources/starport-combobox',
 		})
-	}, [cb.inputValue, excludeIds, geolocation, submitFetcher])
+	}, [cb.inputValue, excludeIds, geolocation])
 
-	const busy = starportFetcher.state !== 'idle'
+	const busy = fetcher.state !== 'idle'
 	const showSpinner = useSpinDelay(busy, {
 		delay: 150,
 		minDuration: 300,
