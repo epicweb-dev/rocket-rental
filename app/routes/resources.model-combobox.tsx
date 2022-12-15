@@ -1,10 +1,10 @@
 import type { LoaderArgs, SerializeFrom } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import type { BaseOptions } from '~/components/search-combobox'
 import {
-	SearchCombobox,
+	BasicSearchCombobox,
 	SearchParamsSchema,
-} from '~/components/search-combobox'
+	type BaseOptions,
+} from '~/components/basic-search-combobox'
 import { prisma } from '~/utils/db.server'
 import { parseSearchParams } from '~/utils/search-params'
 
@@ -32,7 +32,7 @@ type Model = SerializeFrom<typeof loader>['items'][number]
 
 export function ModelCombobox({ ...baseOptions }: BaseOptions<Model>) {
 	return (
-		<SearchCombobox
+		<BasicSearchCombobox
 			{...baseOptions}
 			itemToKey={item => item.id}
 			itemToString={item => item?.name ?? ''}

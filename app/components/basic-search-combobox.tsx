@@ -16,7 +16,7 @@ export const SearchParamsSchema = z.object({
 	exclude: z.array(z.string()).default([]),
 })
 
-export function SearchCombobox<Item>({
+export function BasicSearchCombobox<Item>({
 	exclude,
 	onChange,
 	itemToString,
