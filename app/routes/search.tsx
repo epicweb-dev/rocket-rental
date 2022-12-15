@@ -724,6 +724,8 @@ export default function ShipsRoute() {
 						<input
 							name="capacityMin"
 							type="number"
+							min="1"
+							max="15"
 							className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
 							defaultValue={searchParams.get('capacityMin') ?? ''}
 						/>
@@ -733,6 +735,8 @@ export default function ShipsRoute() {
 						<input
 							name="capacityMax"
 							type="number"
+							min="1"
+							max="15"
 							className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
 							defaultValue={searchParams.get('capacityMax') ?? ''}
 						/>
@@ -742,6 +746,8 @@ export default function ShipsRoute() {
 						<input
 							name="dailyChargeMin"
 							type="number"
+							min="1"
+							max="1000"
 							className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
 							defaultValue={searchParams.get('dailyChargeMin') ?? ''}
 						/>
@@ -751,6 +757,8 @@ export default function ShipsRoute() {
 						<input
 							name="dailyChargeMax"
 							type="number"
+							min="1"
+							max="1000"
 							className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
 							defaultValue={searchParams.get('dailyChargeMax') ?? ''}
 						/>
