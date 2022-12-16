@@ -1,16 +1,17 @@
 import { z } from 'zod'
-import { SearchCombobox } from './search-combobox'
+import { SearchCombobox, type SearchComboboxProps } from './search-combobox'
 
 export type GeoItem = {
 	id: string
 	displayName: string
-	distance: number | null
+	distance?: number | null
 }
 
-export type BaseOptions = {
-	exclude: Array<string>
+export type BaseOptions = Pick<
+	SearchComboboxProps<GeoItem>,
+	'selectedItem' | 'exclude' | 'onChange'
+> & {
 	geolocation: { lat: number; long: number } | null
-	onChange: (selectedHost: GeoItem | null | undefined) => void
 }
 
 const NullableNumber = z

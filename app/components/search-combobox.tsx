@@ -7,14 +7,15 @@ import { z } from 'zod'
 import { Spinner } from './spinner'
 
 export type SearchComboboxProps<Item> = {
-	exclude: Array<string>
+	selectedItem?: Item | null | undefined
+	exclude?: Array<string> | null
 	onChange: (selectedHost: Item | null | undefined) => void
 	itemToString: (item: Item | null | undefined) => string
 	itemToKey: (item: Item) => string
 	label: string
 	renderItemInList: (item: Item) => React.ReactNode
 	resourceUrl: string
-	additionalSearchParams?: Record<string, string> | null
+	additionalSearchParams?: Record<string, string | Array<string>> | null
 }
 
 export const SearchParamsSchema = z.object({
@@ -23,6 +24,7 @@ export const SearchParamsSchema = z.object({
 })
 
 export function SearchCombobox<Item>({
+	selectedItem,
 	exclude,
 	onChange,
 	itemToString,
@@ -41,18 +43,18 @@ export function SearchCombobox<Item>({
 		id,
 		onSelectedItemChange: ({ selectedItem }) => onChange(selectedItem),
 		items,
-		selectedItem: null,
+		selectedItem,
 		itemToString,
 	})
 
 	const searchParams = new URLSearchParams()
 	searchParams.set('query', cb.inputValue)
-	for (const ex of exclude) {
+	for (const ex of exclude ?? []) {
 		searchParams.append('exclude', ex)
 	}
-	if (additionalSearchParams) {
-		for (const [key, value] of Object.entries(additionalSearchParams)) {
-			searchParams.set(key, value)
+	for (const [key, value] of Object.entries(additionalSearchParams ?? {})) {
+		for (const v of Array.isArray(value) ? value : [value]) {
+			searchParams.append(key, v)
 		}
 	}
 	const fetchUrl = `${resourceUrl}?${searchParams}`

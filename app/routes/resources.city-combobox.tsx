@@ -5,11 +5,11 @@ import { SearchParamsSchema } from '~/components/geo-search-combobox'
 import { GeoSearchCombobox } from '~/components/geo-search-combobox'
 import { prisma } from '~/utils/db.server'
 import { getClosestCities } from '~/utils/geo.server'
-import { parseSearchParams } from '~/utils/search-params'
+import { getSearchParamsOrFail } from 'remix-params-helper'
 
 export async function loader({ request }: LoaderArgs) {
-	const { query, lat, long, exclude } = parseSearchParams(
-		new URL(request.url).searchParams,
+	const { query, lat, long, exclude } = getSearchParamsOrFail(
+		request,
 		SearchParamsSchema,
 	)
 

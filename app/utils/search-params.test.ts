@@ -1,14 +1,14 @@
 import { z } from 'zod'
-import { parseSearchParams } from './search-params'
+import { getSearchParamsOrFail } from './search-params'
 
-test('parseSearchParams parses search params', () => {
+test('getSearchParamsOrFail parses search params', () => {
 	const searchParams = makeSearchParams({
 		starportIds: ['123', '456'],
 		hostIds: ['123'],
 		capacityMin: '31',
 		shipRatingMin: '4',
 	})
-	const result = parseSearchParams(
+	const result = getSearchParamsOrFail(
 		searchParams,
 		z.object({
 			starportIds: z.array(z.string()).default([]),
@@ -25,17 +25,17 @@ test('parseSearchParams parses search params', () => {
 	})
 })
 
-test('parseSearchParams fails when multiple values and not expecting it', () => {
+test('getSearchParamsOrFail fails when multiple values and not expecting it', () => {
 	expect(() =>
-		parseSearchParams(
+		getSearchParamsOrFail(
 			makeSearchParams({ a: ['1', '2'] }),
 			z.object({ a: z.string() }),
 		),
 	).toThrow(/invalid_type/)
 })
 
-test('parseSearchParams works', () => {
-	parseSearchParams(
+test('getSearchParamsOrFail works', () => {
+	getSearchParamsOrFail(
 		makeSearchParams({ query: '', exclude: [] }),
 		z.object({
 			query: z.string().default(''),
@@ -44,7 +44,7 @@ test('parseSearchParams works', () => {
 	)
 })
 
-test('parseSearchParams handles default values', () => {
+test('getSearchParamsOrFail handles default values', () => {
 	const NullableNumber = z
 		.string()
 		.nullable()
@@ -61,7 +61,10 @@ test('parseSearchParams handles default values', () => {
 		exclude: z.array(z.string()).default([]),
 	})
 
-	const results = parseSearchParams(new URLSearchParams(), SearchParamsSchema)
+	const results = getSearchParamsOrFail(
+		new URLSearchParams(),
+		SearchParamsSchema,
+	)
 	expect(results).toEqual({
 		query: '',
 		lat: null,

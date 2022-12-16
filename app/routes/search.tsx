@@ -9,15 +9,12 @@ import {
 	useSubmit,
 } from '@remix-run/react'
 import { useCallback, useEffect, useState } from 'react'
+import { getSearchParamsOrFail } from 'remix-params-helper'
 import { z } from 'zod'
 import { db, interpolateArray, prisma } from '~/utils/db.server'
 import { getClosestStarports, getDistanceCalculation } from '~/utils/geo.server'
 import { typedBoolean } from '~/utils/misc'
-import {
-	addParamToSet,
-	parseSearchParams,
-	unappend,
-} from '~/utils/search-params'
+import { addParamToSet, unappend } from '~/utils/search-params'
 import { BrandCombobox } from './resources.brand-combobox'
 import { CityCombobox } from './resources.city-combobox'
 import { HostCombobox } from './resources.host-combobox'
@@ -55,10 +52,7 @@ const SearchParamsSchema = z.object({
 })
 
 export async function loader({ request }: DataFunctionArgs) {
-	const searchParameters = parseSearchParams(
-		new URL(request.url).searchParams,
-		SearchParamsSchema,
-	)
+	const searchParameters = getSearchParamsOrFail(request, SearchParamsSchema)
 	const { starportId, cityId, brandId, modelId, hostId } = searchParameters
 
 	const ships = searchShips(searchParameters)
@@ -445,6 +439,7 @@ export default function ShipsRoute() {
 				Enable Geolocation
 			</label>
 			<StarportCombobox
+				selectedItem={null}
 				exclude={searchParams.getAll('starportId')}
 				geolocation={
 					geolocationEnabled && geolocation.state === 'resolved'
@@ -489,6 +484,7 @@ export default function ShipsRoute() {
 					})}
 			</ul>
 			<CityCombobox
+				selectedItem={null}
 				exclude={searchParams.getAll('cityId')}
 				geolocation={
 					geolocationEnabled && geolocation.state === 'resolved'
@@ -535,6 +531,7 @@ export default function ShipsRoute() {
 					})}
 			</ul>
 			<BrandCombobox
+				selectedItem={null}
 				exclude={searchParams.getAll('brandId')}
 				onChange={selectedBrand => {
 					if (selectedBrand) {
@@ -586,6 +583,7 @@ export default function ShipsRoute() {
 					})}
 			</ul>
 			<ModelCombobox
+				selectedItem={null}
 				exclude={searchParams.getAll('modelId')}
 				onChange={selectedModel => {
 					if (selectedModel) {
@@ -637,6 +635,7 @@ export default function ShipsRoute() {
 					})}
 			</ul>
 			<HostCombobox
+				selectedItem={null}
 				exclude={searchParams.getAll('hostId')}
 				onChange={selectedHost => {
 					if (selectedHost) {

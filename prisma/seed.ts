@@ -103,7 +103,7 @@ async function seed() {
 						create: createContactInfo(),
 					},
 					password: {
-						create: createPassword(),
+						create: createPassword(userData.username),
 					},
 				},
 			})

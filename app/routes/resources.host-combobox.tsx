@@ -6,13 +6,10 @@ import {
 	type BaseOptions,
 } from '~/components/basic-search-combobox'
 import { prisma } from '~/utils/db.server'
-import { parseSearchParams } from '~/utils/search-params'
+import { getSearchParamsOrFail } from 'remix-params-helper'
 
 export async function loader({ request }: LoaderArgs) {
-	const { query, exclude } = parseSearchParams(
-		new URL(request.url).searchParams,
-		SearchParamsSchema,
-	)
+	const { query, exclude } = getSearchParamsOrFail(request, SearchParamsSchema)
 
 	const hosts = await prisma.host.findMany({
 		where: {
