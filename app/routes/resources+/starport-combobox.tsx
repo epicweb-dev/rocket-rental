@@ -14,7 +14,7 @@ export async function loader({ request }: LoaderArgs) {
 	)
 
 	let starports: Array<GeoItem>
-	if (lat !== null && long !== null) {
+	if (lat !== undefined && long !== undefined) {
 		starports = getClosestStarports({ lat, long, query, exclude, limit: 20 })
 	} else {
 		starports = (

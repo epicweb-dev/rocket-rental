@@ -14,18 +14,10 @@ export type BaseOptions = Pick<
 	geolocation: { lat: number; long: number } | null
 }
 
-const NullableNumber = z
-	.string()
-	.optional()
-	.transform(s => {
-		const number = s ? Number(s) : null
-		return number === null || Number.isNaN(number) ? null : number
-	})
-
 export const SearchParamsSchema = z.object({
 	query: z.string().default(''),
-	lat: NullableNumber,
-	long: NullableNumber,
+	lat: z.number().optional(),
+	long: z.number().optional(),
 	exclude: z.array(z.string()).default([]),
 })
 

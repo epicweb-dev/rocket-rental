@@ -18,7 +18,7 @@ export async function loader({ request }: LoaderArgs) {
 		displayName: string
 		distance: number | null
 	}>
-	if (lat !== null && long !== null) {
+	if (lat !== undefined && long !== undefined) {
 		cities = getClosestCities({ lat, long, query, exclude, limit: 20 })
 	} else {
 		cities = (
