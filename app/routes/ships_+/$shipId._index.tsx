@@ -8,7 +8,7 @@ import {
 	bookingSessionKey,
 	getIsShipAvailable,
 	validateBookerForm,
-} from './resources.booker'
+} from '~/routes/resources+/booker'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.shipId, 'Missing shipId')

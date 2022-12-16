@@ -11,8 +11,8 @@ import { BASE_URL } from 'test/utils'
 import { test } from 'vitest'
 import { prisma } from '~/utils/db.server'
 import { commitSession, getSession } from '~/utils/session.server'
-import { bookingSessionKey } from './resources.booker'
-import { loader } from './ships_.$shipId.book'
+import { bookingSessionKey } from '~/routes/resources+/booker'
+import { loader } from './$shipId.book'
 
 test('requires authenticated user', async () => {
 	const params = { shipId: '123' }

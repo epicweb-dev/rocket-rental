@@ -8,13 +8,13 @@ import { prisma } from '~/utils/db.server'
 import { requireUserId } from '~/utils/auth.server'
 import { getSession, commitSession } from '~/utils/session.server'
 import { useOptionalUser } from '~/utils/misc'
-import { InlineLogin } from './resources.login'
+import { InlineLogin } from '~/routes/resources+/login'
 import * as df from 'date-fns'
 import {
 	bookingSessionKey,
 	getIsShipAvailable,
 	validateBookerForm,
-} from './resources.booker'
+} from '~/routes/resources+/booker'
 
 function createFormDataFromEntries(
 	entries: Array<[string, FormDataEntryValue]>,

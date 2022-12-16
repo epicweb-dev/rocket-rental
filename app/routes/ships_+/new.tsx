@@ -1,68 +1,37 @@
 import type { DataFunctionArgs } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import { Form, useCatch, useLoaderData, useParams } from '@remix-run/react'
+import { Form, Link, useCatch, useLoaderData } from '@remix-run/react'
 import { useState } from 'react'
 import invariant from 'tiny-invariant'
 import { requireUserId } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'
-import { BrandCombobox } from './resources.brand-combobox'
-import { ModelCombobox } from './resources.model-combobox'
-import { StarportCombobox } from './resources.starport-combobox'
+import { BrandCombobox } from '~/routes/resources+/brand-combobox'
+import { ModelCombobox } from '~/routes/resources+/model-combobox'
+import { StarportCombobox } from '~/routes/resources+/starport-combobox'
 
-export async function loader({ request, params }: DataFunctionArgs) {
-	invariant(params.shipId, 'Missing shipId')
+export async function loader({ request }: DataFunctionArgs) {
 	const userId = await requireUserId(request)
-	const ship = await prisma.ship.findFirst({
-		where: { id: params.shipId, hostId: userId },
-		select: {
-			model: {
-				select: {
-					id: true,
-					name: true,
-					imageUrl: true,
-					brand: {
-						select: {
-							id: true,
-							name: true,
-							imageUrl: true,
-						},
-					},
-				},
-			},
-			starport: {
-				select: {
-					id: true,
-					name: true,
-				},
-			},
-			name: true,
-			description: true,
-			imageUrl: true,
-			capacity: true,
-			dailyCharge: true,
-		},
+	const host = await prisma.host.findFirst({
+		where: { userId },
+		select: { userId: true },
 	})
-	if (!ship) {
-		throw new Response('not found', { status: 404 })
+	if (!host) {
+		throw new Response('unauthorized', { status: 403 })
 	}
-	return json({
-		ship: {
-			...ship,
-			starport: { id: ship.starport.id, displayName: ship.starport.name },
-		},
-	})
+	return json({})
 }
 
-export async function action({ request, params }: DataFunctionArgs) {
+export async function action({ request }: DataFunctionArgs) {
 	const userId = await requireUserId(request)
-	const ship = await prisma.ship.findFirst({
-		where: { id: params.shipId, hostId: userId },
-		select: { id: true },
+	const host = await prisma.host.findFirst({
+		where: { userId },
+		select: { userId: true },
 	})
-	if (!ship) {
-		throw new Response('not found', { status: 404 })
+	if (!host) {
+		throw new Response('unauthorized', { status: 403 })
 	}
+
 	const formData = await request.formData()
 	const {
 		name,
@@ -91,9 +60,9 @@ export async function action({ request, params }: DataFunctionArgs) {
 	// 	return json({ errors }, { status: 400 })
 	// }
 
-	await prisma.ship.update({
-		where: { id: ship.id },
+	const ship = await prisma.ship.create({
 		data: {
+			hostId: host.userId,
 			name,
 			description,
 			imageUrl,
@@ -109,17 +78,20 @@ export async function action({ request, params }: DataFunctionArgs) {
 
 export default function ShipEditRoute() {
 	const data = useLoaderData<typeof loader>()
-	const [selectedStarport, setSelectedStarport] = useState<
-		typeof data.ship.starport | null
-	>(data.ship.starport)
+	const [selectedStarport, setSelectedStarport] = useState<{
+		id: string
+		displayName: string
+	} | null>(null)
 	const [selectedModel, setSelectedModel] = useState<{
 		id: string
 		name: string
 		imageUrl: string
-	} | null>(data.ship.model)
-	const [selectedBrand, setSelectedBrand] = useState<
-		typeof data.ship.model.brand | null
-	>(data.ship.model.brand)
+	} | null>(null)
+	const [selectedBrand, setSelectedBrand] = useState<{
+		id: string
+		name: string
+		imageUrl: string
+	} | null>(null)
 
 	return (
 		<div>
@@ -131,7 +103,6 @@ export default function ShipEditRoute() {
 						className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
 						type="text"
 						name="name"
-						defaultValue={data.ship.name}
 					/>
 				</label>
 				<label>
@@ -140,7 +111,6 @@ export default function ShipEditRoute() {
 						className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
 						type="text"
 						name="description"
-						defaultValue={data.ship.description}
 					/>
 				</label>
 				<BrandCombobox
@@ -165,7 +135,6 @@ export default function ShipEditRoute() {
 						className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
 						type="text"
 						name="imageUrl"
-						defaultValue={data.ship.imageUrl}
 					/>
 				</label>
 				<label>
@@ -176,7 +145,6 @@ export default function ShipEditRoute() {
 						name="capacity"
 						min="1"
 						max="10"
-						defaultValue={data.ship.capacity}
 					/>
 				</label>
 				<label>
@@ -187,7 +155,6 @@ export default function ShipEditRoute() {
 						min="0"
 						max="1000"
 						name="dailyCharge"
-						defaultValue={data.ship.dailyCharge}
 					/>
 				</label>
 				<StarportCombobox
@@ -213,10 +180,14 @@ export default function ShipEditRoute() {
 
 export function CatchBoundary() {
 	const caught = useCatch()
-	const params = useParams()
 
-	if (caught.status === 404) {
-		return <div>Ship "{params.shipId}" not found</div>
+	if (caught.status === 403) {
+		return (
+			<div>
+				You are not a host. You must <Link to="/me">visit</Link> your profile
+				page to create your host profile first.
+			</div>
+		)
 	}
 
 	throw new Error(`Unexpected caught response with status: ${caught.status}`)

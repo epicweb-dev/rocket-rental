@@ -15,11 +15,11 @@ import { db, interpolateArray, prisma } from '~/utils/db.server'
 import { getClosestStarports, getDistanceCalculation } from '~/utils/geo.server'
 import { typedBoolean } from '~/utils/misc'
 import { addParamToSet, unappend } from '~/utils/search-params'
-import { BrandCombobox } from './resources.brand-combobox'
-import { CityCombobox } from './resources.city-combobox'
-import { HostCombobox } from './resources.host-combobox'
-import { ModelCombobox } from './resources.model-combobox'
-import { StarportCombobox } from './resources.starport-combobox'
+import { BrandCombobox } from '~/routes/resources+/brand-combobox'
+import { CityCombobox } from '~/routes/resources+/city-combobox'
+import { HostCombobox } from '~/routes/resources+/host-combobox'
+import { ModelCombobox } from '~/routes/resources+/model-combobox'
+import { StarportCombobox } from '~/routes/resources+/starport-combobox'
 
 const MAX_RESULTS = 50
 

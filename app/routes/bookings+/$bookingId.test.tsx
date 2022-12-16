@@ -9,7 +9,7 @@ import {
 } from 'prisma/seed-utils'
 import { test } from 'vitest'
 import { prisma } from '~/utils/db.server'
-import { loader } from './bookings.$bookingId'
+import { loader } from './$bookingId'
 import invariant from 'tiny-invariant'
 import { BASE_URL, getUserCookie } from 'test/utils'
 

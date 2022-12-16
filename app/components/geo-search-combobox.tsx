@@ -16,7 +16,6 @@ export type BaseOptions = Pick<
 
 const NullableNumber = z
 	.string()
-	.nullable()
 	.optional()
 	.transform(s => {
 		const number = s ? Number(s) : null

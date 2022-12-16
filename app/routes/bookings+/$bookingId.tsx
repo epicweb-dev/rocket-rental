@@ -10,7 +10,7 @@ import {
 	calculateReviewTimeExperied,
 	ReviewCard,
 	Reviewer,
-} from './resources.reviewer'
+} from '~/routes/resources+/reviewer'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.bookingId, 'Missing bookingId')

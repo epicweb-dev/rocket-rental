@@ -12,8 +12,11 @@ import { prisma } from '~/utils/db.server'
 import { requireUserId } from '~/utils/auth.server'
 import { chatEmitter, EVENTS } from '~/utils/chat.server'
 import { useEventSource } from '~/utils/hooks'
-import type { Message, NewMessageChange } from './chats.$chatId.events'
-import { isNewMessageChange } from './chats.$chatId.events'
+import {
+	isNewMessageChange,
+	type Message,
+	type NewMessageChange,
+} from './$chatId.events'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.chatId, 'Missing chatId')
