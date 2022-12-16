@@ -17,3 +17,5 @@ node_modules
 /mocks/fixtures/*.json
 /coverage
 /prisma/data.db.bkp
+
+prisma/test
