@@ -11,17 +11,15 @@ process.env.DATABASE_PATH = `./prisma/test/${filename}`
 process.env.DATABASE_URL = `file:./test/${filename}?connection_limit=1`
 fs.copyFileSync('prisma/test/base.db', process.env.DATABASE_PATH)
 
-afterEach(async () => {
-	db.transaction(() => {
-		db.exec(`
-			DELETE FROM user;
-			DELETE FROM ship;
-			DELETE FROM shipBrand;
-			DELETE FROM starport;
-			DELETE FROM booking;
-			DELETE FROM chat;
-		`)
-	})
+afterEach(() => {
+	db.exec(`
+		DELETE FROM user;
+		DELETE FROM ship;
+		DELETE FROM shipBrand;
+		DELETE FROM starport;
+		DELETE FROM booking;
+		DELETE FROM chat;
+	`)
 })
 
 afterAll(async () => {
