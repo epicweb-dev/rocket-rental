@@ -4,6 +4,8 @@ mount-dir: '${FLY_LITEFS_DIR}'
 # The path to where the underlying volume mount is.
 data-dir: '/data'
 
+exit-on-error: false
+
 # TODO: make this work
 # candidate: ${FLY_REGION == 'dfw'}
 
