@@ -1,5 +1,3 @@
-FROM flyio/litefs:sha-99b891e AS litefs
-
 # base node image
 FROM node:16-bullseye-slim as base
 
@@ -64,8 +62,8 @@ COPY --from=build /myapp/other/start.js /myapp/other/start.js
 COPY --from=build /myapp/prisma /myapp/prisma
 
 # prepare for litefs
-COPY --from=litefs /usr/local/bin/litefs /usr/local/bin/litefs
+COPY --from=flyio/litefs:sha-d70e353 /usr/local/bin/litefs /usr/local/bin/litefs
 ADD other/litefs.yml /etc/litefs.yml
-RUN mkdir -p /data /litefs/data
+RUN mkdir -p /data ${FLY_LITEFS_DIR}
 
-CMD ["litefs", "--", "node", "./other/start.js"]
+CMD ["litefs", "mount", "--", "node", "./other/start.js"]
