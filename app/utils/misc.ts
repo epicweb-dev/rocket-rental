@@ -1,8 +1,8 @@
+import { type SerializeFrom } from '@remix-run/node'
 import { useRouteLoaderData } from '@remix-run/react'
 import { cloneElement } from 'react'
-import { type loader as rootLoader } from '~/root'
 import { type User } from '~/models/user.server'
-import { type V2_MetaFunction, type SerializeFrom } from '@remix-run/node'
+import { type loader as rootLoader } from '~/root'
 
 const DEFAULT_REDIRECT = '/'
 
