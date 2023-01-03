@@ -1,7 +1,7 @@
-import type { DataFunctionArgs } from '@remix-run/server-runtime'
+import type { DataFunctionArgs } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
-import { authenticator } from '~/utils/auth.server'
 import invariant from 'tiny-invariant'
+import { authenticator } from '~/utils/auth.server'
 
 export function loader() {
 	return redirect('/login')

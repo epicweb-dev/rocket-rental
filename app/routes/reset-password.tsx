@@ -1,11 +1,11 @@
-import type { DataFunctionArgs, MetaFunction } from '@remix-run/node'
+import type { DataFunctionArgs, V2_MetaFunction } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
 	Form,
 	useActionData,
 	useLoaderData,
-	useTransition,
+	useNavigation,
 } from '@remix-run/react'
 import { useEffect, useRef } from 'react'
 import invariant from 'tiny-invariant'
@@ -67,16 +67,19 @@ export async function action({ request }: DataFunctionArgs) {
 	})
 }
 
-export const meta: MetaFunction = () => {
-	return {
-		title: 'Setup Rocket Rental Account',
-	}
+export const meta: V2_MetaFunction = ({ matches }) => {
+	let rootModule = matches.find(match => match.route.id === 'root')
+
+	return [
+		...(rootModule?.meta ?? [])?.filter(meta => !('title' in meta)),
+		{ tite: 'Reset Password | Rocket Rental' },
+	]
 }
 
 export default function ResetPasswordPage() {
 	const data = useLoaderData<typeof loader>()
 	const form = useRef<HTMLFormElement>(null)
-	const transition = useTransition()
+	const navigation = useNavigation()
 	const actionData = useActionData<typeof action>()
 
 	const hasPasswordError = actionData?.errors?.password
@@ -175,9 +178,11 @@ export default function ResetPasswordPage() {
 						<button
 							type="submit"
 							className="w-full rounded bg-gray-500  py-2 px-4 text-white hover:bg-gray-600 focus:bg-gray-400"
-							disabled={Boolean(transition.submission)}
+							disabled={Boolean(navigation.state === 'submitting')}
 						>
-							{transition.submission ? 'Resetting...' : 'Reset Password'}
+							{navigation.state === 'submitting'
+								? 'Resetting...'
+								: 'Reset Password'}
 						</button>
 					</div>
 				</Form>

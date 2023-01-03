@@ -1,4 +1,4 @@
-import type { DataFunctionArgs } from '@remix-run/server-runtime'
+import type { DataFunctionArgs } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { authenticator } from '~/utils/auth.server'
 

@@ -1,7 +1,7 @@
 import type {
 	LinksFunction,
 	DataFunctionArgs,
-	MetaFunction,
+	V2_MetaFunction,
 } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
@@ -24,15 +24,12 @@ export const links: LinksFunction = () => {
 	return [{ rel: 'stylesheet', href: tailwindStylesheetUrl }, ...vendorLinks]
 }
 
-export const meta: MetaFunction = () => ({
-	charset: 'utf-8',
-	title: 'Rocket Rental',
-	viewport: 'width=device-width,initial-scale=1',
-})
-
-export function action() {
-	// this is for useRevalidator
-	return { ok: true }
+export const meta: V2_MetaFunction = () => {
+	return [
+		{ title: 'Rocket Rental' },
+		{ charSet: 'utf-8' },
+		{ name: 'viewport', content: 'width=device-width,initial-scale=1' },
+	]
 }
 
 export async function loader({ request }: DataFunctionArgs) {

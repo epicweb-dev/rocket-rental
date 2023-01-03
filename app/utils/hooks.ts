@@ -1,16 +1,4 @@
-import { useFetcher } from '@remix-run/react'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
-
-// TODO: Swap this with react-router's useRevalidator when Remix adds support for it.
-export function useRevalidator() {
-	const { submit } = useFetcher()
-
-	const revalidate = useCallback(() => {
-		submit(null, { action: '/', method: 'post' })
-	}, [submit])
-
-	return useMemo(() => ({ revalidate }), [revalidate])
-}
+import { useEffect, useRef } from 'react'
 
 export function useEventSource(
 	href: string,

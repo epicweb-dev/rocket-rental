@@ -1,13 +1,12 @@
-import type { DataFunctionArgs, MetaFunction } from '@remix-run/node'
-import { redirect } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import type { DataFunctionArgs } from '@remix-run/node'
+import { json, redirect, type V2_MetaFunction } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { getUserByEmail } from '~/models/user.server'
 import { sendEmail } from '~/utils/email.server'
 import { decrypt, encrypt } from '~/utils/encryption.server'
-import { commitSession, getSession } from '~/utils/session.server'
 import { getDomainUrl } from '~/utils/misc.server'
+import { commitSession, getSession } from '~/utils/session.server'
 
 export const onboardingEmailSessionKey = 'onboardingToken'
 const onboardingTokenQueryParam = 'token'
@@ -92,10 +91,13 @@ export async function action({ request }: DataFunctionArgs) {
 	}
 }
 
-export const meta: MetaFunction = () => {
-	return {
-		title: 'Signup for Rocket Rental',
-	}
+export const meta: V2_MetaFunction = ({ matches }) => {
+	let rootModule = matches.find(match => match.route.id === 'root')
+
+	return [
+		...(rootModule?.meta ?? [])?.filter(meta => !('title' in meta)),
+		{ tite: 'Sign Up | Rocket Rental' },
+	]
 }
 
 export default function SignupRoute() {

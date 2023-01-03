@@ -1,4 +1,4 @@
-import type { DataFunctionArgs, MetaFunction } from '@remix-run/node'
+import type { DataFunctionArgs, V2_MetaFunction } from '@remix-run/node'
 import { json, redirect } from '@remix-run/node'
 import {
 	Form,
@@ -118,10 +118,13 @@ export async function action({ request }: DataFunctionArgs) {
 	})
 }
 
-export const meta: MetaFunction = () => {
-	return {
-		title: 'Setup Rocket Rental Account',
-	}
+export const meta: V2_MetaFunction = ({ matches }) => {
+	let rootModule = matches.find(match => match.route.id === 'root')
+
+	return [
+		...(rootModule?.meta ?? [])?.filter(meta => !('title' in meta)),
+		{ tite: 'Setup Rocket Rental Account' },
+	]
 }
 
 export default function OnboardingPage() {

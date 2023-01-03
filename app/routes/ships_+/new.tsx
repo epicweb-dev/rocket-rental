@@ -76,7 +76,7 @@ export async function action({ request }: DataFunctionArgs) {
 	return redirect(`/ships/${ship.id}`)
 }
 
-export default function ShipEditRoute() {
+export default function NewShipRoute() {
 	const data = useLoaderData<typeof loader>()
 	const [selectedStarport, setSelectedStarport] = useState<{
 		id: string
@@ -95,7 +95,7 @@ export default function ShipEditRoute() {
 
 	return (
 		<div>
-			<h1>Ship Edit</h1>
+			<h1>Create A New Ship</h1>
 			<Form method="post">
 				<label>
 					Name
@@ -126,9 +126,7 @@ export default function ShipEditRoute() {
 						setSelectedModel(newModel ?? null)
 					}}
 				/>
-				{selectedModel ? (
-					<input type="hidden" name="modelId" value={selectedModel.id ?? ''} />
-				) : null}
+				<input type="hidden" name="modelId" value={selectedModel?.id ?? ''} />
 				<label>
 					Image URL
 					<input
@@ -164,13 +162,11 @@ export default function ShipEditRoute() {
 						setSelectedStarport(newStarport ?? null)
 					}}
 				/>
-				{selectedStarport ? (
-					<input
-						type="hidden"
-						name="starportId"
-						value={selectedStarport.id ?? ''}
-					/>
-				) : null}
+				<input
+					type="hidden"
+					name="starportId"
+					value={selectedStarport?.id ?? ''}
+				/>
 				<button type="submit">Save</button>
 			</Form>
 			<pre>{JSON.stringify(data, null, 2)}</pre>
