@@ -35,7 +35,6 @@ model Password {
 
 model ContactInfo {
   id      String  @id @unique @default(cuid())
-  email   String?
   phone   String?
   address String?
   city    String?

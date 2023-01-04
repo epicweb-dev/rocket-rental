@@ -13,12 +13,12 @@ import {
 	ScrollRestoration,
 	useLoaderData,
 } from '@remix-run/react'
-import { getUserById } from './models/user.server'
 import { authenticator } from './utils/auth.server'
 
 import tailwindStylesheetUrl from './styles/tailwind.css'
 import { links as vendorLinks } from './utils/vendor.css'
 import { getEnv } from './utils/env.server'
+import { prisma } from './utils/db.server'
 
 export const links: LinksFunction = () => {
 	return [{ rel: 'stylesheet', href: tailwindStylesheetUrl }, ...vendorLinks]
@@ -30,6 +30,13 @@ export const meta: V2_MetaFunction = () => {
 		{ charSet: 'utf-8' },
 		{ name: 'viewport', content: 'width=device-width,initial-scale=1' },
 	]
+}
+
+export async function getUserById(id: string) {
+	return prisma.user.findUnique({
+		where: { id },
+		select: { id: true, name: true },
+	})
 }
 
 export async function loader({ request }: DataFunctionArgs) {

@@ -7,7 +7,6 @@ export function createContactInfo(): Omit<
 	'id' | 'userId' | 'createdAt' | 'updatedAt'
 > {
 	return {
-		email: faker.internet.email(),
 		address: faker.address.streetAddress(),
 		city: faker.address.city(),
 		state: faker.address.state(),

@@ -2,7 +2,7 @@ import type { DataFunctionArgs } from '@remix-run/node'
 import { json, redirect, type V2_MetaFunction } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
 import invariant from 'tiny-invariant'
-import { getUserByEmail } from '~/models/user.server'
+import { prisma } from '~/utils/db.server'
 import { sendEmail } from '~/utils/email.server'
 import { decrypt, encrypt } from '~/utils/encryption.server'
 import { getDomainUrl } from '~/utils/misc.server'
@@ -46,8 +46,11 @@ export async function action({ request }: DataFunctionArgs) {
 		)
 	}
 
-	const userExists = await getUserByEmail(email)
-	if (userExists) {
+	const existingUser = await prisma.user.findUnique({
+		where: { email },
+		select: { id: true },
+	})
+	if (existingUser) {
 		return json(
 			{
 				status: 'error',
