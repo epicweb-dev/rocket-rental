@@ -19,3 +19,4 @@ node_modules
 /prisma/data.db.bkp
 
 prisma/test
+other/image.db

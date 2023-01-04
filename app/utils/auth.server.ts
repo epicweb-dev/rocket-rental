@@ -7,7 +7,7 @@ import { Authenticator } from 'remix-auth'
 import { FormStrategy } from 'remix-auth-form'
 import invariant from 'tiny-invariant'
 import { sessionStorage } from './session.server'
-import { verifyLogin } from '~/models/user.server'
+import { getUserById, verifyLogin } from '~/models/user.server'
 
 export const authenticator = new Authenticator<string>(sessionStorage, {
 	sessionKey: 'token',
@@ -44,6 +44,16 @@ export async function requireUserId(request: Request) {
 		failureRedirect,
 	})
 	return userId
+}
+
+export async function requireUser(request: Request) {
+	const userId = await requireUserId(request)
+	const user = await getUserById(userId)
+	if (!user) {
+		await authenticator.logout(request, { redirectTo: '/' })
+		throw new Response('Unauthorized', { status: 401 })
+	}
+	return user
 }
 
 export async function getUserId(request: Request) {
