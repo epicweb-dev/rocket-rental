@@ -33,19 +33,11 @@ export async function action({ request }: DataFunctionArgs) {
 	}
 
 	const formData = await request.formData()
-	const {
-		name,
-		description,
-		imageUrl,
-		capacity,
-		dailyCharge,
-		modelId,
-		starportId,
-	} = Object.fromEntries(formData)
+	const { name, description, capacity, dailyCharge, modelId, starportId } =
+		Object.fromEntries(formData)
 
 	invariant(typeof name === 'string', 'name type invalid')
 	invariant(typeof description === 'string', 'description type invalid')
-	invariant(typeof imageUrl === 'string', 'imageUrl type invalid')
 	invariant(typeof capacity === 'string', 'capacity type invalid')
 	invariant(typeof dailyCharge === 'string', 'dailyCharge type invalid')
 	invariant(typeof modelId === 'string', 'modelId type invalid')
@@ -65,7 +57,7 @@ export async function action({ request }: DataFunctionArgs) {
 			hostId: host.userId,
 			name,
 			description,
-			imageUrl,
+			// TODO: handle image upload
 			capacity: Number(capacity),
 			dailyCharge: Number(dailyCharge),
 			modelId: modelId,
@@ -85,12 +77,12 @@ export default function NewShipRoute() {
 	const [selectedModel, setSelectedModel] = useState<{
 		id: string
 		name: string
-		imageUrl: string
+		imageId: string
 	} | null>(null)
 	const [selectedBrand, setSelectedBrand] = useState<{
 		id: string
 		name: string
-		imageUrl: string
+		imageId: string
 	} | null>(null)
 
 	return (
@@ -127,14 +119,7 @@ export default function NewShipRoute() {
 					}}
 				/>
 				<input type="hidden" name="modelId" value={selectedModel?.id ?? ''} />
-				<label>
-					Image URL
-					<input
-						className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-						type="text"
-						name="imageUrl"
-					/>
-				</label>
+				{/* TODO: handle image upload */}
 				<label>
 					Capacity
 					<input

@@ -11,6 +11,8 @@ import {
 	createShipModel,
 	createStarport,
 	createUser,
+	downloadFile,
+	lockifyFakerImage,
 	oneDay,
 } from './seed-utils'
 import allTheCities from 'all-the-cities'
@@ -36,7 +38,7 @@ async function seed() {
 		.filter(c => c.population > 75_000)
 		.sort((a, z) => z.population - a.population)
 
-	console.time('🌃 Created cities...')
+	console.time(`🌃 Created ${citiesToCreate.length} cities...`)
 	for (const city of citiesToCreate) {
 		await prisma.city.create({
 			data: {
@@ -47,55 +49,112 @@ async function seed() {
 			},
 		})
 	}
-	console.timeEnd('🌃 Created cities...')
+	console.timeEnd(`🌃 Created ${citiesToCreate.length} cities...`)
 
-	console.time('✅ Created brands...')
+	const totalBrands = 30
+	console.time(`✅ Created ${totalBrands} brands...`)
 	const brands = await Promise.all(
-		Array.from({ length: 30 }, async () => {
+		Array.from({ length: totalBrands }, async () => {
 			const brand = await prisma.shipBrand.create({
-				data: createBrand(),
+				data: {
+					...createBrand(),
+					image: {
+						create: {
+							contentType: 'image/jpeg',
+							file: {
+								create: {
+									blob: await downloadFile(
+										lockifyFakerImage(
+											lockifyFakerImage(faker.image.nature(512, 512, true)),
+										),
+									),
+								},
+							},
+						},
+					},
+				},
 			})
 			return brand
 		}),
 	)
-	console.timeEnd('✅ Created brands...')
+	console.timeEnd(`✅ Created ${totalBrands} brands...`)
 
-	console.time('⭐ Creating ship models...')
+	const totalShipModels = 100
+	console.time(`⭐ Created ${totalShipModels} ship models...`)
 	const shipModels = await Promise.all(
-		Array.from({ length: 100 }, async () => {
+		Array.from({ length: totalShipModels }, async () => {
+			const image = await prisma.image.create({
+				data: {
+					contentType: 'image/jpeg',
+					file: {
+						create: {
+							blob: await downloadFile(
+								lockifyFakerImage(
+									lockifyFakerImage(faker.image.business(512, 512, true)),
+								),
+							),
+						},
+					},
+				},
+				select: { fileId: true },
+			})
+
 			const shipModel = await prisma.shipModel.create({
 				data: {
 					brandId: faker.helpers.arrayElement(brands).id,
 					...createShipModel(),
+					imageId: image.fileId,
 				},
 			})
 			return shipModel
 		}),
 	)
+	console.timeEnd(`⭐ Created ${totalShipModels} ship models...`)
 
-	console.time('🏢 Created starports...')
+	const totalStarports = 80
+	console.time(`🏢 Created ${totalStarports} starports...`)
 	const starports = await Promise.all(
-		Array.from({ length: 80 }, async (_, index) => {
+		Array.from({ length: totalStarports }, async (_, index) => {
 			const city: typeof citiesToCreate[number] = citiesToCreate[index]
 			const starport = await prisma.starport.create({
 				data: {
 					...createStarport(),
 					longitude: city.loc.coordinates[0],
 					latitude: city.loc.coordinates[1],
+					image: {
+						create: {
+							contentType: 'image/jpeg',
+							file: {
+								create: {
+									blob: await downloadFile(
+										lockifyFakerImage(
+											lockifyFakerImage(faker.image.business(512, 512, true)),
+										),
+									),
+								},
+							},
+						},
+					},
 				},
 			})
 			return starport
 		}),
 	)
-	console.timeEnd('🏢 Created starports...')
+	console.timeEnd(`🏢 Created ${totalStarports} starports...`)
 
 	// hosts with ships and reviews
 	// renters with bookings and reviews
 	// hosts who are renters also
-	console.time('👤 Created users...')
+	const totalUsers = Math.floor(100)
+	console.time(`👤 Created ${totalUsers} users...`)
 	const users = await Promise.all(
-		Array.from({ length: 500 }, async () => {
-			const userData = createUser()
+		Array.from({ length: totalUsers }, async () => {
+			const gender = faker.helpers.arrayElement(['female', 'male']) as
+				| 'female'
+				| 'male'
+			const userData = createUser({ gender })
+			const imageGender = gender === 'female' ? 'women' : 'men'
+			const imageNumber = faker.datatype.number({ min: 0, max: 99 })
 			const user = await prisma.user.create({
 				data: {
 					...userData,
@@ -105,15 +164,29 @@ async function seed() {
 					password: {
 						create: createPassword(userData.username),
 					},
+					image: {
+						create: {
+							contentType: 'image/jpeg',
+							file: {
+								create: {
+									blob: await downloadFile(
+										`https://randomuser.me/api/portraits/${imageGender}/${imageNumber}.jpg`,
+									),
+								},
+							},
+						},
+					},
 				},
 			})
 			return user
 		}),
 	)
-	console.timeEnd('👤 Created users...')
+	console.timeEnd(`👤 Created ${totalUsers} users...`)
 
-	console.time('👮 Created admins...')
-	const adminIds = users.slice(0, 50).map(user => user.id)
+	const totalAdmins = Math.floor(totalUsers * 0.1)
+
+	console.time(`👮 Created ${totalAdmins} admins...`)
+	const adminIds = users.slice(0, totalAdmins).map(user => user.id)
 	const admins = await Promise.all(
 		adminIds.map(async id => {
 			const admin = await prisma.admin.create({
@@ -124,28 +197,50 @@ async function seed() {
 			return admin
 		}),
 	)
-	console.timeEnd('👮 Created admins...')
+	console.timeEnd(`👮 Created ${totalAdmins} admins...`)
 
-	console.time('🥳 Created hosts...')
-	const hostIds = users.slice(50, 200).map(user => user.id)
+	const totalHosts = Math.floor(totalUsers * 0.3)
+
+	console.time(`🥳 Created ${totalHosts} hosts...`)
+	const hostIds = users
+		.slice(totalAdmins, totalAdmins + totalHosts)
+		.map(user => user.id)
 	const hosts = await Promise.all(
 		hostIds.map(async (id, index) => {
 			const shipCount = faker.datatype.number({ min: 1, max: 15 })
+
+			const images = await Promise.all(
+				Array.from({ length: shipCount }, async () => {
+					const image = await prisma.image.create({
+						data: {
+							contentType: 'image/jpeg',
+							file: {
+								create: {
+									blob: await downloadFile(
+										lockifyFakerImage(faker.image.transport(512, 512, true)),
+									),
+								},
+							},
+						},
+					})
+					return image
+				}),
+			)
 
 			const host = await prisma.host.create({
 				data: {
 					userId: id,
 					bio: faker.lorem.sentences(3),
 					ships: {
-						create: Array.from(
-							{ length: shipCount },
-							(): Omit<P.Ship, 'id' | 'createdAt' | 'updatedAt' | 'hostId'> => {
+						create: await Promise.all(
+							Array.from({ length: shipCount }, async (_, index) => {
 								return {
 									modelId: faker.helpers.arrayElement(shipModels).id,
 									starportId: faker.helpers.arrayElement(starports).id,
 									...createShip(),
+									imageId: images[index].fileId,
 								}
-							},
+							}),
 						),
 					},
 				},
@@ -156,10 +251,14 @@ async function seed() {
 			return host
 		}),
 	)
-	console.timeEnd('🥳 Created hosts...')
+	console.timeEnd(`🥳 Created ${totalHosts} hosts...`)
 
-	console.time('😍 Created renters...')
-	const renterIds = users.slice(150).map(user => user.id)
+	const totalRenters = Math.floor(
+		totalUsers - totalAdmins - totalHosts + totalHosts * 0.6,
+	)
+
+	console.time(`😍 Created ${totalRenters} renters...`)
+	const renterIds = users.slice(totalUsers - totalRenters).map(user => user.id)
 	const renters = await Promise.all(
 		renterIds.map(async id => {
 			const renter = await prisma.renter.create({
@@ -171,7 +270,7 @@ async function seed() {
 			return renter
 		}),
 	)
-	console.timeEnd('😍 Created renters...')
+	console.timeEnd(`😍 Created ${totalRenters} renters...`)
 
 	console.time('📚 Created bookings...')
 	const rentersWithBookings = faker.helpers.arrayElements(renters, 20)
@@ -322,7 +421,18 @@ async function seed() {
 			email: 'kody@kcd.dev',
 			username: 'kody',
 			name: 'Kody',
-			imageUrl: kodyUser.imageUrl,
+			image: {
+				create: {
+					contentType: 'image/png',
+					file: {
+						create: {
+							blob: await downloadFile(
+								`https://res.cloudinary.com/kentcdodds-com/image/upload/kentcdodds.com/misc/kody.png`,
+							),
+						},
+					},
+				},
+			},
 			password: {
 				create: {
 					hash: await bcrypt.hash('kodylovesyou', 10),

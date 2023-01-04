@@ -13,7 +13,7 @@ import { getSearchParamsOrFail } from 'remix-params-helper'
 import { z } from 'zod'
 import { db, interpolateArray, prisma } from '~/utils/db.server'
 import { getClosestStarports, getDistanceCalculation } from '~/utils/geo.server'
-import { typedBoolean } from '~/utils/misc'
+import { getImgSrc, typedBoolean } from '~/utils/misc'
 import { addParamToSet, unappend } from '~/utils/search-params'
 import { BrandCombobox } from '~/routes/resources+/brand-combobox'
 import { CityCombobox } from '~/routes/resources+/city-combobox'
@@ -66,7 +66,7 @@ export async function loader({ request }: DataFunctionArgs) {
 		where: {
 			id: { in: [...new Set(ships.map(ship => ship.modelId)), ...modelId] },
 		},
-		select: { id: true, name: true, imageUrl: true },
+		select: { id: true, name: true, imageId: true },
 	})
 	const brands = await prisma.shipBrand.findMany({
 		where: {
@@ -74,13 +74,13 @@ export async function loader({ request }: DataFunctionArgs) {
 				in: [...new Set(ships.map(ship => ship.brandId)), ...brandId],
 			},
 		},
-		select: { id: true, name: true, imageUrl: true },
+		select: { id: true, name: true, imageId: true },
 	})
 	const hosts = await prisma.host.findMany({
 		where: {
 			userId: { in: [...new Set(ships.map(ship => ship.hostId)), ...hostId] },
 		},
-		select: { user: { select: { id: true, name: true, imageUrl: true } } },
+		select: { user: { select: { id: true, name: true, imageId: true } } },
 	})
 	const starports = await prisma.starport.findMany({
 		where: {
@@ -101,7 +101,7 @@ const SearchShipsResult = z.array(
 		hostId: z.string(),
 		starportId: z.string(),
 		brandId: z.string(),
-		imageUrl: z.string().url(),
+		imageId: z.string(),
 		name: z.string(),
 		dailyCharge: z.number().positive(),
 		capacity: z.number().positive(),
@@ -262,7 +262,7 @@ function searchShips({
 			ship.hostId,
 			ship.starportId,
 			m.brandId,
-			ship.imageUrl,
+			ship.imageId,
 			ship.name,
 			ship.dailyCharge,
 			ship.capacity,
@@ -567,9 +567,9 @@ export default function ShipsRoute() {
 							<li key={brand.id}>
 								<div className="flex items-center gap-2">
 									<Link to={`/${brand.id}`} className="flex items-center gap-2">
-										{brand.imageUrl ? (
+										{brand.imageId ? (
 											<img
-												src={brand.imageUrl}
+												src={getImgSrc(brand.imageId)}
 												alt={brand.name ?? 'Unnamed host'}
 												className="h-8 w-8 rounded-full"
 											/>
@@ -619,9 +619,9 @@ export default function ShipsRoute() {
 							<li key={model.id}>
 								<div className="flex items-center gap-2">
 									<Link to={`/${model.id}`} className="flex items-center gap-2">
-										{model.imageUrl ? (
+										{model.imageId ? (
 											<img
-												src={model.imageUrl}
+												src={getImgSrc(model.imageId)}
 												alt={model.name ?? 'Unnamed host'}
 												className="h-8 w-8 rounded-full"
 											/>
@@ -674,9 +674,9 @@ export default function ShipsRoute() {
 										to={`/${host.user.id}`}
 										className="flex items-center gap-2"
 									>
-										{host.user.imageUrl ? (
+										{host.user.imageId ? (
 											<img
-												src={host.user.imageUrl}
+												src={getImgSrc(host.user.imageId)}
 												alt={host.user.name ?? 'Unnamed host'}
 												className="h-8 w-8 rounded-full"
 											/>
@@ -797,7 +797,7 @@ export default function ShipsRoute() {
 									className="flex gap-4 bg-slate-400"
 								>
 									<img
-										src={ship.imageUrl}
+										src={getImgSrc(ship.imageId)}
 										alt=""
 										className="inline aspect-square w-16 rounded-sm"
 									/>

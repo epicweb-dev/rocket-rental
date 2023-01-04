@@ -2,6 +2,15 @@ import type * as P from '@prisma/client'
 import { faker } from '@faker-js/faker'
 import bcrypt from 'bcryptjs'
 
+export async function downloadFile(url: string) {
+	const response = await fetch(url)
+	if (!response.ok) {
+		throw new Error(`Failed to fetch image with status ${response.status}`)
+	}
+	const blob = Buffer.from(await response.arrayBuffer())
+	return blob
+}
+
 export function createContactInfo(): Omit<
 	P.ContactInfo,
 	'id' | 'userId' | 'createdAt' | 'updatedAt'
@@ -16,11 +25,11 @@ export function createContactInfo(): Omit<
 	}
 }
 
-export function createUser(): Omit<P.User, 'id' | 'createdAt' | 'updatedAt'> {
-	const gender = faker.helpers.arrayElement(['female', 'male']) as
-		| 'female'
-		| 'male'
-
+export function createUser({
+	gender = faker.helpers.arrayElement(['female', 'male']) as 'female' | 'male',
+}: {
+	gender?: 'male' | 'female'
+} = {}): Omit<P.User, 'id' | 'createdAt' | 'updatedAt' | 'imageId'> {
 	const firstName = faker.name.firstName(gender)
 	const lastName = faker.name.lastName()
 
@@ -28,13 +37,10 @@ export function createUser(): Omit<P.User, 'id' | 'createdAt' | 'updatedAt'> {
 		firstName.toLowerCase(),
 		lastName.toLowerCase(),
 	])
-	const imageGender = gender === 'female' ? 'women' : 'men'
-	const imageNumber = faker.datatype.number({ min: 0, max: 99 })
 	return {
 		username,
 		name: `${firstName} ${lastName}`,
 		email: `${username}@example.com`,
-		imageUrl: `https://randomuser.me/api/portraits/${imageGender}/${imageNumber}.jpg`,
 	}
 }
 
@@ -57,14 +63,13 @@ export function createDateRange({
 	}
 }
 
-const lockifyImage = (imageUrl: string) =>
+export const lockifyFakerImage = (imageUrl: string) =>
 	imageUrl.replace(/\?(\d+)/, '?lock=$1')
 
 export function createBrand() {
 	return {
 		name: faker.company.name(),
 		description: faker.company.bs(),
-		imageUrl: lockifyImage(faker.image.nature(512, 512, true)),
 	}
 }
 
@@ -72,7 +77,6 @@ export function createShipModel() {
 	return {
 		name: faker.company.name(),
 		description: faker.company.bs(),
-		imageUrl: lockifyImage(faker.image.nature(512, 512, true)),
 	}
 }
 
@@ -80,7 +84,6 @@ export function createStarport() {
 	return {
 		name: faker.company.name(),
 		description: faker.lorem.sentences(3),
-		imageUrl: lockifyImage(faker.image.business(512, 512, true)),
 		latitude: Number(faker.address.latitude()),
 		longitude: Number(faker.address.longitude()),
 	}
@@ -97,7 +100,6 @@ export function createShip() {
 		name: faker.lorem.word(),
 		capacity: faker.datatype.number({ min: 1, max: 10 }),
 		description: faker.lorem.sentences(3),
-		imageUrl: lockifyImage(faker.image.transport(512, 512, true)),
 		dailyCharge: faker.datatype.number({ min: 100, max: 1000 }),
 	}
 }

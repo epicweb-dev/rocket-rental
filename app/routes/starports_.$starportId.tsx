@@ -3,13 +3,14 @@ import { json } from '@remix-run/node'
 import { useCatch, useLoaderData, useParams } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server'
+import { getImgSrc, getShipImgSrc } from '~/utils/misc'
 
 export async function loader({ params }: DataFunctionArgs) {
 	invariant(params.starportId, 'Missing starportId')
 	const starport = await prisma.starport.findUnique({
 		where: { id: params.starportId },
 		select: {
-			imageUrl: true,
+			imageId: true,
 			name: true,
 			description: true,
 			latitude: true,
@@ -18,13 +19,13 @@ export async function loader({ params }: DataFunctionArgs) {
 				select: {
 					id: true,
 					name: true,
-					imageUrl: true,
+					imageId: true,
 					host: {
 						select: {
 							user: {
 								select: {
 									name: true,
-									imageUrl: true,
+									imageId: true,
 								},
 							},
 						},
@@ -50,7 +51,7 @@ export default function StarportRoute() {
 	const data = useLoaderData<typeof loader>()
 	return (
 		<div>
-			<img src={data.starport.imageUrl} alt="" />
+			<img src={getImgSrc(data.starport.imageId)} alt="" />
 			<h1>
 				{data.starport.name} ({data.starport.latitude},{' '}
 				{data.starport.longitude})
@@ -62,16 +63,16 @@ export default function StarportRoute() {
 					<li key={ship.id} className="p-6">
 						<a href={`/ships/${ship.id}`} className="flex gap-4 bg-slate-400">
 							<img
-								src={ship.imageUrl}
+								src={getShipImgSrc(ship.imageId)}
 								alt=""
 								className="h-24 w-24 object-cover"
 							/>
 							<div className="flex flex-col gap-2">
 								<div className="text-xl">{ship.name}</div>
 								<div className="flex gap-2">
-									{ship.host.user.imageUrl ? (
+									{ship.host.user.imageId ? (
 										<img
-											src={ship.host.user.imageUrl}
+											src={ship.host.user.imageId}
 											alt=""
 											className="h-8 w-8 rounded-full"
 										/>

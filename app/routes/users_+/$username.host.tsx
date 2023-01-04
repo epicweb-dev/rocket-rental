@@ -26,7 +26,7 @@ export async function loader({ params }: DataFunctionArgs) {
 						select: {
 							id: true,
 							name: true,
-							imageUrl: true,
+							imageId: true,
 							_count: {
 								select: {
 									// TODO: calculate only bookings they've had in the past
@@ -38,12 +38,12 @@ export async function loader({ params }: DataFunctionArgs) {
 								select: {
 									id: true,
 									name: true,
-									imageUrl: true,
+									imageId: true,
 									brand: {
 										select: {
 											id: true,
 											name: true,
-											imageUrl: true,
+											imageId: true,
 										},
 									},
 								},
@@ -61,7 +61,7 @@ export async function loader({ params }: DataFunctionArgs) {
 								select: {
 									user: {
 										select: {
-											imageUrl: true,
+											imageId: true,
 											name: true,
 											username: true,
 										},
@@ -80,7 +80,7 @@ export async function loader({ params }: DataFunctionArgs) {
 								select: {
 									user: {
 										select: {
-											imageUrl: true,
+											imageId: true,
 											name: true,
 											username: true,
 										},

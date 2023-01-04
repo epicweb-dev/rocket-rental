@@ -7,7 +7,7 @@ import {
 import { prisma } from '~/utils/db.server'
 import { getSearchParamsOrFail } from 'remix-params-helper'
 import { z } from 'zod'
-import { typedBoolean } from '~/utils/misc'
+import { getImgSrc, typedBoolean } from '~/utils/misc'
 
 export const SearchParamsSchema = z.object({
 	query: z.string().default(''),
@@ -31,7 +31,7 @@ export async function loader({ request }: LoaderArgs) {
 		},
 		select: {
 			id: true,
-			imageUrl: true,
+			imageId: true,
 			name: true,
 		},
 		take: 20,
@@ -55,9 +55,9 @@ export function ModelCombobox({
 			resourceUrl="/resources/model-combobox"
 			renderItemInList={model => (
 				<>
-					{model.imageUrl ? (
+					{model.imageId ? (
 						<img
-							src={model.imageUrl}
+							src={getImgSrc(model.imageId)}
 							alt={model.name}
 							className="h-8 w-8 rounded-full"
 						/>

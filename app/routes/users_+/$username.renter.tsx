@@ -38,7 +38,7 @@ export async function loader({ params }: DataFunctionArgs) {
 								select: {
 									user: {
 										select: {
-											imageUrl: true,
+											imageId: true,
 											name: true,
 											username: true,
 										},
@@ -57,7 +57,7 @@ export async function loader({ params }: DataFunctionArgs) {
 								select: {
 									user: {
 										select: {
-											imageUrl: true,
+											imageId: true,
 											name: true,
 											username: true,
 										},
@@ -76,7 +76,7 @@ export async function loader({ params }: DataFunctionArgs) {
 								select: {
 									id: true,
 									name: true,
-									imageUrl: true,
+									imageId: true,
 								},
 							},
 						},

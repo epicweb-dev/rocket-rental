@@ -7,6 +7,7 @@ import {
 } from '~/components/basic-search-combobox'
 import { prisma } from '~/utils/db.server'
 import { getSearchParamsOrFail } from 'remix-params-helper'
+import { getUserImgSrc } from '~/utils/misc'
 
 export async function loader({ request }: LoaderArgs) {
 	const { query, exclude } = getSearchParamsOrFail(request, SearchParamsSchema)
@@ -28,7 +29,7 @@ export async function loader({ request }: LoaderArgs) {
 				select: {
 					id: true,
 					name: true,
-					imageUrl: true,
+					imageId: true,
 				},
 			},
 		},
@@ -49,9 +50,9 @@ export function HostCombobox({ ...baseOptions }: BaseOptions<Host>) {
 			resourceUrl="/resources/host-combobox"
 			renderItemInList={host => (
 				<>
-					{host.user.imageUrl ? (
+					{host.user.imageId ? (
 						<img
-							src={host.user.imageUrl}
+							src={getUserImgSrc(host.user.imageId)}
 							alt={host.user.name ?? 'Unnamed host'}
 							className="h-8 w-8 rounded-full"
 						/>

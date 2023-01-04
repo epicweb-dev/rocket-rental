@@ -27,15 +27,15 @@ export async function loader({ request, params }: DataFunctionArgs) {
 		select: {
 			id: true,
 			renter: {
-				select: { user: { select: { id: true, name: true, imageUrl: true } } },
+				select: { user: { select: { id: true, name: true, imageId: true } } },
 			},
 			ship: {
 				select: {
 					name: true,
-					imageUrl: true,
+					imageId: true,
 					host: {
 						select: {
-							user: { select: { id: true, name: true, imageUrl: true } },
+							user: { select: { id: true, name: true, imageId: true } },
 						},
 					},
 				},

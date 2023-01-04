@@ -4,7 +4,7 @@ import { useFetcher } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server'
 import { requireUserId } from '~/utils/auth.server'
-import { getErrorInfo } from '~/utils/misc'
+import { getErrorInfo, getUserImgSrc } from '~/utils/misc'
 
 export function calculateReviewTimeExperied(bookingEndDate: Date) {
 	return bookingEndDate.getTime() + 1000 * 60 * 60 * 24 * 14 < Date.now()
@@ -192,7 +192,7 @@ export function ReviewCard({
 }: {
 	type: 'renter' | 'ship' | 'host'
 	review: { rating: number; description: string }
-	reviewer: { name: string | null; imageUrl: string | null }
+	reviewer: { name: string | null; imageId: string | null }
 }) {
 	return (
 		<section aria-labelledby={`${type}-review-title`}>
@@ -203,10 +203,10 @@ export function ReviewCard({
 				))}
 			</div>
 			<div className="flex gap-4">
-				{reviewer.imageUrl ? (
+				{reviewer.imageId ? (
 					<img
 						className="h-12 w-12 rounded-full"
-						src={reviewer.imageUrl}
+						src={getUserImgSrc(reviewer.imageId)}
 						alt={reviewer.name ?? ''}
 					/>
 				) : null}{' '}
@@ -243,7 +243,7 @@ export function Reviewer({
 	type: 'ship' | 'renter' | 'host'
 	bookingId: string
 	reviewee: {
-		imageUrl?: string | null
+		imageId?: string | null
 		name?: string | null
 	}
 	existingReview?: { rating: number; description: string } | null
@@ -258,10 +258,10 @@ export function Reviewer({
 	return (
 		<div>
 			<div className="flex gap-4">
-				{reviewee.imageUrl ? (
+				{reviewee.imageId ? (
 					<img
 						className="h-16 w-16 rounded-full"
-						src={reviewee.imageUrl}
+						src={getUserImgSrc(reviewee.imageId)}
 						alt={reviewee.name ?? type}
 					/>
 				) : null}

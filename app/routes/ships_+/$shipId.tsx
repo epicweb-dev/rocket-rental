@@ -9,6 +9,7 @@ import {
 } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server'
+import { getImgSrc, getShipImgSrc, getUserImgSrc } from '~/utils/misc'
 
 export async function loader({ params }: DataFunctionArgs) {
 	invariant(params.shipId, 'Missing shipId')
@@ -18,7 +19,7 @@ export async function loader({ params }: DataFunctionArgs) {
 			id: true,
 			name: true,
 			description: true,
-			imageUrl: true,
+			imageId: true,
 			host: {
 				select: {
 					createdAt: true,
@@ -26,7 +27,7 @@ export async function loader({ params }: DataFunctionArgs) {
 						select: {
 							username: true,
 							name: true,
-							imageUrl: true,
+							imageId: true,
 						},
 					},
 				},
@@ -36,13 +37,13 @@ export async function loader({ params }: DataFunctionArgs) {
 					id: true,
 					name: true,
 					description: true,
-					imageUrl: true,
+					imageId: true,
 					brand: {
 						select: {
 							id: true,
 							name: true,
 							description: true,
-							imageUrl: true,
+							imageId: true,
 						},
 					},
 				},
@@ -52,7 +53,7 @@ export async function loader({ params }: DataFunctionArgs) {
 			starport: {
 				select: {
 					id: true,
-					imageUrl: true,
+					imageId: true,
 					name: true,
 					latitude: true,
 					longitude: true,
@@ -70,7 +71,7 @@ export async function loader({ params }: DataFunctionArgs) {
 								select: {
 									username: true,
 									name: true,
-									imageUrl: true,
+									imageId: true,
 								},
 							},
 						},
@@ -91,7 +92,7 @@ export default function ShipRoute() {
 	const data = useLoaderData<typeof loader>()
 	return (
 		<div>
-			<img src={data.ship.imageUrl} alt="" />
+			<img src={getShipImgSrc(data.ship.imageId)} alt="" />
 			<h1>{data.ship.name}</h1>
 			<p>{data.ship.description}</p>
 
@@ -99,9 +100,9 @@ export default function ShipRoute() {
 				<div>
 					<p>
 						<Link to={`/users/${data.ship.host.user.username}`}>
-							{data.ship.host.user.imageUrl ? (
+							{data.ship.host.user.imageId ? (
 								<img
-									src={data.ship.host.user.imageUrl}
+									src={getUserImgSrc(data.ship.host.user.imageId)}
 									alt={data.ship.host.user.name ?? "Ship's host"}
 									title={data.ship.host.user.name ?? "Ship's host"}
 									className="aspect-square w-12"
@@ -113,9 +114,9 @@ export default function ShipRoute() {
 					</p>
 					<p>
 						<Link to={`/models/${data.ship.model.id}`}>
-							{data.ship.model.imageUrl ? (
+							{data.ship.model.imageId ? (
 								<img
-									src={data.ship.model.imageUrl}
+									src={getImgSrc(data.ship.model.imageId)}
 									alt={data.ship.model.name ?? "Ship's model"}
 									title={data.ship.model.name ?? "Ship's model"}
 									className="aspect-square w-12"
@@ -143,9 +144,9 @@ export default function ShipRoute() {
 								<li key={review.id}>
 									<p>
 										<Link to={`/users/${review.renter.user.username}`}>
-											{review.renter.user.imageUrl ? (
+											{review.renter.user.imageId ? (
 												<img
-													src={review.renter.user.imageUrl}
+													src={getUserImgSrc(review.renter.user.imageId)}
 													alt={review.renter.user.name ?? "Ship's host"}
 													title={review.renter.user.name ?? "Ship's host"}
 													className="aspect-square w-12"

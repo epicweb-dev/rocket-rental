@@ -7,6 +7,7 @@ import {
 } from '~/components/basic-search-combobox'
 import { prisma } from '~/utils/db.server'
 import { getSearchParamsOrFail } from 'remix-params-helper'
+import { getImgSrc } from '~/utils/misc'
 
 export async function loader({ request }: LoaderArgs) {
 	const { query, exclude } = getSearchParamsOrFail(request, SearchParamsSchema)
@@ -17,7 +18,7 @@ export async function loader({ request }: LoaderArgs) {
 		},
 		select: {
 			id: true,
-			imageUrl: true,
+			imageId: true,
 			name: true,
 		},
 		take: 20,
@@ -37,9 +38,9 @@ export function BrandCombobox({ ...baseOptions }: BaseOptions<Brand>) {
 			resourceUrl="/resources/brand-combobox"
 			renderItemInList={brand => (
 				<>
-					{brand.imageUrl ? (
+					{brand.imageId ? (
 						<img
-							src={brand.imageUrl}
+							src={getImgSrc(brand.imageId)}
 							alt={brand.name}
 							className="h-8 w-8 rounded-full"
 						/>

@@ -7,15 +7,43 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model File {
+  id   String @id @unique @default(uuid())
+  blob Bytes
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Image     Image?
+}
+
+model Image {
+  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fileId String @unique
+
+  contentType String
+  altText     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User      User?
+  ShipBrand ShipBrand?
+  ShipModel ShipModel?
+  Ship      Ship?
+  Starport  Starport?
+}
+
 model User {
   id       String  @id @unique @default(cuid())
   email    String  @unique
   username String  @unique
   name     String?
-  imageUrl String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  image   Image?  @relation(fields: [imageId], references: [fileId])
+  imageId String? @unique
 
   password    Password?
   contactInfo ContactInfo?
@@ -87,18 +115,23 @@ model Admin {
 }
 
 model ShipBrand {
-  id          String      @id @unique @default(cuid())
+  id          String @id @unique @default(cuid())
   name        String
   description String
-  imageUrl    String
-  shipModels  ShipModel[]
+
+  image   Image  @relation(fields: [imageId], references: [fileId])
+  imageId String @unique
+
+  shipModels ShipModel[]
 }
 
 model ShipModel {
   id          String @id @unique @default(cuid())
   name        String
   description String
-  imageUrl    String
+
+  image   Image  @relation(fields: [imageId], references: [fileId])
+  imageId String @unique
 
   brand   ShipBrand @relation(fields: [brandId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   brandId String
@@ -111,7 +144,9 @@ model Ship {
   name        String
   capacity    Int
   description String
-  imageUrl    String
+
+  image   Image?  @relation(fields: [imageId], references: [fileId])
+  imageId String? @unique
 
   dailyCharge Int
 
@@ -135,9 +170,12 @@ model Starport {
   id          String @id @unique @default(cuid())
   name        String
   description String
-  imageUrl    String
-  latitude    Float
-  longitude   Float
+
+  image   Image  @relation(fields: [imageId], references: [fileId])
+  imageId String @unique
+
+  latitude  Float
+  longitude Float
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

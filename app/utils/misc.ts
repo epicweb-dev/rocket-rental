@@ -29,7 +29,7 @@ export function safeRedirect(
 }
 
 function isUser(user: any): user is User {
-	return user && typeof user === 'object' && typeof user.email === 'string'
+	return user && typeof user === 'object' && typeof user.id === 'string'
 }
 
 export function useOptionalUser(): User | undefined {
@@ -90,4 +90,18 @@ export function typedBoolean<T>(
 	value: T,
 ): value is Exclude<T, false | null | undefined | '' | 0> {
 	return Boolean(value)
+}
+
+export function getImgSrc(imageId: string) {
+	return `/images/${imageId}`
+}
+
+export function getShipImgSrc(imageId?: string | null) {
+	// TODO: make this real I guess
+	return imageId ? `/images/${imageId}` : `/images/ship.png`
+}
+
+export function getUserImgSrc(imageId?: string | null) {
+	// TODO: make this real I guess
+	return imageId ? `/images/${imageId}` : `/images/user.png`
 }

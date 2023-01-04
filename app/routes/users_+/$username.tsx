@@ -15,7 +15,7 @@ import {
 import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server'
 import { getUserId, requireUserId } from '~/utils/auth.server'
-import { useOptionalUser } from '~/utils/misc'
+import { getUserImgSrc, useOptionalUser } from '~/utils/misc'
 
 export async function loader({ params, request }: DataFunctionArgs) {
 	const loggedInUser = await getUserId(request)
@@ -26,7 +26,7 @@ export async function loader({ params, request }: DataFunctionArgs) {
 			id: true,
 			username: true,
 			name: true,
-			imageUrl: true,
+			imageId: true,
 			contactInfo: {
 				select: {
 					city: true,
@@ -151,9 +151,9 @@ export default function UserRoute() {
 					<Link to="/bookings">View Your Bookings</Link>
 				</>
 			) : null}
-			{data.user.imageUrl ? (
+			{data.user.imageId ? (
 				<img
-					src={data.user.imageUrl}
+					src={getUserImgSrc(data.user.imageId)}
 					alt={data.user.name ?? data.user.username}
 				/>
 			) : null}

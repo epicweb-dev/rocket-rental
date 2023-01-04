@@ -8,6 +8,7 @@ export const meta: V2_MetaFunction = ({ matches }) => {
 
 export default function Index() {
 	const user = useOptionalUser()
+	console.log({ user })
 	return (
 		<main>
 			<nav>

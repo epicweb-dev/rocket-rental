@@ -17,6 +17,7 @@ import {
 	type Message,
 	type NewMessageChange,
 } from './$chatId.events'
+import { getUserImgSrc } from '~/utils/misc'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.chatId, 'Missing chatId')
@@ -25,7 +26,7 @@ export async function loader({ request, params }: DataFunctionArgs) {
 		where: { id: params.chatId, users: { some: { id: userId } } },
 		select: {
 			id: true,
-			users: { select: { id: true, name: true, imageUrl: true } },
+			users: { select: { id: true, name: true, imageId: true } },
 			messages: { select: { id: true, senderId: true, content: true } },
 		},
 	})
@@ -129,7 +130,7 @@ export default function ChatRoute() {
 					return (
 						<li key={message.id} className="flex items-center">
 							<img
-								src={sender?.imageUrl ?? 'TODO: add default image'}
+								src={getUserImgSrc(sender?.imageId)}
 								alt={sender?.name ?? 'Unknown user'}
 								className="h-8 w-8 rounded-full"
 							/>
