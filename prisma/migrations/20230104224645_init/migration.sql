@@ -1,12 +1,31 @@
 -- CreateTable
+CREATE TABLE "File" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "blob" BLOB NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "Image" (
+    "fileId" TEXT NOT NULL,
+    "contentType" TEXT NOT NULL,
+    "altText" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "Image_fileId_fkey" FOREIGN KEY ("fileId") REFERENCES "File" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "email" TEXT NOT NULL,
     "username" TEXT NOT NULL,
     "name" TEXT,
-    "imageUrl" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "updatedAt" DATETIME NOT NULL,
+    "imageId" TEXT,
+    CONSTRAINT "User_imageId_fkey" FOREIGN KEY ("imageId") REFERENCES "Image" ("fileId") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -19,7 +38,6 @@ CREATE TABLE "Password" (
 -- CreateTable
 CREATE TABLE "ContactInfo" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "email" TEXT,
     "phone" TEXT,
     "address" TEXT,
     "city" TEXT,
@@ -63,7 +81,8 @@ CREATE TABLE "ShipBrand" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    "imageUrl" TEXT NOT NULL
+    "imageId" TEXT NOT NULL,
+    CONSTRAINT "ShipBrand_imageId_fkey" FOREIGN KEY ("imageId") REFERENCES "Image" ("fileId") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -71,8 +90,9 @@ CREATE TABLE "ShipModel" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    "imageUrl" TEXT NOT NULL,
+    "imageId" TEXT NOT NULL,
     "brandId" TEXT NOT NULL,
+    CONSTRAINT "ShipModel_imageId_fkey" FOREIGN KEY ("imageId") REFERENCES "Image" ("fileId") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "ShipModel_brandId_fkey" FOREIGN KEY ("brandId") REFERENCES "ShipBrand" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -82,13 +102,14 @@ CREATE TABLE "Ship" (
     "name" TEXT NOT NULL,
     "capacity" INTEGER NOT NULL,
     "description" TEXT NOT NULL,
-    "imageUrl" TEXT NOT NULL,
+    "imageId" TEXT,
     "dailyCharge" INTEGER NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     "modelId" TEXT NOT NULL,
     "hostId" TEXT NOT NULL,
     "starportId" TEXT NOT NULL,
+    CONSTRAINT "Ship_imageId_fkey" FOREIGN KEY ("imageId") REFERENCES "Image" ("fileId") ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT "Ship_modelId_fkey" FOREIGN KEY ("modelId") REFERENCES "ShipModel" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Ship_hostId_fkey" FOREIGN KEY ("hostId") REFERENCES "Host" ("userId") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Ship_starportId_fkey" FOREIGN KEY ("starportId") REFERENCES "Starport" ("id") ON DELETE CASCADE ON UPDATE CASCADE
@@ -99,11 +120,12 @@ CREATE TABLE "Starport" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    "imageUrl" TEXT NOT NULL,
+    "imageId" TEXT NOT NULL,
     "latitude" REAL NOT NULL,
     "longitude" REAL NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "Starport_imageId_fkey" FOREIGN KEY ("imageId") REFERENCES "Image" ("fileId") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -204,6 +226,12 @@ CREATE TABLE "_ChatToUser" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "File_id_key" ON "File"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Image_fileId_key" ON "Image"("fileId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_id_key" ON "User"("id");
 
 -- CreateIndex
@@ -211,6 +239,9 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_imageId_key" ON "User"("imageId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Password_userId_key" ON "Password"("userId");
@@ -234,13 +265,25 @@ CREATE UNIQUE INDEX "Admin_userId_key" ON "Admin"("userId");
 CREATE UNIQUE INDEX "ShipBrand_id_key" ON "ShipBrand"("id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "ShipBrand_imageId_key" ON "ShipBrand"("imageId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "ShipModel_id_key" ON "ShipModel"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ShipModel_imageId_key" ON "ShipModel"("imageId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Ship_id_key" ON "Ship"("id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Ship_imageId_key" ON "Ship"("imageId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Starport_id_key" ON "Starport"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Starport_imageId_key" ON "Starport"("imageId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "City_id_key" ON "City"("id");
