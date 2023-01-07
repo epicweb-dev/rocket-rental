@@ -10,7 +10,9 @@ import {
 	calculateReviewTimeExperied,
 	ReviewCard,
 	Reviewer,
+	ReviewFormSchema,
 } from '~/routes/resources+/reviewer'
+import { getFieldMetadatas } from '~/utils/forms'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.bookingId, 'Missing bookingId')
@@ -77,6 +79,7 @@ export async function loader({ request, params }: DataFunctionArgs) {
 					: null,
 		},
 		canReview: calculateCanReview(booking),
+		reviewerFieldMetadatas: getFieldMetadatas(ReviewFormSchema),
 	})
 }
 
@@ -101,12 +104,14 @@ export default function BookingRoute() {
 								bookingId={data.booking.id}
 								reviewee={data.booking.ship}
 								existingReview={data.booking.shipReview}
+								fieldMetadatas={data.reviewerFieldMetadatas}
 							/>
 							<Reviewer
 								type="host"
 								bookingId={data.booking.id}
 								reviewee={data.booking.ship.host.user}
 								existingReview={data.booking.hostReview}
+								fieldMetadatas={data.reviewerFieldMetadatas}
 							/>
 						</>
 					) : null}
@@ -120,6 +125,7 @@ export default function BookingRoute() {
 							bookingId={data.booking.id}
 							reviewee={data.booking.renter.user}
 							existingReview={data.booking.renterReview}
+							fieldMetadatas={data.reviewerFieldMetadatas}
 						/>
 					) : null}
 				</div>

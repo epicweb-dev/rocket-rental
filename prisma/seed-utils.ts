@@ -1,6 +1,7 @@
 import type * as P from '@prisma/client'
 import { faker } from '@faker-js/faker'
 import bcrypt from 'bcryptjs'
+import { type PrismaClient } from '@prisma/client'
 
 export async function downloadFile(url: string) {
 	const response = await fetch(url)
@@ -131,4 +132,19 @@ export function createBooking({
 		endDate,
 		totalPrice: days * dailyCharge,
 	}
+}
+
+export async function insertImage(prisma: PrismaClient, imageUrl: string) {
+	const image = await prisma.image.create({
+		data: {
+			contentType: 'image/jpeg',
+			file: {
+				create: {
+					blob: await downloadFile(lockifyFakerImage(imageUrl)),
+				},
+			},
+		},
+		select: { fileId: true },
+	})
+	return image.fileId
 }

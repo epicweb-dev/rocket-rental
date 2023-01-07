@@ -8,6 +8,8 @@ import {
 	createUser,
 	oneDay,
 	createShipModel,
+	insertImage,
+	lockifyFakerImage,
 } from 'prisma/seed-utils'
 import invariant from 'tiny-invariant'
 import type { Locator } from '@playwright/test'
@@ -27,6 +29,24 @@ test('Users can leave reviews and view them when they are all submitted', async 
 			},
 		})
 		const shipData = createShip()
+		const shipModelImageId = await insertImage(
+			prisma,
+			lockifyFakerImage(faker.image.transport(512, 512, true)),
+		)
+		const brandImageId = await insertImage(
+			prisma,
+			lockifyFakerImage(faker.image.nature(512, 512, true)),
+		)
+		const starportImageId = await insertImage(
+			prisma,
+			lockifyFakerImage(faker.image.business(512, 512, true)),
+		)
+		const shipBrand = await prisma.shipBrand.create({
+			data: {
+				...createBrand(),
+				imageId: brandImageId,
+			},
+		})
 		const hostUser = await prisma.user.create({
 			data: {
 				...createUser(),
@@ -38,12 +58,13 @@ test('Users can leave reviews and view them when they are all submitted', async 
 									model: {
 										create: {
 											...createShipModel(),
-											brand: {
-												create: createBrand(),
-											},
+											imageId: shipModelImageId,
+											brandId: shipBrand.id,
 										},
 									},
-									starport: { create: createStarport() },
+									starport: {
+										create: { ...createStarport(), imageId: starportImageId },
+									},
 									...shipData,
 									bookings: {
 										create: [

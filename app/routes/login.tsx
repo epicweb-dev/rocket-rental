@@ -1,5 +1,5 @@
 import type { DataFunctionArgs, V2_MetaFunction } from '@remix-run/node'
-import { redirect, json } from '@remix-run/node'
+import { json, redirect } from '@remix-run/node'
 import {
 	Form,
 	Link,
@@ -9,18 +9,24 @@ import {
 } from '@remix-run/react'
 import { useEffect, useRef } from 'react'
 import { FormStrategy } from 'remix-auth-form'
-import invariant from 'tiny-invariant'
-import {
-	MAX_PASSWORD_LENGTH,
-	MAX_USERNAME_LENGTH,
-	MIN_PASSWORD_LENGTH,
-	MIN_USERNAME_LENGTH,
-	validatePassword,
-	validateUsername,
-} from '~/utils/user-validation'
+import { z } from 'zod'
 import { authenticator } from '~/utils/auth.server'
-import { commitSession, getSession } from '~/utils/session.server'
+import {
+	getFields,
+	getFieldMetadatas,
+	getFormProps,
+	preprocessFormData,
+} from '~/utils/forms'
 import { safeRedirect } from '~/utils/misc'
+import { commitSession, getSession } from '~/utils/session.server'
+import { passwordSchema, usernameSchema } from '~/utils/user-validation'
+
+const LoginFormSchema = z.object({
+	username: usernameSchema,
+	password: passwordSchema,
+	remember: z.boolean(),
+	redirectTo: z.string().optional(),
+})
 
 export async function loader({ request }: DataFunctionArgs) {
 	await authenticator.isAuthenticated(request, {
@@ -28,8 +34,15 @@ export async function loader({ request }: DataFunctionArgs) {
 	})
 	const session = await getSession(request.headers.get('cookie'))
 	const error = session.get(authenticator.sessionErrorKey)
+	let errorMessage: string | null = null
+	if (typeof error?.message === 'string') {
+		errorMessage = error.message
+	}
 	return json(
-		{ formError: error?.message },
+		{
+			formError: errorMessage,
+			fieldMetadatas: getFieldMetadatas(LoginFormSchema),
+		},
 		{
 			headers: {
 				'Set-Cookie': await commitSession(session),
@@ -40,20 +53,13 @@ export async function loader({ request }: DataFunctionArgs) {
 
 export async function action({ request }: DataFunctionArgs) {
 	const formData = await request.clone().formData()
-	const { username, password, redirectTo, remember } =
-		Object.fromEntries(formData)
-	invariant(typeof username === 'string', 'username type invalid')
-	invariant(typeof password === 'string', 'password type invalid')
-	invariant(typeof redirectTo === 'string', 'redirectTo type invalid')
-
-	const errors = {
-		username: validateUsername(username),
-		password: validatePassword(password),
+	const result = LoginFormSchema.safeParse(
+		preprocessFormData(formData, LoginFormSchema),
+	)
+	if (!result.success) {
+		return json({ errors: result.error.flatten() }, { status: 400 })
 	}
-	const hasErrors = Object.values(errors).some(Boolean)
-	if (hasErrors) {
-		return json({ errors }, { status: 400 })
-	}
+	const { remember, redirectTo } = result.data
 
 	const userId = await authenticator.authenticate(FormStrategy.name, request, {
 		failureRedirect: '/login',
@@ -75,24 +81,33 @@ export const meta: V2_MetaFunction = ({ matches }) => {
 
 	return [
 		...(rootModule?.meta ?? [])?.filter(meta => !('title' in meta)),
-		{ tite: 'Login to Rocket Rental' },
+		{ title: 'Login to Rocket Rental' },
 	]
 }
 
 export default function LoginPage() {
 	const [searchParams] = useSearchParams()
-	const form = useRef<HTMLFormElement>(null)
+	const formRef = useRef<HTMLFormElement>(null)
 	const data = useLoaderData<typeof loader>()
-	const redirectTo = searchParams.get('redirectTo') || '/'
 	const actionData = useActionData<typeof action>()
-	const hasUsernameError = actionData?.errors?.username
-	const hasPasswordError = actionData?.errors?.password
+
+	const fields = getFields(data.fieldMetadatas, actionData?.errors.fieldErrors)
+
+	const form = getFormProps({
+		name: 'login',
+		errors: [...(actionData?.errors.formErrors ?? []), data.formError],
+	})
+
+	const redirectTo = searchParams.get('redirectTo') || '/'
+	const hasUsernameError = Boolean(fields.username.errorUI)
+	const hasPasswordError = Boolean(fields.password.errorUI)
 	const hasErrors = hasUsernameError || hasPasswordError
 
 	useEffect(() => {
-		if (!form.current) return
+		if (!formRef.current) return
 		if (hasErrors) {
-			const firstInvalidElement = form.current.querySelector('[aria-invalid]')
+			const firstInvalidElement =
+				formRef.current.querySelector('[aria-invalid]')
 			if (firstInvalidElement instanceof HTMLElement) {
 				firstInvalidElement.focus()
 			}
@@ -105,92 +120,68 @@ export default function LoginPage() {
 				<Form
 					method="post"
 					className="space-y-6"
-					aria-invalid={data.formError ? true : undefined}
-					aria-describedby={data.formError ? 'form-error' : undefined}
+					{...form.props}
 					noValidate
-					ref={form}
+					ref={formRef}
 				>
 					<div>
 						<label
-							htmlFor="username"
 							className="block text-sm font-medium text-gray-700"
+							{...fields.username.labelProps}
 						>
 							Username
 						</label>
 						<div className="mt-1">
 							<input
-								id="username"
-								name="username"
 								autoFocus={true}
 								required
-								minLength={MIN_USERNAME_LENGTH}
-								maxLength={MAX_USERNAME_LENGTH}
 								autoComplete="username"
 								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-								aria-describedby={
-									hasUsernameError ? 'username-error' : undefined
-								}
-								aria-invalid={hasUsernameError ? true : undefined}
+								{...fields.username.props}
 							/>
-							{hasUsernameError ? (
-								<span className="pt-1 text-red-700" id="username-error">
-									{actionData?.errors.username}
-								</span>
-							) : null}
+							{fields.username.errorUI}
 						</div>
 					</div>
 
 					<div>
 						<label
-							htmlFor="password"
 							className="block text-sm font-medium text-gray-700"
+							{...fields.password.labelProps}
 						>
 							Password
 						</label>
 						<div className="mt-1">
 							<input
-								id="password"
-								type="password"
-								name="password"
-								required
-								minLength={MIN_PASSWORD_LENGTH}
-								maxLength={MAX_PASSWORD_LENGTH}
 								autoComplete="current-password"
 								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-								aria-describedby={
-									hasPasswordError ? 'password-error' : undefined
-								}
-								aria-invalid={hasPasswordError ? true : undefined}
+								{...fields.password.props}
+								type="password"
 							/>
-							{hasPasswordError ? (
-								<span className="pt-1 text-red-700" id="password-error">
-									{actionData?.errors.password}
-								</span>
-							) : null}
+							{fields.password.errorUI}
 						</div>
 					</div>
 
 					<div className="flex items-center">
 						<input
-							id="remember"
-							name="remember"
-							type="checkbox"
 							className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+							{...fields.remember.props}
 						/>
 						<label
-							htmlFor="remember"
 							className="ml-2 block text-sm text-gray-900"
+							{...fields.remember.labelProps}
 						>
 							Remember me
 						</label>
 					</div>
 
-					<input type="hidden" name="redirectTo" value={redirectTo} />
-					{data.formError ? (
-						<div className="pt-1 text-red-700" id="form-error">
-							{data.formError}
-						</div>
-					) : null}
+					<input
+						{...fields.redirectTo.props}
+						type="hidden"
+						value={redirectTo}
+					/>
+
+					{form.errorUI}
+
 					<div className="flex items-center justify-between gap-6">
 						<button
 							type="submit"

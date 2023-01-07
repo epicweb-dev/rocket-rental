@@ -99,7 +99,7 @@ export const meta: V2_MetaFunction = ({ matches }) => {
 
 	return [
 		...(rootModule?.meta ?? [])?.filter(meta => !('title' in meta)),
-		{ tite: 'Sign Up | Rocket Rental' },
+		{ title: 'Sign Up | Rocket Rental' },
 	]
 }
 

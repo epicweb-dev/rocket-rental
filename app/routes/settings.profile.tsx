@@ -35,6 +35,7 @@ export default function EditUserProfile() {
 	return (
 		<div>
 			<Form method="post"></Form>
+			<pre>{JSON.stringify(data, null, 2)}</pre>
 		</div>
 	)
 }

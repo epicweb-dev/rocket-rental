@@ -6,6 +6,9 @@ import {
 	oneDay,
 	createShipModel,
 	createBrand,
+	insertImage,
+	lockifyFakerImage,
+	downloadFile,
 } from 'prisma/seed-utils'
 import { BASE_URL } from 'test/utils'
 import { test } from 'vitest'
@@ -13,6 +16,7 @@ import { prisma } from '~/utils/db.server'
 import { commitSession, getSession } from '~/utils/session.server'
 import { bookingSessionKey } from '~/routes/resources+/booker'
 import { loader } from './$shipId.book'
+import { faker } from '@faker-js/faker'
 
 test('requires authenticated user', async () => {
 	const params = { shipId: '123' }
@@ -26,19 +30,39 @@ test('requires authenticated user', async () => {
 })
 
 test('returns booking data from the session', async () => {
+	const brandImageId = await insertImage(
+		prisma,
+		lockifyFakerImage(faker.image.nature(512, 512, true)),
+	)
+	const starportImageId = await insertImage(
+		prisma,
+		lockifyFakerImage(faker.image.nightlife(512, 512, true)),
+	)
 	const ship = await prisma.ship.create({
 		data: {
 			...createShip(),
 			model: {
 				create: {
 					...createShipModel(),
+					image: {
+						create: {
+							contentType: 'image/jpeg',
+							file: {
+								create: {
+									blob: await downloadFile(
+										lockifyFakerImage(faker.image.business(512, 512, true)),
+									),
+								},
+							},
+						},
+					},
 					brand: {
-						create: createBrand(),
+						create: { ...createBrand(), imageId: brandImageId },
 					},
 				},
 			},
 			host: { create: { user: { create: createUser() } } },
-			starport: { create: createStarport() },
+			starport: { create: { ...createStarport(), imageId: starportImageId } },
 		},
 	})
 	const startDate = new Date(Date.now() + oneDay)

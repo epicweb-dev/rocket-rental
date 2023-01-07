@@ -72,7 +72,7 @@ export const meta: V2_MetaFunction = ({ matches }) => {
 
 	return [
 		...(rootModule?.meta ?? [])?.filter(meta => !('title' in meta)),
-		{ tite: 'Reset Password | Rocket Rental' },
+		{ title: 'Reset Password | Rocket Rental' },
 	]
 }
 

@@ -12,6 +12,7 @@ import {
 	createStarport,
 	createUser,
 	downloadFile,
+	insertImage,
 	lockifyFakerImage,
 	oneDay,
 } from './seed-utils'
@@ -64,9 +65,7 @@ async function seed() {
 							file: {
 								create: {
 									blob: await downloadFile(
-										lockifyFakerImage(
-											lockifyFakerImage(faker.image.nature(512, 512, true)),
-										),
+										lockifyFakerImage(faker.image.nature(512, 512, true)),
 									),
 								},
 							},
@@ -83,27 +82,16 @@ async function seed() {
 	console.time(`⭐ Created ${totalShipModels} ship models...`)
 	const shipModels = await Promise.all(
 		Array.from({ length: totalShipModels }, async () => {
-			const image = await prisma.image.create({
-				data: {
-					contentType: 'image/jpeg',
-					file: {
-						create: {
-							blob: await downloadFile(
-								lockifyFakerImage(
-									lockifyFakerImage(faker.image.business(512, 512, true)),
-								),
-							),
-						},
-					},
-				},
-				select: { fileId: true },
-			})
+			const imageId = await insertImage(
+				prisma,
+				lockifyFakerImage(faker.image.business(512, 512, true)),
+			)
 
 			const shipModel = await prisma.shipModel.create({
 				data: {
 					brandId: faker.helpers.arrayElement(brands).id,
 					...createShipModel(),
-					imageId: image.fileId,
+					imageId,
 				},
 			})
 			return shipModel
@@ -127,9 +115,7 @@ async function seed() {
 							file: {
 								create: {
 									blob: await downloadFile(
-										lockifyFakerImage(
-											lockifyFakerImage(faker.image.business(512, 512, true)),
-										),
+										lockifyFakerImage(faker.image.business(512, 512, true)),
 									),
 								},
 							},
@@ -206,25 +192,16 @@ async function seed() {
 		.slice(totalAdmins, totalAdmins + totalHosts)
 		.map(user => user.id)
 	const hosts = await Promise.all(
-		hostIds.map(async (id, index) => {
+		hostIds.map(async id => {
 			const shipCount = faker.datatype.number({ min: 1, max: 15 })
 
-			const images = await Promise.all(
-				Array.from({ length: shipCount }, async () => {
-					const image = await prisma.image.create({
-						data: {
-							contentType: 'image/jpeg',
-							file: {
-								create: {
-									blob: await downloadFile(
-										lockifyFakerImage(faker.image.transport(512, 512, true)),
-									),
-								},
-							},
-						},
-					})
-					return image
-				}),
+			const imageIds = await Promise.all(
+				Array.from({ length: shipCount }, () =>
+					insertImage(
+						prisma,
+						lockifyFakerImage(faker.image.transport(512, 512, true)),
+					),
+				),
 			)
 
 			const host = await prisma.host.create({
@@ -238,7 +215,7 @@ async function seed() {
 									modelId: faker.helpers.arrayElement(shipModels).id,
 									starportId: faker.helpers.arrayElement(starports).id,
 									...createShip(),
-									imageId: images[index].fileId,
+									imageId: imageIds[index],
 								}
 							}),
 						),

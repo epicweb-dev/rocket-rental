@@ -1,6 +1,5 @@
 import { type SerializeFrom } from '@remix-run/node'
 import { useRouteLoaderData } from '@remix-run/react'
-import { cloneElement } from 'react'
 import { type User } from '~/models/user.server'
 import { type loader as rootLoader } from '~/root'
 
@@ -48,42 +47,6 @@ export function useUser(): User {
 		)
 	}
 	return maybeUser
-}
-
-export function validateEmail(email: unknown): email is string {
-	return typeof email === 'string' && email.length > 3 && email.includes('@')
-}
-
-export function getErrorInfo<Key extends string>({
-	idPrefix,
-	errors,
-	names,
-	ui,
-}: {
-	idPrefix?: string
-	errors: Record<string, string | null> | null | undefined
-	names: Array<Key>
-	ui: React.ReactElement
-}) {
-	const info = names.reduce((acc, name) => {
-		if (errors?.[name]) {
-			const errorElId = [idPrefix, name, 'error'].filter(Boolean).join('-')
-			acc[name] = {
-				fieldProps: {
-					'aria-invalid': true,
-					'aria-describedby': errorElId,
-				},
-				errorUI: cloneElement(ui, {
-					id: errorElId,
-					children: errors[name],
-				}),
-			}
-		} else {
-			acc[name] = {}
-		}
-		return acc
-	}, {} as Record<Key, { fieldProps?: { 'aria-invalid': true; 'aria-describedby': string }; errorUI?: React.ReactElement }>)
-	return info
 }
 
 export function typedBoolean<T>(

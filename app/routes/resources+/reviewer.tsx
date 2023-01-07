@@ -1,10 +1,16 @@
 import type { DataFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
-import invariant from 'tiny-invariant'
-import { prisma } from '~/utils/db.server'
+import { z } from 'zod'
 import { requireUserId } from '~/utils/auth.server'
-import { getErrorInfo, getUserImgSrc } from '~/utils/misc'
+import { prisma } from '~/utils/db.server'
+import {
+	getFields,
+	getFormProps,
+	preprocessFormData,
+	type FieldMetadatas,
+} from '~/utils/forms'
+import { getUserImgSrc } from '~/utils/misc'
 
 export function calculateReviewTimeExperied(bookingEndDate: Date) {
 	return bookingEndDate.getTime() + 1000 * 60 * 60 * 24 * 14 < Date.now()
@@ -24,6 +30,7 @@ export function calculateCanReview(booking: {
 }
 
 const MIN_DESCRIPTION_LENGTH = 10
+const MAX_DESCRIPTION_LENGTH = 10_000
 
 async function validatePermission({
 	intent,
@@ -62,16 +69,35 @@ async function validatePermission({
 	return null
 }
 
+export const ReviewFormSchema = z.object({
+	intent: z.union([z.literal('renter'), z.literal('ship'), z.literal('host')], {
+		invalid_type_error: 'Invalid intent',
+	}),
+	rating: z
+		.number()
+		.min(1, { message: 'Rating must be 1 or more' })
+		.max(5, { message: 'Rating must be 5 or less' }),
+	description: z
+		.string()
+		.min(MIN_DESCRIPTION_LENGTH, {
+			message: `Description must be at least ${MIN_DESCRIPTION_LENGTH} characters`,
+		})
+		.max(MAX_DESCRIPTION_LENGTH, {
+			message: `Description must be at most ${MAX_DESCRIPTION_LENGTH} characters`,
+		}),
+	bookingId: z.string({ invalid_type_error: 'Invalid bookingId' }),
+})
+
 export async function action({ request }: DataFunctionArgs) {
 	const formData = await request.formData()
-	const {
-		intent,
-		rating: ratingString = '0',
-		description,
-		bookingId,
-	} = Object.fromEntries(formData)
-	invariant(typeof bookingId === 'string', 'Invalid bookingId type')
+	const result = await ReviewFormSchema.safeParseAsync(
+		preprocessFormData(formData, ReviewFormSchema),
+	)
+	if (!result.success) {
+		return json({ errors: result.error.flatten() }, { status: 400 })
+	}
 
+	const { intent, rating, description, bookingId } = result.data
 	const userId = await requireUserId(request)
 	const booking = await prisma.booking.findFirst({
 		where: {
@@ -96,31 +122,19 @@ export async function action({ request }: DataFunctionArgs) {
 	if (!booking) {
 		throw new Response('not found', { status: 404 })
 	}
-	invariant(typeof intent === 'string', 'Invalid intent')
-	invariant(typeof ratingString === 'string', 'Invalid rating type')
-	invariant(typeof description === 'string', 'Invalid description type')
 
-	const rating = Number(ratingString)
+	const formErrors = [
+		await validatePermission({
+			renterId: booking.renterId,
+			hostId: booking.ship.hostId,
+			intent,
+			submitterUserId: userId,
+		}),
+		calculateCanReview(booking) ? null : 'Review time expired',
+	].filter(Boolean)
 
-	const errors = {
-		form:
-			(await validatePermission({
-				renterId: booking.renterId,
-				hostId: booking.ship.hostId,
-				intent,
-				submitterUserId: userId,
-			})) ||
-			(rating <= 5 && rating >= 1
-				? null
-				: 'Rating must be between 1 and 5 stars') ||
-			(calculateCanReview(booking) ? null : 'Review time expired'),
-		description:
-			description.length > MIN_DESCRIPTION_LENGTH ? null : 'Review too short',
-	}
-
-	const hasErrors = Object.values(errors).some(Boolean)
-	if (hasErrors) {
-		return json({ errors }, { status: 400 })
+	if (formErrors.length) {
+		return json({ errors: { fieldErrors: {}, formErrors } }, { status: 400 })
 	}
 
 	switch (intent) {
@@ -237,11 +251,13 @@ const FORM_NAME = {
 export function Reviewer({
 	type,
 	reviewee,
+	fieldMetadatas,
 	existingReview,
 	bookingId,
 }: {
 	type: 'ship' | 'renter' | 'host'
 	bookingId: string
+	fieldMetadatas: FieldMetadatas<keyof z.infer<typeof ReviewFormSchema>>
 	reviewee: {
 		imageId?: string | null
 		name?: string | null
@@ -249,12 +265,16 @@ export function Reviewer({
 	existingReview?: { rating: number; description: string } | null
 }) {
 	const reviewFetcher = useFetcher<typeof action>()
-	const errorInfo = getErrorInfo({
-		idPrefix: type,
-		errors: reviewFetcher.data?.errors,
-		names: ['description', 'form'],
-		ui: <span className="pt-1 text-red-700" />,
+	const fields = getFields(
+		fieldMetadatas,
+		reviewFetcher.data?.errors?.fieldErrors,
+	)
+
+	const form = getFormProps({
+		name: `reviewer`,
+		errors: reviewFetcher.data?.errors?.formErrors,
 	})
+
 	return (
 		<div>
 			<div className="flex gap-4">
@@ -272,11 +292,22 @@ export function Reviewer({
 				action="/resources/reviewer"
 				noValidate
 				aria-label={FORM_NAME[type]}
-				{...errorInfo.form.fieldProps}
+				{...form.props}
 			>
-				<input type="hidden" name="bookingId" value={bookingId} />
+				<input {...fields.bookingId.props} type="hidden" value={bookingId} />
 				<fieldset role="radiogroup">
-					<legend>{REVIEW_RATING_LABELS[type]}:</legend>
+					<legend
+						onClick={event => {
+							const legend = event?.currentTarget
+							const checkedInput =
+								legend.parentElement?.querySelector('input[checked]')
+							if (checkedInput instanceof HTMLInputElement) {
+								checkedInput.focus()
+							}
+						}}
+					>
+						{REVIEW_RATING_LABELS[type]}:
+					</legend>
 					{Array.from({ length: 5 }, (_, i) => {
 						const number = i + 1
 						const id = `${type}-rating-${number}`
@@ -289,35 +320,33 @@ export function Reviewer({
 									{number} Stars
 								</label>
 								<input
-									id={id}
-									type="radio"
-									name="rating"
 									value={number}
 									defaultChecked={checked}
+									{...fields.rating.props}
+									id={id}
+									type="radio"
 								/>
 							</span>
 						)
 					})}
 				</fieldset>
+				{fields.rating.errorUI}
 				<div>
-					<label htmlFor={`${type}-review-description`}>
+					<label {...fields.description.labelProps}>
 						{REVIEW_DESCRIPTION_LABELS[type]}:
 					</label>
 					<textarea
-						id={`${type}-review-description`}
-						name="description"
 						className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
 						defaultValue={existingReview?.description ?? ''}
-						minLength={MIN_DESCRIPTION_LENGTH}
-						{...errorInfo.description.fieldProps}
-					></textarea>
-					{errorInfo.description.errorUI}
+						{...fields.description.props}
+					/>
+					{fields.description.errorUI}
 				</div>
 				<button type="submit" name="intent" value={type}>
 					{existingReview ? 'Update Review' : 'Create Review'}
 					{reviewFetcher.state === 'idle' ? '' : '...'}
 				</button>
-				<div>{errorInfo.form.errorUI}</div>
+				<div>{form.errorUI}</div>
 			</reviewFetcher.Form>
 		</div>
 	)

@@ -8,13 +8,14 @@ import { prisma } from '~/utils/db.server'
 import { requireUserId } from '~/utils/auth.server'
 import { getSession, commitSession } from '~/utils/session.server'
 import { useOptionalUser } from '~/utils/misc'
-import { InlineLogin } from '~/routes/resources+/login'
+import { InlineLogin, LoginFormSchema } from '~/routes/resources+/login'
 import * as df from 'date-fns'
 import {
 	bookingSessionKey,
 	getIsShipAvailable,
 	validateBookerForm,
 } from '~/routes/resources+/booker'
+import { getFieldMetadatas } from '~/utils/forms'
 
 function createFormDataFromEntries(
 	entries: Array<[string, FormDataEntryValue]>,
@@ -67,7 +68,13 @@ export async function loader({ request, params }: DataFunctionArgs) {
 	}
 	const { startDate, endDate, shipId } = result.data
 	const totalPrice = await calculateTotalPrice({ startDate, endDate, shipId })
-	return json({ startDate, endDate, shipId, totalPrice })
+	return json({
+		startDate,
+		endDate,
+		shipId,
+		totalPrice,
+		inlineLoginFieldProps: getFieldMetadatas(LoginFormSchema),
+	})
 }
 
 export async function action({ request }: DataFunctionArgs) {
@@ -153,7 +160,7 @@ export default function ShipBookRoute() {
 					</button>
 				</Form>
 			) : (
-				<InlineLogin />
+				<InlineLogin fieldMetadatas={data.inlineLoginFieldProps} />
 			)}
 			<Link to="..">Cancel</Link>
 		</div>

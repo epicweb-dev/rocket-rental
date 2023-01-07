@@ -7,25 +7,46 @@ import {
 	useLoaderData,
 	useSearchParams,
 } from '@remix-run/react'
-import * as React from 'react'
-import invariant from 'tiny-invariant'
+import { z } from 'zod'
 import { createUser } from '~/models/user.server'
-import {
-	MAX_NAME_LENGTH,
-	MAX_PASSWORD_LENGTH,
-	MAX_USERNAME_LENGTH,
-	MIN_NAME_LENGTH,
-	MIN_PASSWORD_LENGTH,
-	MIN_USERNAME_LENGTH,
-	validateConfirmPassword,
-	validateName,
-	validatePassword,
-	validateUsername,
-} from '~/utils/user-validation'
 import { authenticator } from '~/utils/auth.server'
+import {
+	getFields,
+	getFieldMetadatas,
+	getFormProps,
+	preprocessFormData,
+} from '~/utils/forms'
+import { safeRedirect } from '~/utils/misc'
 import { commitSession, getSession } from '~/utils/session.server'
-import { getErrorInfo, safeRedirect } from '~/utils/misc'
+import {
+	nameSchema,
+	passwordSchema,
+	usernameSchema,
+} from '~/utils/user-validation'
 import { onboardingEmailSessionKey } from './signup'
+
+const onboardingFormSchema = z
+	.object({
+		username: usernameSchema,
+		name: nameSchema,
+		password: passwordSchema,
+		confirmPassword: passwordSchema,
+		agreeToTermsOfServiceAndPrivacyPolicy: z.boolean().refine(val => val, {
+			message: 'You must agree to the terms of service and privacy policy',
+		}),
+		agreeToMailingList: z.boolean(),
+		remember: z.boolean(),
+		redirectTo: z.string().optional(),
+	})
+	.superRefine(({ confirmPassword, password }, ctx) => {
+		if (confirmPassword !== password) {
+			ctx.addIssue({
+				path: ['confirmPassword'],
+				code: 'custom',
+				message: 'The passwords did not match',
+			})
+		}
+	})
 
 export async function loader({ request }: DataFunctionArgs) {
 	await authenticator.isAuthenticated(request, {
@@ -38,7 +59,11 @@ export async function loader({ request }: DataFunctionArgs) {
 		return redirect('/signup')
 	}
 	return json(
-		{ formError: error?.message, onboardingEmail },
+		{
+			formError: error?.message,
+			onboardingEmail,
+			fieldMetadatas: getFieldMetadatas(onboardingFormSchema),
+		},
 		{
 			headers: {
 				'Set-Cookie': await commitSession(session),
@@ -55,58 +80,28 @@ export async function action({ request }: DataFunctionArgs) {
 	}
 
 	const formData = await request.formData()
+	const result = onboardingFormSchema.safeParse(
+		preprocessFormData(formData, onboardingFormSchema),
+	)
+	if (!result.success) {
+		return json(
+			{ status: 'error', errors: result.error.flatten() },
+			{ status: 400 },
+		)
+	}
 	const {
 		username,
 		name,
 		password,
-		confirmPassword,
-		agreeToTermsOfServiceAndPrivacyPolicy,
-		agreeToMailingList,
+		// TODO: add user to mailing list if they agreed to it
+		// agreeToMailingList,
 		remember,
 		redirectTo,
-	} = Object.fromEntries(formData)
-	invariant(typeof username === 'string', 'username type invalid')
-	invariant(typeof name === 'string', 'name type invalid')
-	invariant(typeof password === 'string', 'password type invalid')
-	invariant(typeof confirmPassword === 'string', 'confirmPassword type invalid')
-	invariant(
-		typeof agreeToTermsOfServiceAndPrivacyPolicy === 'string' ||
-			agreeToTermsOfServiceAndPrivacyPolicy == null,
-		'agreeToTermsOfServiceAndPrivacyPolicy type invalid',
-	)
-	invariant(
-		typeof agreeToMailingList === 'string' || agreeToMailingList == null,
-		'agreeToMailingList type invalid',
-	)
-
-	// TODO: the type of remember is wrong after this invariant.
-	// it can be a string or undefined or null, but it's only a string...
-	invariant(
-		typeof remember === 'string' || remember == null,
-		'remember type invalid',
-	)
-	invariant(typeof redirectTo === 'string', 'redirectTo type invalid')
-
-	const errors = {
-		username: validateUsername(username),
-		name: validateName(name),
-		password: validatePassword(password),
-		confirmPassword: validateConfirmPassword({ password, confirmPassword }),
-		agreeToTermsOfServiceAndPrivacyPolicy:
-			agreeToTermsOfServiceAndPrivacyPolicy === 'on'
-				? null
-				: 'You must agree to the terms of service and privacy policy',
-	}
-	const hasErrors = Object.values(errors).some(Boolean)
-	if (hasErrors) {
-		return json({ status: 'error', errors }, { status: 400 })
-	}
+	} = result.data
 
 	const user = await createUser({ email, username, password, name })
 	session.set(authenticator.sessionKey, user.id)
 	session.unset(onboardingEmailSessionKey)
-
-	// TODO: add user to mailing list if they agreed to it
 
 	const newCookie = await commitSession(session, {
 		maxAge: remember
@@ -123,7 +118,7 @@ export const meta: V2_MetaFunction = ({ matches }) => {
 
 	return [
 		...(rootModule?.meta ?? [])?.filter(meta => !('title' in meta)),
-		{ tite: 'Setup Rocket Rental Account' },
+		{ title: 'Setup Rocket Rental Account' },
 	]
 }
 
@@ -131,175 +126,143 @@ export default function OnboardingPage() {
 	const [searchParams] = useSearchParams()
 	const data = useLoaderData<typeof loader>()
 	const actionData = useActionData<typeof action>()
-	const errorInfo = getErrorInfo({
-		errors: actionData?.errors,
-		names: [
-			'username',
-			'name',
-			'password',
-			'confirmPassword',
-			'agreeToTermsOfServiceAndPrivacyPolicy',
-		],
-		ui: <span className="pt-1 text-red-700" />,
+	const fields = getFields(data.fieldMetadatas, actionData?.errors.fieldErrors)
+	const form = getFormProps({
+		name: 'onboarding',
+		errors: [...(actionData?.errors.formErrors ?? []), data.formError],
 	})
+
 	const redirectTo = searchParams.get('redirectTo') || '/'
 
 	return (
 		<div className="flex min-h-full flex-col justify-center">
 			<div className="mx-auto w-full max-w-md px-8">
-				<Form
-					method="post"
-					className="space-y-6"
-					aria-invalid={data.formError ? true : undefined}
-					aria-describedby="form-error"
-					noValidate
-				>
+				<Form method="post" className="space-y-6" noValidate {...form.props}>
 					<div>Onboarding for {data.onboardingEmail}</div>
 					<div>
 						<label
-							htmlFor="username"
 							className="block text-sm font-medium text-gray-700"
+							{...fields.username.labelProps}
 						>
 							Username
 						</label>
 						<div className="mt-1">
 							<input
-								id="username"
-								name="username"
 								autoFocus={true}
 								autoComplete="username"
 								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-								minLength={MIN_USERNAME_LENGTH}
-								maxLength={MAX_USERNAME_LENGTH}
-								required
-								{...errorInfo.username.fieldProps}
+								{...fields.username.props}
 							/>
-							{errorInfo.username.errorUI}
+							{fields.username.errorUI}
 						</div>
 					</div>
 
 					<div>
 						<label
-							htmlFor="name"
 							className="block text-sm font-medium text-gray-700"
+							{...fields.name.labelProps}
 						>
 							Name
 						</label>
 						<div className="mt-1">
 							<input
-								id="name"
-								name="name"
 								autoComplete="name"
 								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-								minLength={MIN_NAME_LENGTH}
-								maxLength={MAX_NAME_LENGTH}
-								required
-								{...errorInfo.name.fieldProps}
+								{...fields.name.props}
 							/>
-							{errorInfo.name.errorUI}
+							{fields.name.errorUI}
 						</div>
 					</div>
 
 					<div>
 						<label
-							htmlFor="password"
 							className="block text-sm font-medium text-gray-700"
+							{...fields.password.labelProps}
 						>
 							Password
 						</label>
 						<div className="mt-1">
 							<input
-								id="password"
 								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
 								autoComplete="new-password"
+								{...fields.password.props}
 								type="password"
-								name="password"
-								minLength={MIN_PASSWORD_LENGTH}
-								maxLength={MAX_PASSWORD_LENGTH}
-								required
-								{...errorInfo.password.fieldProps}
 							/>
-							{errorInfo.password.errorUI}
+							{fields.password.errorUI}
 						</div>
 					</div>
 
 					<div>
 						<label
-							htmlFor="confirmPassword"
 							className="block text-sm font-medium text-gray-700"
+							{...fields.confirmPassword.labelProps}
 						>
 							Confirm Password
 						</label>
 						<div className="mt-1">
 							<input
-								id="confirmPassword"
 								autoComplete="new-password"
 								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+								{...fields.confirmPassword.props}
 								type="password"
-								name="confirmPassword"
-								minLength={MIN_PASSWORD_LENGTH}
-								maxLength={MAX_PASSWORD_LENGTH}
-								required
-								{...errorInfo.confirmPassword.fieldProps}
 							/>
-							{errorInfo.confirmPassword.errorUI}
+							{fields.confirmPassword.errorUI}
 						</div>
 					</div>
 
-					<div className="flex items-center">
-						<input
-							id="agreeToTermsOfServiceAndPrivacyPolicy"
-							name="agreeToTermsOfServiceAndPrivacyPolicy"
-							type="checkbox"
-							className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-							required
-							{...errorInfo.agreeToTermsOfServiceAndPrivacyPolicy.fieldProps}
-						/>
-						<label
-							htmlFor="agreeToTermsOfServiceAndPrivacyPolicy"
-							className="ml-2 block text-sm text-gray-900"
-						>
-							Do you agree to our Terms of Service and Privacy Policy?
-						</label>
-						{errorInfo.agreeToTermsOfServiceAndPrivacyPolicy.errorUI}
+					<div>
+						<div className="flex items-center">
+							<input
+								className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+								{...fields.agreeToTermsOfServiceAndPrivacyPolicy.props}
+							/>
+							<label
+								className="ml-2 block text-sm text-gray-900"
+								{...fields.agreeToTermsOfServiceAndPrivacyPolicy.labelProps}
+							>
+								Do you agree to our Terms of Service and Privacy Policy?
+							</label>
+						</div>
+						{fields.agreeToTermsOfServiceAndPrivacyPolicy.errorUI}
+					</div>
+
+					<div>
+						<div className="flex items-center">
+							<input
+								className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+								{...fields.agreeToMailingList.props}
+							/>
+							<label
+								className="ml-2 block text-sm text-gray-900"
+								{...fields.agreeToMailingList.labelProps}
+							>
+								Would you like to receive special discounts and offers?
+							</label>
+						</div>
+						{fields.agreeToMailingList.errorUI}
 					</div>
 
 					<div className="flex items-center">
 						<input
-							id="agreeToMailingList"
-							name="agreeToMailingList"
-							type="checkbox"
 							className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+							{...fields.remember.props}
 						/>
 						<label
-							htmlFor="agreeToMailingList"
 							className="ml-2 block text-sm text-gray-900"
-						>
-							Would you like to receive special discounts and offers?
-						</label>
-					</div>
-
-					<div className="flex items-center">
-						<input
-							id="remember"
-							name="remember"
-							type="checkbox"
-							className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-						/>
-						<label
-							htmlFor="remember"
-							className="ml-2 block text-sm text-gray-900"
+							{...fields.remember.labelProps}
 						>
 							Remember me
 						</label>
 					</div>
 
-					<input type="hidden" name="redirectTo" value={redirectTo} />
-					{data.formError ? (
-						<div className="pt-1 text-red-700" id="form-error">
-							{data.formError}
-						</div>
-					) : null}
+					<input
+						{...fields.redirectTo.props}
+						type="hidden"
+						value={redirectTo}
+					/>
+
+					{form.errorUI}
+
 					<div className="flex items-center justify-between gap-6">
 						<button
 							type="submit"
