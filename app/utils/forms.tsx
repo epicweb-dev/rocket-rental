@@ -206,6 +206,9 @@ function getFieldProps(schema: z.ZodTypeAny): InputValidationProps {
 		return { type: 'date' }
 	} else if (schema instanceof z.ZodLiteral) {
 		return { required: true, type: 'text', pattern: schema._def.value }
+	} else if (schema instanceof z.ZodAny) {
+		// this is the best we can do.
+		return { required: true, type: 'text' }
 	}
 
 	console.error(schema)
