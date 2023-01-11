@@ -163,7 +163,7 @@ export async function action({ request }: DataFunctionArgs) {
 	})
 
 	if (previousUserPhoto?.imageId) {
-		await prisma.image
+		void prisma.image
 			.delete({
 				where: { fileId: previousUserPhoto.imageId },
 			})
@@ -235,6 +235,7 @@ export default function EditUserProfile() {
 					<img
 						src={getUserImgSrc(data.user.imageId)}
 						alt={data.user.username}
+						className="h-24 w-24 rounded-full object-cover"
 					/>
 					<label className={labelClassName} {...fields.profileFile.labelProps}>
 						Change your Profile Photo

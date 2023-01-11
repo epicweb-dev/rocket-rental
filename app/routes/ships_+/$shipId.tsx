@@ -108,7 +108,7 @@ export default function ShipRoute() {
 									className="aspect-square w-12"
 								/>
 							) : (
-								`Brand: ${data.ship.host.user.name}`
+								`Host: ${data.ship.host.user.name}`
 							)}
 						</Link>
 					</p>
@@ -129,7 +129,6 @@ export default function ShipRoute() {
 					<p>Capacity: {data.ship.capacity}</p>
 					<p>Daily Charge: {data.ship.dailyCharge}</p>
 					<p>Starport: {data.ship.starport.name}</p>
-					<p>SHOW MAP HERE</p>
 				</div>
 				<div>
 					<div>

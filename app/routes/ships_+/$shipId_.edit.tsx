@@ -1,14 +1,42 @@
-import type { DataFunctionArgs } from '@remix-run/node'
+import {
+	type DataFunctionArgs,
+	unstable_createMemoryUploadHandler,
+	unstable_parseMultipartFormData,
+} from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import { Form, useCatch, useLoaderData, useParams } from '@remix-run/react'
+import {
+	Form,
+	useActionData,
+	useCatch,
+	useLoaderData,
+	useParams,
+} from '@remix-run/react'
 import { useState } from 'react'
+import { z } from 'zod'
 import invariant from 'tiny-invariant'
 import { requireUserId } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'
 import { BrandCombobox } from '~/routes/resources+/brand-combobox'
 import { ModelCombobox } from '~/routes/resources+/model-combobox'
 import { StarportCombobox } from '~/routes/resources+/starport-combobox'
+import {
+	getFieldMetadatas,
+	getFields,
+	getFormProps,
+	preprocessFormData,
+} from '~/utils/forms'
+import { getShipImgSrc } from '~/utils/misc'
+
+const ShipFormSchema = z.object({
+	name: z.string().min(2).max(60).optional(),
+	description: z.string().min(20).max(10_000).optional(),
+	capacity: z.number().min(1).max(100).optional(),
+	dailyCharge: z.number().min(1).max(100_000).optional(),
+	modelId: z.string().cuid({ message: 'Invalid Model' }).optional(),
+	starportId: z.string().cuid({ message: 'Invalid Starport' }).optional(),
+	imageFile: z.instanceof(File).optional(),
+})
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.shipId, 'Missing shipId')
@@ -51,56 +79,128 @@ export async function loader({ request, params }: DataFunctionArgs) {
 			...ship,
 			starport: { id: ship.starport.id, displayName: ship.starport.name },
 		},
+		fieldMetadata: getFieldMetadatas(ShipFormSchema),
 	})
 }
 
+const MAX_SIZE = 1024 * 1024 * 5 // 5MB
+
 export async function action({ request, params }: DataFunctionArgs) {
+	invariant(params.shipId, 'Missing shipId')
 	const userId = await requireUserId(request)
-	const ship = await prisma.ship.findFirst({
-		where: { id: params.shipId, hostId: userId },
-		select: { id: true },
+	const host = await prisma.host.findFirst({
+		where: { userId },
+		select: { userId: true },
 	})
-	if (!ship) {
-		throw new Response('not found', { status: 404 })
+	if (!host) {
+		throw new Response('unauthorized', { status: 403 })
 	}
-	const formData = await request.formData()
-	const { name, description, capacity, dailyCharge, modelId, starportId } =
-		Object.fromEntries(formData)
+	const contentLength = Number(request.headers.get('Content-Length'))
+	if (
+		contentLength &&
+		Number.isFinite(contentLength) &&
+		contentLength > MAX_SIZE
+	) {
+		return json(
+			{
+				status: 'error',
+				errors: {
+					formErrors: [],
+					fieldErrors: { imageFile: ['File too large'] },
+				},
+			} as const,
+			{ status: 400 },
+		)
+	}
+	const formData = await unstable_parseMultipartFormData(
+		request,
+		unstable_createMemoryUploadHandler({ maxPartSize: MAX_SIZE }),
+	)
+	const result = ShipFormSchema.safeParse(
+		preprocessFormData(formData, ShipFormSchema),
+	)
+	if (!result.success) {
+		return json({ status: 'error', errors: result.error.flatten() } as const, {
+			status: 400,
+		})
+	}
+	const {
+		name,
+		description,
+		capacity,
+		dailyCharge,
+		modelId,
+		starportId,
+		imageFile,
+	} = result.data
 
-	invariant(typeof name === 'string', 'name type invalid')
-	invariant(typeof description === 'string', 'description type invalid')
-	invariant(typeof capacity === 'string', 'capacity type invalid')
-	invariant(typeof dailyCharge === 'string', 'dailyCharge type invalid')
-	invariant(typeof modelId === 'string', 'modelId type invalid')
-	invariant(typeof starportId === 'string', 'starportId type invalid')
+	const hasImageFile = imageFile?.size && imageFile.size > 0
 
-	// const errors = {
-	// 	username: validateUsername(username),
-	// 	password: validatePassword(password),
-	// }
-	// const hasErrors = Object.values(errors).some(Boolean)
-	// if (hasErrors) {
-	// 	return json({ errors }, { status: 400 })
-	// }
+	const previousImage = hasImageFile
+		? await prisma.user.findUnique({
+				where: { id: params.shipId },
+				select: { imageId: true },
+		  })
+		: undefined
 
-	await prisma.ship.update({
-		where: { id: ship.id },
-		data: {
-			name,
-			description,
-			// TODO: handle image upload
-			capacity: Number(capacity),
-			dailyCharge: Number(dailyCharge),
-			modelId: modelId,
-			starportId: starportId,
-		},
+	const ship = await prisma.$transaction(async transactionClient => {
+		const newImage = hasImageFile
+			? await transactionClient.image.create({
+					select: { fileId: true },
+					data: {
+						contentType: imageFile.type,
+						file: {
+							create: {
+								blob: Buffer.from(await imageFile.arrayBuffer()),
+							},
+						},
+					},
+			  })
+			: null
+
+		const ship = await transactionClient.ship.update({
+			where: { id: params.shipId },
+			data: {
+				hostId: host.userId,
+				name,
+				description,
+				imageId: newImage ? newImage.fileId : undefined,
+				capacity: Number(capacity),
+				dailyCharge: Number(dailyCharge),
+				modelId: modelId,
+				starportId: starportId,
+			},
+		})
+
+		return ship
 	})
+
+	if (previousImage?.imageId) {
+		void prisma.image
+			.delete({
+				where: { fileId: previousImage.imageId },
+			})
+			.catch(error => {
+				console.error(`Error trying to delete a previous image`, error)
+				// don't fail the request though...
+			})
+	}
 
 	return redirect(`/ships/${ship.id}`)
 }
 
+const labelClassName = 'block text-sm font-medium text-gray-700'
+const inputClassName = 'w-full rounded border border-gray-500 px-2 py-1 text-lg'
+const fieldClassName = 'flex gap-1 flex-col'
+
 export default function ShipEditRoute() {
 	const data = useLoaderData<typeof loader>()
+	const actionData = useActionData<typeof action>()
+	const form = getFormProps({
+		name: 'ship-edit',
+		errors: actionData?.errors?.formErrors,
+	})
+	const fields = getFields(data.fieldMetadata, actionData?.errors?.fieldErrors)
 	const [selectedStarport, setSelectedStarport] = useState<
 		typeof data.ship.starport | null
 	>(data.ship.starport)
@@ -114,27 +214,53 @@ export default function ShipEditRoute() {
 	>(data.ship.model.brand)
 
 	return (
-		<div>
+		<div className="container m-auto">
 			<h1>Ship Edit</h1>
-			<Form method="post">
-				<label>
-					Name
+			<Form
+				method="post"
+				className="flex flex-col gap-4"
+				encType="multipart/form-data"
+				noValidate
+				{...form.props}
+			>
+				<div className={fieldClassName}>
+					<img
+						src={getShipImgSrc(data.ship.imageId)}
+						alt={data.ship.name}
+						className="h-24 w-24 rounded-full object-cover"
+					/>
+					<label className={labelClassName} {...fields.imageFile.labelProps}>
+						{data.ship.imageId ? 'Change Ship Photo' : 'Set Ship Photo'}
+					</label>
 					<input
-						className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-						type="text"
-						name="name"
+						className={inputClassName}
+						{...fields.imageFile.props}
+						type="file"
+					/>
+					{fields.imageFile.errorUI}
+				</div>
+				<div className={fieldClassName}>
+					<label className={labelClassName} {...fields.name.labelProps}>
+						Name
+					</label>
+					<input
+						className={inputClassName}
 						defaultValue={data.ship.name}
+						{...fields.name.props}
 					/>
-				</label>
-				<label>
-					Description
-					<input
-						className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-						type="text"
-						name="description"
+					{fields.name.errorUI}
+				</div>
+				<div className={fieldClassName}>
+					<label className={labelClassName} {...fields.description.labelProps}>
+						Description
+					</label>
+					<textarea
+						className={inputClassName}
 						defaultValue={data.ship.description}
+						{...fields.description.props}
 					/>
-				</label>
+					{fields.description.errorUI}
+				</div>
 				<BrandCombobox
 					selectedItem={selectedBrand}
 					onChange={newBrand => {
@@ -148,41 +274,37 @@ export default function ShipEditRoute() {
 						setSelectedModel(newModel ?? null)
 					}}
 				/>
-				{selectedModel ? (
-					<input type="hidden" name="modelId" value={selectedModel.id ?? ''} />
+				{selectedModel?.id ? (
+					<input
+						value={selectedModel?.id ?? ''}
+						{...fields.modelId.props}
+						type="hidden"
+					/>
 				) : null}
-				{/* TODO: figure out image upload */}
-				{/* <label>
-					Image URL
+				{fields.modelId.errorUI}
+				{/* TODO: handle image upload */}
+				<div className={fieldClassName}>
+					<label className={labelClassName} {...fields.capacity.labelProps}>
+						Capacity
+					</label>
 					<input
-						className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-						type="text"
-						name="imageId"
-						defaultValue={data.ship.imageId}
-					/>
-				</label> */}
-				<label>
-					Capacity
-					<input
-						className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-						type="number"
-						name="capacity"
-						min="1"
-						max="10"
+						className={inputClassName}
 						defaultValue={data.ship.capacity}
+						{...fields.capacity.props}
 					/>
-				</label>
-				<label>
-					Daily Charge
+					{fields.capacity.errorUI}
+				</div>
+				<div className={fieldClassName}>
+					<label className={labelClassName} {...fields.dailyCharge.labelProps}>
+						Daily Charge
+					</label>
 					<input
-						className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-						type="number"
-						min="0"
-						max="1000"
-						name="dailyCharge"
+						className={inputClassName}
 						defaultValue={data.ship.dailyCharge}
+						{...fields.dailyCharge.props}
 					/>
-				</label>
+					{fields.dailyCharge.errorUI}
+				</div>
 				<StarportCombobox
 					selectedItem={selectedStarport}
 					geolocation={null}
@@ -190,13 +312,17 @@ export default function ShipEditRoute() {
 						setSelectedStarport(newStarport ?? null)
 					}}
 				/>
-				{selectedStarport ? (
+				{selectedStarport?.id ? (
 					<input
-						type="hidden"
-						name="starportId"
 						value={selectedStarport.id ?? ''}
+						{...fields.starportId.props}
+						type="hidden"
 					/>
 				) : null}
+				{fields.starportId.errorUI}
+
+				{form.errorUI}
+
 				<button type="submit">Save</button>
 			</Form>
 			<pre>{JSON.stringify(data, null, 2)}</pre>

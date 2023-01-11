@@ -1,14 +1,40 @@
-import type { DataFunctionArgs } from '@remix-run/node'
+import {
+	type DataFunctionArgs,
+	unstable_createMemoryUploadHandler,
+	unstable_parseMultipartFormData,
+} from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import { Form, Link, useCatch, useLoaderData } from '@remix-run/react'
+import {
+	Form,
+	Link,
+	useActionData,
+	useCatch,
+	useLoaderData,
+} from '@remix-run/react'
 import { useState } from 'react'
-import invariant from 'tiny-invariant'
 import { requireUserId } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'
 import { BrandCombobox } from '~/routes/resources+/brand-combobox'
 import { ModelCombobox } from '~/routes/resources+/model-combobox'
 import { StarportCombobox } from '~/routes/resources+/starport-combobox'
+import { z } from 'zod'
+import {
+	getFieldMetadatas,
+	getFields,
+	getFormProps,
+	preprocessFormData,
+} from '~/utils/forms'
+
+const ShipFormSchema = z.object({
+	name: z.string().min(2).max(60),
+	description: z.string().min(20).max(10_000),
+	capacity: z.number().min(1).max(100),
+	dailyCharge: z.number().min(1).max(100_000),
+	modelId: z.string().cuid({ message: 'Invalid Model' }),
+	starportId: z.string().cuid({ message: 'Invalid Starport' }),
+	imageFile: z.instanceof(File),
+})
 
 export async function loader({ request }: DataFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -19,8 +45,10 @@ export async function loader({ request }: DataFunctionArgs) {
 	if (!host) {
 		throw new Response('unauthorized', { status: 403 })
 	}
-	return json({})
+	return json({ fieldMetadata: getFieldMetadatas(ShipFormSchema) })
 }
+
+const MAX_SIZE = 1024 * 1024 * 5 // 5MB
 
 export async function action({ request }: DataFunctionArgs) {
 	const userId = await requireUserId(request)
@@ -31,45 +59,96 @@ export async function action({ request }: DataFunctionArgs) {
 	if (!host) {
 		throw new Response('unauthorized', { status: 403 })
 	}
+	const contentLength = Number(request.headers.get('Content-Length'))
+	if (
+		contentLength &&
+		Number.isFinite(contentLength) &&
+		contentLength > MAX_SIZE
+	) {
+		return json(
+			{
+				status: 'error',
+				errors: {
+					formErrors: [],
+					fieldErrors: { imageFile: ['File too large'] },
+				},
+			} as const,
+			{ status: 400 },
+		)
+	}
+	const formData = await unstable_parseMultipartFormData(
+		request,
+		unstable_createMemoryUploadHandler({ maxPartSize: MAX_SIZE }),
+	)
+	const result = ShipFormSchema.safeParse(
+		preprocessFormData(formData, ShipFormSchema),
+	)
+	if (!result.success) {
+		return json({ status: 'error', errors: result.error.flatten() } as const, {
+			status: 400,
+		})
+	}
+	const {
+		name,
+		description,
+		capacity,
+		dailyCharge,
+		modelId,
+		starportId,
+		imageFile,
+	} = result.data
 
-	const formData = await request.formData()
-	const { name, description, capacity, dailyCharge, modelId, starportId } =
-		Object.fromEntries(formData)
+	const hasImageFile = imageFile?.size && imageFile.size > 0
 
-	invariant(typeof name === 'string', 'name type invalid')
-	invariant(typeof description === 'string', 'description type invalid')
-	invariant(typeof capacity === 'string', 'capacity type invalid')
-	invariant(typeof dailyCharge === 'string', 'dailyCharge type invalid')
-	invariant(typeof modelId === 'string', 'modelId type invalid')
-	invariant(typeof starportId === 'string', 'starportId type invalid')
+	const ship = await prisma.$transaction(async transactionClient => {
+		const newImage = hasImageFile
+			? await transactionClient.image.create({
+					select: { fileId: true },
+					data: {
+						contentType: imageFile.type,
+						file: {
+							create: {
+								blob: Buffer.from(await imageFile.arrayBuffer()),
+							},
+						},
+					},
+			  })
+			: null
 
-	// const errors = {
-	// 	username: validateUsername(username),
-	// 	password: validatePassword(password),
-	// }
-	// const hasErrors = Object.values(errors).some(Boolean)
-	// if (hasErrors) {
-	// 	return json({ errors }, { status: 400 })
-	// }
-
-	const ship = await prisma.ship.create({
-		data: {
-			hostId: host.userId,
-			name,
-			description,
-			// TODO: handle image upload
-			capacity: Number(capacity),
-			dailyCharge: Number(dailyCharge),
-			modelId: modelId,
-			starportId: starportId,
-		},
+		const ship = await transactionClient.ship.create({
+			data: {
+				hostId: host.userId,
+				name,
+				description,
+				imageId: newImage ? newImage.fileId : undefined,
+				capacity: Number(capacity),
+				dailyCharge: Number(dailyCharge),
+				modelId: modelId,
+				starportId: starportId,
+			},
+		})
+		return ship
 	})
 
 	return redirect(`/ships/${ship.id}`)
 }
 
+const labelClassName = 'block text-sm font-medium text-gray-700'
+const inputClassName = 'w-full rounded border border-gray-500 px-2 py-1 text-lg'
+const fieldClassName = 'flex gap-1 flex-col'
+
 export default function NewShipRoute() {
 	const data = useLoaderData<typeof loader>()
+	const actionData = useActionData<typeof action>()
+	const fields = getFields(
+		data.fieldMetadata,
+		actionData?.status === 'error' ? actionData.errors.fieldErrors : undefined,
+	)
+	const form = getFormProps({
+		name: 'ship-form',
+		errors:
+			actionData?.status === 'error' ? actionData.errors.formErrors : undefined,
+	})
 	const [selectedStarport, setSelectedStarport] = useState<{
 		id: string
 		displayName: string
@@ -86,25 +165,40 @@ export default function NewShipRoute() {
 	} | null>(null)
 
 	return (
-		<div>
+		<div className="container m-auto">
 			<h1>Create A New Ship</h1>
-			<Form method="post">
-				<label>
-					Name
+			<Form
+				method="post"
+				className="flex flex-col gap-4"
+				encType="multipart/form-data"
+				noValidate
+				{...form.props}
+			>
+				<div className={fieldClassName}>
+					<label className={labelClassName} {...fields.imageFile.labelProps}>
+						Set Ship Photo
+					</label>
 					<input
-						className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-						type="text"
-						name="name"
+						className={inputClassName}
+						{...fields.imageFile.props}
+						type="file"
 					/>
-				</label>
-				<label>
-					Description
-					<input
-						className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-						type="text"
-						name="description"
-					/>
-				</label>
+					{fields.imageFile.errorUI}
+				</div>
+				<div className={fieldClassName}>
+					<label className={labelClassName} {...fields.name.labelProps}>
+						Name
+					</label>
+					<input className={inputClassName} {...fields.name.props} />
+					{fields.name.errorUI}
+				</div>
+				<div className={fieldClassName}>
+					<label className={labelClassName} {...fields.description.labelProps}>
+						Description
+					</label>
+					<textarea className={inputClassName} {...fields.description.props} />
+					{fields.description.errorUI}
+				</div>
 				<BrandCombobox
 					selectedItem={selectedBrand}
 					onChange={newBrand => {
@@ -118,28 +212,29 @@ export default function NewShipRoute() {
 						setSelectedModel(newModel ?? null)
 					}}
 				/>
-				<input type="hidden" name="modelId" value={selectedModel?.id ?? ''} />
+				{selectedModel?.id ? (
+					<input
+						value={selectedModel?.id ?? ''}
+						{...fields.modelId.props}
+						type="hidden"
+					/>
+				) : null}
+				{fields.modelId.errorUI}
 				{/* TODO: handle image upload */}
-				<label>
-					Capacity
-					<input
-						className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-						type="number"
-						name="capacity"
-						min="1"
-						max="10"
-					/>
-				</label>
-				<label>
-					Daily Charge
-					<input
-						className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-						type="number"
-						min="0"
-						max="1000"
-						name="dailyCharge"
-					/>
-				</label>
+				<div className={fieldClassName}>
+					<label className={labelClassName} {...fields.capacity.labelProps}>
+						Capacity
+					</label>
+					<input className={inputClassName} {...fields.capacity.props} />
+					{fields.capacity.errorUI}
+				</div>
+				<div className={fieldClassName}>
+					<label className={labelClassName} {...fields.dailyCharge.labelProps}>
+						Daily Charge
+					</label>
+					<input className={inputClassName} {...fields.dailyCharge.props} />
+					{fields.dailyCharge.errorUI}
+				</div>
 				<StarportCombobox
 					selectedItem={selectedStarport}
 					geolocation={null}
@@ -147,11 +242,17 @@ export default function NewShipRoute() {
 						setSelectedStarport(newStarport ?? null)
 					}}
 				/>
-				<input
-					type="hidden"
-					name="starportId"
-					value={selectedStarport?.id ?? ''}
-				/>
+				{selectedStarport?.id ? (
+					<input
+						value={selectedStarport.id ?? ''}
+						{...fields.starportId.props}
+						type="hidden"
+					/>
+				) : null}
+				{fields.starportId.errorUI}
+
+				{form.errorUI}
+
 				<button type="submit">Save</button>
 			</Form>
 			<pre>{JSON.stringify(data, null, 2)}</pre>
