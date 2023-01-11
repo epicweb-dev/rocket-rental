@@ -1,7 +1,7 @@
 import type { DataFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Link, useFetcher } from '@remix-run/react'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { AuthorizationError } from 'remix-auth'
 import { FormStrategy } from 'remix-auth-form'
 import { z } from 'zod'

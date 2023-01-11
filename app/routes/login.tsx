@@ -7,13 +7,13 @@ import {
 	useLoaderData,
 	useSearchParams,
 } from '@remix-run/react'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { FormStrategy } from 'remix-auth-form'
 import { z } from 'zod'
 import { authenticator } from '~/utils/auth.server'
 import {
-	getFields,
 	getFieldMetadatas,
+	getFields,
 	getFormProps,
 	preprocessFormData,
 	useFocusInvalid,
