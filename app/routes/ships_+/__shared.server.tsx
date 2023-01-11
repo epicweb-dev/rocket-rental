@@ -14,6 +14,8 @@ export const ShipFormSchema = z.object({
 	imageFile: z.instanceof(File),
 })
 
+export const LooseShipFormSchema = ShipFormSchema.partial()
+
 export const MAX_SIZE = 1024 * 1024 * 5 // 5MB
 
 export function validateContentLength(request: Request) {

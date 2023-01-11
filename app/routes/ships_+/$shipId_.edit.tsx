@@ -12,13 +12,11 @@ import { getFieldMetadatas, preprocessFormData } from '~/utils/forms'
 import ShipEditForm from './__shared'
 import {
 	insertImage,
+	LooseShipFormSchema,
 	MAX_SIZE,
 	requireHost,
-	ShipFormSchema,
 	validateContentLength,
 } from './__shared.server'
-
-const LooseShipFormSchema = ShipFormSchema.partial()
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.shipId, 'Missing shipId')

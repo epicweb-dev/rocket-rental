@@ -1,24 +1,40 @@
 import type { DataFunctionArgs, V2_MetaFunction } from '@remix-run/node'
-import { redirect } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import { json, redirect } from '@remix-run/node'
 import {
 	Form,
 	useActionData,
 	useLoaderData,
 	useNavigation,
 } from '@remix-run/react'
-import { useEffect, useRef } from 'react'
-import invariant from 'tiny-invariant'
+import { useRef } from 'react'
+import { z } from 'zod'
 import { resetUserPassword } from '~/models/user.server'
-import {
-	MAX_PASSWORD_LENGTH,
-	MIN_PASSWORD_LENGTH,
-	validateConfirmPassword,
-	validatePassword,
-} from '~/utils/user-validation'
 import { authenticator } from '~/utils/auth.server'
+import {
+	getFieldMetadatas,
+	getFields,
+	getFormProps,
+	preprocessFormData,
+	useFocusInvalid,
+} from '~/utils/forms'
 import { commitSession, getSession } from '~/utils/session.server'
+import { passwordSchema } from '~/utils/user-validation'
 import { resetPasswordSessionKey } from './forgot-password'
+
+const ResetPasswordSchema = z
+	.object({
+		password: passwordSchema,
+		confirmPassword: passwordSchema,
+	})
+	.superRefine(({ confirmPassword, password }, ctx) => {
+		if (confirmPassword !== password) {
+			ctx.addIssue({
+				path: ['confirmPassword'],
+				code: 'custom',
+				message: 'The passwords did not match',
+			})
+		}
+	})
 
 export async function loader({ request }: DataFunctionArgs) {
 	await authenticator.isAuthenticated(request, {
@@ -31,29 +47,30 @@ export async function loader({ request }: DataFunctionArgs) {
 		return redirect('/login')
 	}
 	return json(
-		{ formError: error?.message, resetPasswordUsername },
 		{
-			headers: {
-				'Set-Cookie': await commitSession(session),
-			},
+			formError: error?.message,
+			resetPasswordUsername,
+			fieldMetadata: getFieldMetadatas(ResetPasswordSchema),
+		},
+		{
+			headers: { 'Set-Cookie': await commitSession(session) },
 		},
 	)
 }
 
 export async function action({ request }: DataFunctionArgs) {
 	const formData = await request.formData()
-	const { password, confirmPassword } = Object.fromEntries(formData)
-	invariant(typeof password === 'string', 'password type invalid')
-	invariant(typeof confirmPassword === 'string', 'confirmPassword type invalid')
+	const result = ResetPasswordSchema.safeParse(
+		preprocessFormData(formData, ResetPasswordSchema),
+	)
+	if (!result.success) {
+		return json(
+			{ status: 'error', errors: result.error.flatten() },
+			{ status: 400 },
+		)
+	}
 
-	const errors = {
-		password: validatePassword(password),
-		confirmPassword: validateConfirmPassword({ password, confirmPassword }),
-	}
-	const hasErrors = Object.values(errors).some(Boolean)
-	if (hasErrors) {
-		return json({ errors }, { status: 400 })
-	}
+	const { password } = result.data
 
 	const session = await getSession(request.headers.get('cookie'))
 	const username = session.get(resetPasswordSessionKey)
@@ -78,23 +95,17 @@ export const meta: V2_MetaFunction = ({ matches }) => {
 
 export default function ResetPasswordPage() {
 	const data = useLoaderData<typeof loader>()
-	const form = useRef<HTMLFormElement>(null)
-	const navigation = useNavigation()
 	const actionData = useActionData<typeof action>()
+	const formRef = useRef<HTMLFormElement>(null)
+	const navigation = useNavigation()
 
-	const hasPasswordError = actionData?.errors?.password
-	const hasConfirmPasswordError = actionData?.errors?.confirmPassword
-	const hasErrors = hasConfirmPasswordError || hasPasswordError
+	const form = getFormProps({
+		name: 'reset-password',
+		errors: actionData?.errors.formErrors,
+	})
+	const fields = getFields(data.fieldMetadata, actionData?.errors?.fieldErrors)
 
-	useEffect(() => {
-		if (!form.current) return
-		if (hasErrors) {
-			const firstInvalidElement = form.current.querySelector('[aria-invalid]')
-			if (firstInvalidElement instanceof HTMLElement) {
-				firstInvalidElement.focus()
-			}
-		}
-	}, [hasErrors])
+	useFocusInvalid(formRef.current, actionData?.errors)
 
 	return (
 		<div className="flex min-h-full flex-col justify-center">
@@ -102,78 +113,47 @@ export default function ResetPasswordPage() {
 				<Form
 					method="post"
 					className="space-y-6"
-					aria-invalid={data.formError ? true : undefined}
-					aria-describedby="form-error"
-					ref={form}
+					ref={formRef}
 					noValidate
+					{...form.props}
 				>
 					<div>Resetting password for {data.resetPasswordUsername}</div>
 
 					<div>
 						<label
-							htmlFor="password"
 							className="block text-sm font-medium text-gray-700"
+							{...fields.password.labelProps}
 						>
 							Password
 						</label>
 						<div className="mt-1">
 							<input
-								id="password"
-								type="password"
-								name="password"
-								required
-								minLength={MIN_PASSWORD_LENGTH}
-								maxLength={MAX_PASSWORD_LENGTH}
 								autoComplete="current-password"
 								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-								aria-describedby={
-									hasPasswordError ? 'password-error' : undefined
-								}
-								aria-invalid={hasPasswordError ? true : undefined}
+								{...fields.password.props}
 							/>
-							{hasPasswordError ? (
-								<span className="pt-1 text-red-700" id="password-error">
-									{actionData?.errors.password}
-								</span>
-							) : null}
+							{fields.password.errorUI}
 						</div>
 					</div>
 
 					<div>
 						<label
-							htmlFor="confirmPassword"
 							className="block text-sm font-medium text-gray-700"
+							{...fields.confirmPassword.labelProps}
 						>
 							Confirm Password
 						</label>
 						<div className="mt-1">
 							<input
-								id="confirmPassword"
-								type="password"
-								name="confirmPassword"
-								required
-								minLength={MIN_PASSWORD_LENGTH}
-								maxLength={MAX_PASSWORD_LENGTH}
 								autoComplete="current-password"
 								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-								aria-describedby={
-									hasConfirmPasswordError ? 'confirm-password-error' : undefined
-								}
-								aria-invalid={hasConfirmPasswordError ? true : undefined}
+								{...fields.confirmPassword.props}
 							/>
-							{hasConfirmPasswordError ? (
-								<span className="pt-1 text-red-700" id="confirm-password-error">
-									{actionData?.errors.confirmPassword}
-								</span>
-							) : null}
+							{fields.confirmPassword.errorUI}
 						</div>
 					</div>
 
-					{data.formError ? (
-						<div className="pt-1 text-red-700" id="form-error">
-							{data.formError}
-						</div>
-					) : null}
+					{form.errorUI}
 					<div className="flex items-center justify-between gap-6">
 						<button
 							type="submit"

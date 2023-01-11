@@ -8,6 +8,7 @@ import { json } from '@remix-run/node'
 import {
 	Form,
 	useActionData,
+	useFormAction,
 	useLoaderData,
 	useNavigation,
 } from '@remix-run/react'
@@ -20,6 +21,7 @@ import {
 	getFields,
 	getFormProps,
 	preprocessFormData,
+	useFocusInvalid,
 } from '~/utils/forms'
 import { getUserImgSrc } from '~/utils/misc'
 import {
@@ -190,15 +192,16 @@ export default function EditUserProfile() {
 	const actionData = useActionData<typeof action>()
 	const formRef = useRef<HTMLFormElement>(null)
 	const navigation = useNavigation()
+	const formAction = useFormAction()
 
 	const prevNav = usePreviousValue(navigation)
 	const wasSubmitting =
 		prevNav.state === 'submitting' &&
-		prevNav.formAction === '/settings/profile' &&
+		prevNav.formAction === formAction &&
 		prevNav.formMethod === 'post'
 	const isSubmitting =
 		navigation.state === 'submitting' &&
-		navigation.formAction === '/settings/profile' &&
+		navigation.formAction === formAction &&
 		navigation.formMethod === 'post'
 
 	const wasSubmittingButIsNoLonger = wasSubmitting && !isSubmitting
@@ -210,17 +213,14 @@ export default function EditUserProfile() {
 		formRef.current.reset()
 	}, [actionData?.status, wasSubmittingButIsNoLonger])
 
+	const errors = actionData?.status === 'error' ? actionData.errors : null
+	useFocusInvalid(formRef.current, errors)
+
 	const form = getFormProps({
 		name: 'edit-profile',
-		errors:
-			actionData?.status === 'error'
-				? actionData?.errors.formErrors
-				: undefined,
+		errors: errors?.formErrors,
 	})
-	const fields = getFields(
-		data.fieldMetadata,
-		actionData?.status === 'error' ? actionData?.errors.fieldErrors : undefined,
-	)
+	const fields = getFields(data.fieldMetadata, errors?.fieldErrors)
 
 	return (
 		<div className="container m-auto">

@@ -16,6 +16,7 @@ import {
 	getFieldMetadatas,
 	getFormProps,
 	preprocessFormData,
+	useFocusInvalid,
 } from '~/utils/forms'
 import { safeRedirect } from '~/utils/misc'
 import { commitSession, getSession } from '~/utils/session.server'
@@ -99,20 +100,8 @@ export default function LoginPage() {
 	})
 
 	const redirectTo = searchParams.get('redirectTo') || '/'
-	const hasUsernameError = Boolean(fields.username.errorUI)
-	const hasPasswordError = Boolean(fields.password.errorUI)
-	const hasErrors = hasUsernameError || hasPasswordError
 
-	useEffect(() => {
-		if (!formRef.current) return
-		if (hasErrors) {
-			const firstInvalidElement =
-				formRef.current.querySelector('[aria-invalid]')
-			if (firstInvalidElement instanceof HTMLElement) {
-				firstInvalidElement.focus()
-			}
-		}
-	}, [hasErrors])
+	useFocusInvalid(formRef.current, actionData?.errors)
 
 	return (
 		<div className="flex min-h-full flex-col justify-center">

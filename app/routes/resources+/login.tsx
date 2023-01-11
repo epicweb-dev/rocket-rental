@@ -10,6 +10,7 @@ import {
 	getFields,
 	getFormProps,
 	preprocessFormData,
+	useFocusInvalid,
 	type FieldMetadatas,
 } from '~/utils/forms'
 import { commitSession, getSession } from '~/utils/session.server'
@@ -83,20 +84,7 @@ export function InlineLogin({
 		errors: loginFetcher.data?.errors?.formErrors,
 	})
 
-	const hasUsernameError = Boolean(fields.username.errorUI)
-	const hasPasswordError = Boolean(fields.password.errorUI)
-	const hasErrors = hasUsernameError || hasPasswordError
-
-	useEffect(() => {
-		if (!formRef.current) return
-		if (hasErrors) {
-			const firstInvalidElement =
-				formRef.current.querySelector('[aria-invalid]')
-			if (firstInvalidElement instanceof HTMLElement) {
-				firstInvalidElement.focus()
-			}
-		}
-	}, [hasErrors])
+	useFocusInvalid(formRef.current, loginFetcher.data?.errors)
 
 	return (
 		<div>

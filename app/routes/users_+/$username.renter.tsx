@@ -10,6 +10,22 @@ import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server'
 import { requireUserId } from '~/utils/auth.server'
 import { useOptionalUser } from '~/utils/misc'
+import { z } from 'zod'
+import {
+	getFieldMetadatas,
+	getFields,
+	getFormProps,
+	preprocessFormData,
+	useFocusInvalid,
+} from '~/utils/forms'
+import { useRef } from 'react'
+
+const MIN_BIO_LENGTH = 2
+const MAX_BIO_LENGTH = 2000
+
+const BioFormSchema = z.object({
+	bio: z.string().min(MIN_BIO_LENGTH).max(MAX_BIO_LENGTH),
+})
 
 export async function loader({ params }: DataFunctionArgs) {
 	invariant(params.username, 'Missing username')
@@ -88,16 +104,7 @@ export async function loader({ params }: DataFunctionArgs) {
 	if (!user) {
 		throw new Response('not found', { status: 404 })
 	}
-	return json({ user })
-}
-
-const MIN_BIO_LENGTH = 2
-const MAX_BIO_LENGTH = 2000
-
-function validateBio(bio: string) {
-	if (bio.length < MIN_BIO_LENGTH) return 'Bio too short'
-	if (bio.length > MAX_BIO_LENGTH) return 'Bio too long'
-	return null
+	return json({ user, fieldMetadata: getFieldMetadatas(BioFormSchema) })
 }
 
 export async function action({ request, params }: DataFunctionArgs) {
@@ -108,7 +115,7 @@ export async function action({ request, params }: DataFunctionArgs) {
 		select: { id: true, renter: { select: { userId: true } } },
 	})
 	if (userId !== user?.id) {
-		return json({ status: 'unauthorized', errors: null } as const, {
+		return json({ status: 'unauthorized' } as const, {
 			status: 401,
 		})
 	}
@@ -117,26 +124,25 @@ export async function action({ request, params }: DataFunctionArgs) {
 	const intent = formData.get('intent')
 	switch (intent) {
 		case 'update-bio': {
-			const { bio } = Object.fromEntries(formData)
-			invariant(typeof bio === 'string', 'bio type invalid')
-			const errors = {
-				bio: validateBio(bio),
+			const result = BioFormSchema.safeParse(
+				preprocessFormData(formData, BioFormSchema),
+			)
+			if (!result.success) {
+				return json(
+					{ status: 'bio-invalid', errors: result.error.flatten() } as const,
+					{ status: 400 },
+				)
 			}
-			const hasErrors = Object.values(errors).some(Boolean)
-			if (hasErrors) {
-				return json({ status: 'bio-invalid', errors } as const, {
-					status: 400,
-				})
-			}
+			const { bio } = result.data
 			await prisma.renter.update({
 				where: { userId },
 				data: { bio },
 			})
-			return json({ status: 'bio-update-success', errors: null } as const)
+			return json({ status: 'bio-update-success' } as const)
 		}
 		case 'become-renter': {
 			if (user.renter) {
-				return json({ status: 'already-renter', errors: null } as const, {
+				return json({ status: 'already-renter' } as const, {
 					status: 400,
 				})
 			}
@@ -145,10 +151,10 @@ export async function action({ request, params }: DataFunctionArgs) {
 					userId: user.id,
 				},
 			})
-			return json({ status: 'become-renter-success', errors: null } as const)
+			return json({ status: 'become-renter-success' } as const)
 		}
 		default: {
-			return json({ status: 'Unhandled intent', errors: null } as const, {
+			return json({ status: 'Unhandled intent' } as const, {
 				status: 400,
 			})
 		}
@@ -179,13 +185,20 @@ export default function RenterUserRoute() {
 }
 
 function RenterUserDisplay() {
+	const bioFormRef = useRef<HTMLFormElement>(null)
 	const data = useLoaderData<typeof loader>()
 	const user = useOptionalUser()
 	const bioFetcher = useFetcher<typeof action>()
-	const bioError = bioFetcher.data?.errors?.bio
 
 	// we do this check earlier. Just added this to make TS happy
 	invariant(data.user.renter, 'User is not a renter')
+
+	const bioErrors =
+		bioFetcher.data?.status === 'bio-invalid' ? bioFetcher.data?.errors : null
+	const form = getFormProps({ name: 'bio', errors: bioErrors?.formErrors })
+	const fields = getFields(data.fieldMetadata, bioErrors?.fieldErrors)
+
+	useFocusInvalid(bioFormRef.current, bioErrors)
 
 	return (
 		<div>
@@ -193,11 +206,16 @@ function RenterUserDisplay() {
 			<pre>{JSON.stringify(data, null, 2)}</pre>
 			{data.user.id === user?.id ? (
 				<>
-					<bioFetcher.Form method="post" noValidate>
+					<bioFetcher.Form
+						method="post"
+						noValidate
+						ref={bioFormRef}
+						{...form.props}
+					>
 						<div>
 							<label
-								htmlFor="bio"
 								className="block text-sm font-medium text-gray-700"
+								{...fields.bio.labelProps}
 							>
 								Renter Bio
 							</label>
@@ -205,21 +223,13 @@ function RenterUserDisplay() {
 								<textarea
 									defaultValue={data.user.renter.bio ?? ''}
 									className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-									name="bio"
-									id="bio"
-									minLength={MIN_BIO_LENGTH}
-									maxLength={MAX_BIO_LENGTH}
-									aria-describedby={bioError ? 'end-date-error' : undefined}
-									aria-invalid={bioError ? true : undefined}
+									{...fields.bio.props}
 								/>
 
-								{bioError ? (
-									<span className="pt-1 text-red-700" id="start-date-error">
-										{bioError}
-									</span>
-								) : null}
+								{fields.bio.errorUI}
 							</div>
 						</div>
+						{form.errorUI}
 						<button type="submit" name="intent" value="update-bio">
 							{bioFetcher.state === 'idle' ? 'Submit' : 'Submitting...'}
 						</button>

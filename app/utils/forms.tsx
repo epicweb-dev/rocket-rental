@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { z } from 'zod'
 import { typedBoolean } from './misc'
 
@@ -35,11 +36,42 @@ export function getFormProps({
 		props: {
 			'aria-invalid': errors?.length ? true : undefined,
 			'aria-describedby': errors?.length ? errorElId : undefined,
+			tabIndex: errors?.length ? -1 : undefined,
 		},
 		errorUI: errors?.length ? (
 			<ErrorList errors={errors} id={errorElId} />
 		) : null,
 	}
+}
+
+export function useFocusInvalid(
+	formEl: HTMLFormElement | null,
+	errors?: {
+		formErrors?: Array<unknown> | null
+		fieldErrors?: Record<string, Array<unknown> | null | undefined> | null
+	} | null,
+) {
+	useEffect(() => {
+		if (!formEl) return
+		if (!errors) return
+		const allErrors = [
+			...(errors.formErrors?.filter(Boolean) ?? []),
+			...(Object.values(errors.fieldErrors ?? {})
+				?.flat()
+				.filter(Boolean) ?? []),
+		]
+		console.log(allErrors)
+		if (!allErrors.length) return
+
+		if (formEl.getAttribute('aria-invalid')) {
+			formEl.focus()
+		} else {
+			const firstInvalidElement = formEl.querySelector('[aria-invalid]')
+			if (firstInvalidElement instanceof HTMLElement) {
+				firstInvalidElement.focus()
+			}
+		}
+	}, [formEl, errors])
 }
 
 // borrowed this from:
@@ -331,8 +363,8 @@ export function getFields<Key extends string>(
 				...props,
 				id,
 				name,
-				'aria-invalid': Boolean(fieldErrors.length),
-				'aria-describedby': errorElId,
+				'aria-invalid': fieldErrors.length ? true : undefined,
+				'aria-describedby': fieldErrors.length ? errorElId : undefined,
 			},
 			labelProps: { htmlFor: id },
 			errorUI: fieldErrors.length ? (

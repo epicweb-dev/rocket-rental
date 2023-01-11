@@ -21,29 +21,3 @@ export const nameSchema = z
 	.string()
 	.min(MIN_NAME_LENGTH, { message: 'Name is too short' })
 	.max(MAX_NAME_LENGTH, { message: 'Name is too long' })
-
-export function validateUsername(username: string) {
-	if (username.length < MIN_USERNAME_LENGTH) return 'Username is too short'
-	if (username.length > MAX_USERNAME_LENGTH) return 'Username is too long'
-	return null
-}
-
-export function validatePassword(password: string) {
-	if (password.length < MIN_PASSWORD_LENGTH) return 'Password is too short'
-	if (password.length > MAX_PASSWORD_LENGTH) return 'Password is too long'
-	return null
-}
-
-export function validateConfirmPassword({
-	password,
-	confirmPassword,
-}: {
-	password: string
-	confirmPassword: string
-}) {
-	return (
-		validatePassword(confirmPassword) ||
-		(password !== confirmPassword && 'Passwords do not match') ||
-		null
-	)
-}

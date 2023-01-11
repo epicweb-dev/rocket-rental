@@ -1,7 +1,7 @@
 import { Form, Link, useCatch } from '@remix-run/react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { type SerializeFrom } from '@remix-run/node'
-import { getFields, getFormProps } from '~/utils/forms'
+import { getFields, getFormProps, useFocusInvalid } from '~/utils/forms'
 import { getShipImgSrc } from '~/utils/misc'
 import { BrandCombobox } from '~/routes/resources+/brand-combobox'
 import { ModelCombobox } from '~/routes/resources+/model-combobox'
@@ -26,6 +26,7 @@ export default function ShipEditForm({
 		| SerializeFrom<typeof newAction>
 		| SerializeFrom<typeof editAction>
 }) {
+	const formRef = useRef<HTMLFormElement>(null)
 	const form = getFormProps({
 		name: 'ship-edit',
 		errors: actionData?.errors?.formErrors,
@@ -42,12 +43,15 @@ export default function ShipEditForm({
 		NonNullable<typeof data.ship>['model']['brand'] | null
 	>(data.ship?.model.brand ?? null)
 
+	useFocusInvalid(formRef.current, actionData?.errors)
+
 	return (
 		<Form
 			method="post"
 			className="flex flex-col gap-4"
 			encType="multipart/form-data"
 			noValidate
+			ref={formRef}
 			{...form.props}
 		>
 			<div className={fieldClassName}>

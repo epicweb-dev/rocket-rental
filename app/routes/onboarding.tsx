@@ -25,7 +25,7 @@ import {
 } from '~/utils/user-validation'
 import { onboardingEmailSessionKey } from './signup'
 
-const onboardingFormSchema = z
+const OnboardingFormSchema = z
 	.object({
 		username: usernameSchema,
 		name: nameSchema,
@@ -62,7 +62,7 @@ export async function loader({ request }: DataFunctionArgs) {
 		{
 			formError: error?.message,
 			onboardingEmail,
-			fieldMetadatas: getFieldMetadatas(onboardingFormSchema),
+			fieldMetadatas: getFieldMetadatas(OnboardingFormSchema),
 		},
 		{
 			headers: {
@@ -80,8 +80,8 @@ export async function action({ request }: DataFunctionArgs) {
 	}
 
 	const formData = await request.formData()
-	const result = onboardingFormSchema.safeParse(
-		preprocessFormData(formData, onboardingFormSchema),
+	const result = OnboardingFormSchema.safeParse(
+		preprocessFormData(formData, OnboardingFormSchema),
 	)
 	if (!result.success) {
 		return json(
