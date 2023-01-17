@@ -10,7 +10,7 @@ export default defineConfig({
 	test: {
 		include: ['./app/**/*.test.{ts,tsx}'],
 		globals: true,
-		environment: 'happy-dom',
+		environment: 'jsdom',
 		setupFiles: ['./test/setup-test-env.ts'],
 		globalSetup: ['./test/global-setup.ts'],
 		coverage: {

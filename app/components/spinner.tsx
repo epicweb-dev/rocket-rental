@@ -13,6 +13,7 @@ export function Spinner({ showSpinner }: { showSpinner: boolean }) {
 				width="1em"
 				height="1em"
 			>
+				<title>Loading</title>
 				<circle
 					className="opacity-25"
 					cx={12}
