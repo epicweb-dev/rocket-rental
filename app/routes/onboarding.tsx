@@ -8,11 +8,10 @@ import {
 	useSearchParams,
 } from '@remix-run/react'
 import { z } from 'zod'
-import { createUser } from '~/models/user.server'
-import { authenticator } from '~/utils/auth.server'
+import { authenticator, createUser } from '~/utils/auth.server'
 import {
-	getFields,
 	getFieldMetadatas,
+	getFields,
 	getFormProps,
 	preprocessFormData,
 } from '~/utils/forms'

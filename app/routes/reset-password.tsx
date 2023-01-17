@@ -8,8 +8,7 @@ import {
 } from '@remix-run/react'
 import { useRef } from 'react'
 import { z } from 'zod'
-import { resetUserPassword } from '~/models/user.server'
-import { authenticator } from '~/utils/auth.server'
+import { authenticator, resetUserPassword } from '~/utils/auth.server'
 import {
 	getFieldMetadatas,
 	getFields,
