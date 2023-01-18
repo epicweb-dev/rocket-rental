@@ -60,7 +60,6 @@ export function useFocusInvalid(
 				?.flat()
 				.filter(Boolean) ?? []),
 		]
-		console.log(allErrors)
 		if (!allErrors.length) return
 
 		if (formEl.getAttribute('aria-invalid')) {
@@ -265,32 +264,50 @@ function getShape<Schema extends z.ZodTypeAny>(schema: Schema) {
 	return shape
 }
 
+export function preprocessSearchParams<Schema extends z.ZodTypeAny>(
+	params: Request,
+	schema: Schema,
+) {
+	const searchParams = new URL(params.url).searchParams
+	const shape = getShape(schema)
+	return mapObj(shape, ([name, propertySchema]) =>
+		transformDataValueBasedOnSchema(
+			getValueBasedOnSchema(searchParams, String(name), propertySchema),
+			propertySchema,
+		),
+	)
+}
+
 export function preprocessFormData<Schema extends z.ZodTypeAny>(
 	formData: FormData,
 	schema: Schema,
 ) {
 	const shape = getShape(schema)
 	return mapObj(shape, ([name, propertySchema]) =>
-		transformFormDataValue(
-			getFormValue(formData, String(name), propertySchema),
+		transformDataValueBasedOnSchema(
+			getValueBasedOnSchema(formData, String(name), propertySchema),
 			propertySchema,
 		),
 	)
 }
 
-type FormDataValue = FormDataEntryValue | FormDataEntryValue[] | null
-
-function getFormValue(
-	formData: FormData,
+function getValueBasedOnSchema<
+	Value,
+	Data extends {
+		get: (key: string) => Value | null
+		getAll: (key: string) => Array<Value>
+	},
+>(
+	formData: Data,
 	name: string,
 	schema: z.ZodTypeAny,
-): FormDataValue {
+): Value | Array<Value> | null {
 	if (schema instanceof z.ZodEffects) {
-		return getFormValue(formData, name, schema.innerType())
+		return getValueBasedOnSchema(formData, name, schema.innerType())
 	} else if (schema instanceof z.ZodOptional) {
-		return getFormValue(formData, name, schema.unwrap())
+		return getValueBasedOnSchema(formData, name, schema.unwrap())
 	} else if (schema instanceof z.ZodDefault) {
-		return getFormValue(formData, name, schema.removeDefault())
+		return getValueBasedOnSchema(formData, name, schema.removeDefault())
 	} else if (schema instanceof z.ZodArray) {
 		return formData.getAll(name)
 	} else {
@@ -298,27 +315,36 @@ function getFormValue(
 	}
 }
 
-function transformFormDataValue(
-	value: FormDataValue,
+function transformDataValueBasedOnSchema(
+	value: unknown,
 	propertySchema: z.ZodTypeAny,
 ): unknown {
 	if (propertySchema instanceof z.ZodEffects) {
-		return transformFormDataValue(value, propertySchema.innerType())
+		return transformDataValueBasedOnSchema(value, propertySchema.innerType())
 	} else if (propertySchema instanceof z.ZodOptional) {
-		return transformFormDataValue(value, propertySchema.unwrap())
+		return transformDataValueBasedOnSchema(value, propertySchema.unwrap())
 	} else if (propertySchema instanceof z.ZodDefault) {
-		return transformFormDataValue(value, propertySchema.removeDefault())
+		return transformDataValueBasedOnSchema(
+			value,
+			propertySchema.removeDefault(),
+		)
 	} else if (propertySchema instanceof z.ZodArray) {
 		if (!value || !Array.isArray(value)) {
 			throw new Error('Expected array')
 		}
-		return value.map(v => transformFormDataValue(v, propertySchema.element))
+		return value.map(v =>
+			transformDataValueBasedOnSchema(v, propertySchema.element),
+		)
 	} else if (propertySchema instanceof z.ZodObject) {
 		throw new Error('Support object types')
 	} else if (propertySchema instanceof z.ZodBoolean) {
 		return Boolean(value)
 	} else if (propertySchema instanceof z.ZodNumber) {
-		return Number(value)
+		if (value === null) {
+			return undefined
+		} else {
+			return Number(value)
+		}
 	} else {
 		return value
 	}

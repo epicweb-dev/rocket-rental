@@ -88,6 +88,11 @@ test('returns booking data from the session', async () => {
 	expect(json).toEqual({
 		endDate: endDate.toISOString(),
 		shipId: ship.id,
+		inlineLoginFieldProps: expect.objectContaining({
+			password: expect.any(Object),
+			remember: expect.any(Object),
+			username: expect.any(Object),
+		}),
 		startDate: startDate.toISOString(),
 		totalPrice,
 	})

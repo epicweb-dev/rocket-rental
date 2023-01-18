@@ -1,5 +1,10 @@
 {
-	"include": ["remix.env.d.ts", "**/*.ts", "**/*.tsx"],
+	"include": [
+		"remix.env.d.ts",
+		"**/*.ts",
+		"**/*.tsx",
+		"./test/setup-test-env.ts"
+	],
 	"compilerOptions": {
 		"lib": ["DOM", "DOM.Iterable", "ES2019"],
 		"types": ["vitest/globals"],

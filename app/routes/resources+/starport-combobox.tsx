@@ -5,13 +5,11 @@ import { SearchParamsSchema } from '~/components/geo-search-combobox'
 import { GeoSearchCombobox } from '~/components/geo-search-combobox'
 import { prisma } from '~/utils/db.server'
 import { getClosestStarports } from '~/utils/geo.server'
-import { getSearchParamsOrFail } from 'remix-params-helper'
+import { preprocessSearchParams } from '~/utils/forms'
 
 export async function loader({ request }: LoaderArgs) {
-	const { query, lat, long, exclude } = getSearchParamsOrFail(
-		request,
-		SearchParamsSchema,
-	)
+	const data = preprocessSearchParams(request, SearchParamsSchema)
+	const { query, lat, long, exclude } = SearchParamsSchema.parse(data)
 
 	let starports: Array<GeoItem>
 	if (lat !== undefined && long !== undefined) {

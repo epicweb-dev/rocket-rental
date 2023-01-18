@@ -1,14 +1,23 @@
-import fs from 'fs'
+import './setup-env-vars'
 import { installGlobals } from '@remix-run/node'
-import '@testing-library/jest-dom/extend-expect'
+import matchers, {
+	type TestingLibraryMatchers,
+} from '@testing-library/jest-dom/matchers'
 import 'dotenv/config'
+import fs from 'fs'
 import { db } from '~/utils/db.server'
 
-installGlobals()
+declare global {
+	namespace Vi {
+		interface JestAssertion<T = any>
+			extends jest.Matchers<void, T>,
+				TestingLibraryMatchers<T, void> {}
+	}
+}
 
-const filename = `data.${process.env.VITEST_POOL_ID || 0}.db`
-process.env.DATABASE_PATH = `./prisma/test/${filename}`
-process.env.DATABASE_URL = `file:./test/${filename}?connection_limit=1`
+expect.extend(matchers)
+
+installGlobals()
 fs.copyFileSync('prisma/test/base.db', process.env.DATABASE_PATH)
 
 afterEach(() => {

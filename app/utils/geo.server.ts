@@ -67,7 +67,6 @@ export function getClosestStarports(options: BaseOptions) {
 /**
  * This is a bit of a tight abstraction, so please do not export it. Duplicate instead.
  * All usages of this function should be within this file.
- * @returns
  */
 function getClosestWithQuery({
 	lat,
@@ -107,8 +106,8 @@ function getClosestWithQuery({
 	const sql = /*sql*/ `
 		SELECT
 			id,
-			${displayNameSelect} as displayName,
-			${distanceCalculation} AS distance
+			${displayNameSelect} AS displayName,
+			COALESCE(${distanceCalculation}, 0) AS distance
 		FROM ${table}
 		${wheres ? `WHERE ${wheres}` : ''}
 		ORDER BY distance ASC

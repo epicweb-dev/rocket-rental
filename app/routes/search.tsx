@@ -9,7 +9,6 @@ import {
 	useSubmit,
 } from '@remix-run/react'
 import { useCallback, useEffect, useState } from 'react'
-import { getSearchParamsOrFail } from 'remix-params-helper'
 import { z } from 'zod'
 import { db, interpolateArray, prisma } from '~/utils/db.server'
 import { getClosestStarports, getDistanceCalculation } from '~/utils/geo.server'
@@ -20,6 +19,7 @@ import { CityCombobox } from '~/routes/resources+/city-combobox'
 import { HostCombobox } from '~/routes/resources+/host-combobox'
 import { ModelCombobox } from '~/routes/resources+/model-combobox'
 import { StarportCombobox } from '~/routes/resources+/starport-combobox'
+import { preprocessSearchParams } from '~/utils/forms'
 
 const MAX_RESULTS = 50
 
@@ -52,7 +52,8 @@ const SearchParamsSchema = z.object({
 })
 
 export async function loader({ request }: DataFunctionArgs) {
-	const searchParameters = getSearchParamsOrFail(request, SearchParamsSchema)
+	const data = preprocessSearchParams(request, SearchParamsSchema)
+	const searchParameters = SearchParamsSchema.parse(data)
 	const { starportId, cityId, brandId, modelId, hostId } = searchParameters
 
 	const ships = searchShips(searchParameters)
@@ -415,7 +416,7 @@ export default function ShipsRoute() {
 	}, [toggleGeolocation])
 
 	return (
-		<div>
+		<div className="container m-auto mt-12">
 			<h1>Search</h1>
 			<label>
 				<input

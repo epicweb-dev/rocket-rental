@@ -10,6 +10,9 @@ export async function loader({ params }: DataFunctionArgs) {
 	if (!image) throw new Response('Not found', { status: 404 })
 
 	return new Response(image.file.blob, {
-		headers: { 'Content-Type': image.contentType },
+		headers: {
+			'Content-Type': image.contentType,
+			'Cache-Control': 'max-age=31536000',
+		},
 	})
 }

@@ -6,11 +6,12 @@ import {
 	type BaseOptions,
 } from '~/components/basic-search-combobox'
 import { prisma } from '~/utils/db.server'
-import { getSearchParamsOrFail } from 'remix-params-helper'
 import { getUserImgSrc } from '~/utils/misc'
+import { preprocessSearchParams } from '~/utils/forms'
 
 export async function loader({ request }: LoaderArgs) {
-	const { query, exclude } = getSearchParamsOrFail(request, SearchParamsSchema)
+	const data = preprocessSearchParams(request, SearchParamsSchema)
+	const { query, exclude } = SearchParamsSchema.parse(data)
 
 	const hosts = await prisma.host.findMany({
 		where: {

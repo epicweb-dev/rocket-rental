@@ -1,17 +1,16 @@
-import type { LoaderArgs } from '@remix-run/node'
-import { json } from '@remix-run/node'
-import type { BaseOptions } from '~/components/geo-search-combobox'
-import { SearchParamsSchema } from '~/components/geo-search-combobox'
-import { GeoSearchCombobox } from '~/components/geo-search-combobox'
+import { json, type DataFunctionArgs } from '@remix-run/node'
+import {
+	GeoSearchCombobox,
+	SearchParamsSchema,
+	type BaseOptions,
+} from '~/components/geo-search-combobox'
 import { prisma } from '~/utils/db.server'
+import { preprocessSearchParams } from '~/utils/forms'
 import { getClosestCities } from '~/utils/geo.server'
-import { getSearchParamsOrFail } from 'remix-params-helper'
 
-export async function loader({ request }: LoaderArgs) {
-	const { query, lat, long, exclude } = getSearchParamsOrFail(
-		request,
-		SearchParamsSchema,
-	)
+export async function loader({ request }: DataFunctionArgs) {
+	const data = preprocessSearchParams(request, SearchParamsSchema)
+	const { query, lat, long, exclude } = SearchParamsSchema.parse(data)
 
 	let cities: Array<{
 		id: string

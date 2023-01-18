@@ -5,9 +5,9 @@ import {
 	type BaseOptions,
 } from '~/components/basic-search-combobox'
 import { prisma } from '~/utils/db.server'
-import { getSearchParamsOrFail } from 'remix-params-helper'
 import { z } from 'zod'
 import { getImgSrc, typedBoolean } from '~/utils/misc'
+import { preprocessSearchParams } from '~/utils/forms'
 
 export const SearchParamsSchema = z.object({
 	query: z.string().default(''),
@@ -16,10 +16,8 @@ export const SearchParamsSchema = z.object({
 })
 
 export async function loader({ request }: LoaderArgs) {
-	const { query, exclude, brandIds } = getSearchParamsOrFail(
-		request,
-		SearchParamsSchema,
-	)
+	const data = preprocessSearchParams(request, SearchParamsSchema)
+	const { query, exclude, brandIds } = SearchParamsSchema.parse(data)
 
 	const models = await prisma.shipModel.findMany({
 		where: {
