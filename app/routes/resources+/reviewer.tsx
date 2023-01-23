@@ -4,12 +4,7 @@ import { useFetcher } from '@remix-run/react'
 import { z } from 'zod'
 import { requireUserId } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'
-import {
-	getFields,
-	getFormProps,
-	preprocessFormData,
-	type FieldMetadatas,
-} from '~/utils/forms'
+import { useForm, preprocessFormData, type FieldMetadatas } from '~/utils/forms'
 import { getUserImgSrc } from '~/utils/misc'
 
 export function calculateReviewTimeExperied(bookingEndDate: Date) {
@@ -265,14 +260,10 @@ export function Reviewer({
 	existingReview?: { rating: number; description: string } | null
 }) {
 	const reviewFetcher = useFetcher<typeof action>()
-	const fields = getFields(
-		fieldMetadatas,
-		reviewFetcher.data?.errors?.fieldErrors,
-	)
-
-	const form = getFormProps({
+	const { form, fields } = useForm({
 		name: `reviewer`,
-		errors: reviewFetcher.data?.errors?.formErrors,
+		errors: reviewFetcher.data?.errors,
+		fieldMetadatas,
 	})
 
 	return (
@@ -290,7 +281,6 @@ export function Reviewer({
 			<reviewFetcher.Form
 				method="post"
 				action="/resources/reviewer"
-				noValidate
 				aria-label={FORM_NAME[type]}
 				{...form.props}
 			>

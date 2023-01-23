@@ -7,17 +7,10 @@ import {
 	useLoaderData,
 	useSearchParams,
 } from '@remix-run/react'
-import { useRef } from 'react'
 import { FormStrategy } from 'remix-auth-form'
 import { z } from 'zod'
 import { authenticator } from '~/utils/auth.server'
-import {
-	getFieldMetadatas,
-	getFields,
-	getFormProps,
-	preprocessFormData,
-	useFocusInvalid,
-} from '~/utils/forms'
+import { getFieldsFromSchema, preprocessFormData, useForm } from '~/utils/forms'
 import { safeRedirect } from '~/utils/misc'
 import { commitSession, getSession } from '~/utils/session.server'
 import { passwordSchema, usernameSchema } from '~/utils/user-validation'
@@ -42,7 +35,7 @@ export async function loader({ request }: DataFunctionArgs) {
 	return json(
 		{
 			formError: errorMessage,
-			fieldMetadatas: getFieldMetadatas(LoginFormSchema),
+			fieldMetadatas: getFieldsFromSchema(LoginFormSchema),
 		},
 		{
 			headers: {
@@ -88,31 +81,21 @@ export const meta: V2_MetaFunction = ({ matches }) => {
 
 export default function LoginPage() {
 	const [searchParams] = useSearchParams()
-	const formRef = useRef<HTMLFormElement>(null)
 	const data = useLoaderData<typeof loader>()
 	const actionData = useActionData<typeof action>()
 
-	const fields = getFields(data.fieldMetadatas, actionData?.errors.fieldErrors)
-
-	const form = getFormProps({
+	const { form, fields } = useForm({
 		name: 'login',
-		errors: [...(actionData?.errors.formErrors ?? []), data.formError],
+		fieldMetadatas: data.fieldMetadatas,
+		errors: actionData?.errors,
 	})
 
 	const redirectTo = searchParams.get('redirectTo') || '/'
 
-	useFocusInvalid(formRef.current, actionData?.errors)
-
 	return (
 		<div className="flex min-h-full flex-col justify-center">
 			<div className="mx-auto w-full max-w-md px-8">
-				<Form
-					method="post"
-					className="space-y-6"
-					{...form.props}
-					noValidate
-					ref={formRef}
-				>
+				<Form method="post" className="space-y-6" {...form.props}>
 					<div>
 						<label
 							className="block text-sm font-medium text-gray-700"

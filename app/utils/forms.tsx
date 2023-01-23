@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { z } from 'zod'
 import { typedBoolean } from './misc'
 
@@ -24,23 +24,43 @@ export function ErrorList({
 	)
 }
 
-export function getFormProps({
+export function useForm<Key extends string>({
 	name,
 	errors,
+	ref: passedRef,
+	fieldMetadatas,
 }: {
-	name?: string
-	errors?: ListOfErrors
+	name: string
+	fieldMetadatas: FieldMetadatas<Key>
+	ref?: React.RefObject<HTMLFormElement>
+	errors?: {
+		formErrors?: ListOfErrors
+		fieldErrors?: Record<string, ListOfErrors> | null
+	} | null
 }) {
-	const errorElId = ['form', name, 'error'].filter(Boolean).join('-')
+	const defaultRef = useRef<HTMLFormElement>(null)
+	const formRef = passedRef ?? defaultRef
+	const errorElId = ['form', name, 'error'].join('-')
+	const hasFormErrors = errors?.formErrors?.filter(Boolean).length
+	const [hydrated, setHydrated] = React.useState(false)
+	useEffect(() => {
+		setHydrated(true)
+	}, [])
+	useFocusInvalid(formRef.current, errors)
 	return {
-		props: {
-			'aria-invalid': errors?.length ? true : undefined,
-			'aria-describedby': errors?.length ? errorElId : undefined,
-			tabIndex: errors?.length ? -1 : undefined,
+		form: {
+			props: {
+				noValidate: hydrated,
+				'aria-invalid': hasFormErrors ? true : undefined,
+				'aria-describedby': hasFormErrors ? errorElId : undefined,
+				tabIndex: hasFormErrors ? -1 : undefined,
+				ref: formRef,
+			},
+			errorUI: hasFormErrors ? (
+				<ErrorList errors={errors.formErrors} id={errorElId} />
+			) : null,
 		},
-		errorUI: errors?.length ? (
-			<ErrorList errors={errors} id={errorElId} />
-		) : null,
+		fields: getFields(fieldMetadatas, errors?.fieldErrors),
 	}
 }
 
@@ -265,10 +285,10 @@ function getShape<Schema extends z.ZodTypeAny>(schema: Schema) {
 }
 
 export function preprocessSearchParams<Schema extends z.ZodTypeAny>(
-	params: Request,
+	request: Request,
 	schema: Schema,
 ) {
-	const searchParams = new URL(params.url).searchParams
+	const searchParams = new URL(request.url).searchParams
 	const shape = getShape(schema)
 	return mapObj(shape, ([name, propertySchema]) =>
 		transformDataValueBasedOnSchema(
@@ -301,7 +321,7 @@ function getValueBasedOnSchema<
 	formData: Data,
 	name: string,
 	schema: z.ZodTypeAny,
-): Value | Array<Value> | null {
+): Value | Array<Value> | null | undefined {
 	if (schema instanceof z.ZodEffects) {
 		return getValueBasedOnSchema(formData, name, schema.innerType())
 	} else if (schema instanceof z.ZodOptional) {
@@ -340,10 +360,16 @@ function transformDataValueBasedOnSchema(
 	} else if (propertySchema instanceof z.ZodBoolean) {
 		return Boolean(value)
 	} else if (propertySchema instanceof z.ZodNumber) {
-		if (value === null) {
+		if (value === null || value === '') {
 			return undefined
 		} else {
 			return Number(value)
+		}
+	} else if (propertySchema instanceof z.ZodString) {
+		if (value === null) {
+			return undefined
+		} else {
+			return String(value)
 		}
 	} else {
 		return value
@@ -360,7 +386,9 @@ function mapObj<Key extends string, Value, MappedValue>(
 	}, {} as Record<Key, MappedValue>)
 }
 
-export function getFieldMetadatas<Schema extends z.ZodTypeAny>(schema: Schema) {
+export function getFieldsFromSchema<Schema extends z.ZodTypeAny>(
+	schema: Schema,
+) {
 	const shape = getShape(schema)
 	type Key = keyof z.infer<typeof shape>
 
@@ -378,7 +406,7 @@ export type FieldMetadatas<Key extends string | number | symbol> = Record<
 
 export function getFields<Key extends string>(
 	fieldMetadatas: FieldMetadatas<Key>,
-	allErrors?: Partial<Record<Key, ListOfErrors>>,
+	allErrors?: Partial<Record<Key, ListOfErrors>> | null,
 ) {
 	return mapObj(fieldMetadatas, ([name, props]) => {
 		const id = `field-${name}`

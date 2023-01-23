@@ -1,18 +1,11 @@
 import type { DataFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Link, useFetcher } from '@remix-run/react'
-import { useRef } from 'react'
 import { AuthorizationError } from 'remix-auth'
 import { FormStrategy } from 'remix-auth-form'
 import { z } from 'zod'
 import { authenticator } from '~/utils/auth.server'
-import {
-	getFields,
-	getFormProps,
-	preprocessFormData,
-	useFocusInvalid,
-	type FieldMetadatas,
-} from '~/utils/forms'
+import { preprocessFormData, useForm, type FieldMetadatas } from '~/utils/forms'
 import { commitSession, getSession } from '~/utils/session.server'
 import { passwordSchema, usernameSchema } from '~/utils/user-validation'
 
@@ -72,19 +65,12 @@ export function InlineLogin({
 	fieldMetadatas: FieldMetadatas<keyof z.infer<typeof LoginFormSchema>>
 }) {
 	const loginFetcher = useFetcher<typeof action>()
-	const formRef = useRef<HTMLFormElement>(null)
 
-	const fields = getFields(
-		fieldMetadatas,
-		loginFetcher.data?.errors?.fieldErrors,
-	)
-
-	const form = getFormProps({
+	const { form, fields } = useForm({
 		name: 'inline-login',
-		errors: loginFetcher.data?.errors?.formErrors,
+		errors: loginFetcher.data?.errors,
+		fieldMetadatas,
 	})
-
-	useFocusInvalid(formRef.current, loginFetcher.data?.errors)
 
 	return (
 		<div>
@@ -93,8 +79,6 @@ export function InlineLogin({
 					method="post"
 					action="/resources/login"
 					className="space-y-6"
-					ref={formRef}
-					noValidate
 					{...form.props}
 				>
 					<div>

@@ -12,7 +12,7 @@ import {
 	Reviewer,
 	ReviewFormSchema,
 } from '~/routes/resources+/reviewer'
-import { getFieldMetadatas } from '~/utils/forms'
+import { getFieldsFromSchema } from '~/utils/forms'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.bookingId, 'Missing bookingId')
@@ -79,7 +79,7 @@ export async function loader({ request, params }: DataFunctionArgs) {
 					: null,
 		},
 		canReview: calculateCanReview(booking),
-		reviewerFieldMetadatas: getFieldMetadatas(ReviewFormSchema),
+		reviewerFieldMetadatas: getFieldsFromSchema(ReviewFormSchema),
 	})
 }
 

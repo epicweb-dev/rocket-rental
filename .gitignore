@@ -20,3 +20,5 @@ node_modules
 
 prisma/test
 other/image.db
+
+server-build

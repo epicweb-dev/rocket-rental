@@ -7,7 +7,7 @@ import {
 } from '@remix-run/node'
 import { useActionData, useLoaderData } from '@remix-run/react'
 import { prisma } from '~/utils/db.server'
-import { getFieldMetadatas, preprocessFormData } from '~/utils/forms'
+import { getFieldsFromSchema, preprocessFormData } from '~/utils/forms'
 import ShipEditForm from './__shared'
 import {
 	insertImage,
@@ -19,7 +19,10 @@ import {
 
 export async function loader({ request }: DataFunctionArgs) {
 	await requireHost(request)
-	return json({ ship: null, fieldMetadata: getFieldMetadatas(ShipFormSchema) })
+	return json({
+		ship: null,
+		fieldMetadata: getFieldsFromSchema(ShipFormSchema),
+	})
 }
 
 export async function action({ request }: DataFunctionArgs) {

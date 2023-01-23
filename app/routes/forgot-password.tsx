@@ -1,17 +1,23 @@
 import type { DataFunctionArgs, V2_MetaFunction } from '@remix-run/node'
 import { redirect } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import { useFetcher } from '@remix-run/react'
-import invariant from 'tiny-invariant'
+import { useFetcher, useLoaderData } from '@remix-run/react'
 import { prisma } from '~/utils/db.server'
 import { sendEmail } from '~/utils/email.server'
 import { decrypt, encrypt } from '~/utils/encryption.server'
 import { commitSession, getSession } from '~/utils/session.server'
 import { getDomainUrl } from '~/utils/misc.server'
+import { getFieldsFromSchema, preprocessFormData, useForm } from '~/utils/forms'
+import { z } from 'zod'
+import { emailSchema, usernameSchema } from '~/utils/user-validation'
 
 export const resetPasswordSessionKey = 'resetPasswordToken'
 const resetPasswordTokenQueryParam = 'token'
 const tokenType = 'forgot-password'
+
+const ForgotPasswordSchema = z.object({
+	usernameOrEmail: z.union([emailSchema, usernameSchema]),
+})
 
 export async function loader({ request }: DataFunctionArgs) {
 	const resetPasswordTokenString = new URL(request.url).searchParams.get(
@@ -31,30 +37,40 @@ export async function loader({ request }: DataFunctionArgs) {
 			return redirect('/signup')
 		}
 	}
-	return json({})
+	return json({ fieldMetadatas: getFieldsFromSchema(ForgotPasswordSchema) })
 }
 
 export async function action({ request }: DataFunctionArgs) {
 	const formData = await request.formData()
-	const { usernameOrEmail } = Object.fromEntries(formData)
-	invariant(typeof usernameOrEmail === 'string', 'usernameOrEmail type invalid')
-	// just a quick check to make sure they're not being ridiculous
-	invariant(usernameOrEmail.length < 256, 'usernameOrEmail too long')
+	const result = await ForgotPasswordSchema.safeParseAsync(
+		preprocessFormData(formData, ForgotPasswordSchema),
+	)
+	if (!result.success) {
+		return json({
+			status: 'error',
+			errors: result.error.flatten(),
+		})
+	}
+	const { usernameOrEmail } = result.data
 
 	const user = await prisma.user.findFirst({
 		where: { OR: [{ email: usernameOrEmail }, { username: usernameOrEmail }] },
 		select: { email: true, username: true },
 	})
-	if (!user) {
-		return json(
-			{
-				status: 'error',
-				errors: { usernameOrEmail: 'User not found', form: null },
-			},
-			{ status: 400 },
-		)
+	if (user) {
+		void sendPasswordResetEmail({ request, user })
 	}
 
+	return json({ status: 'success', errors: null })
+}
+
+async function sendPasswordResetEmail({
+	request,
+	user,
+}: {
+	request: Request
+	user: { email: string; username: string }
+}) {
 	const resetPasswordToken = encrypt(
 		JSON.stringify({ type: tokenType, payload: { username: user.username } }),
 	)
@@ -64,7 +80,7 @@ export async function action({ request }: DataFunctionArgs) {
 		resetPasswordToken,
 	)
 
-	const response = await sendEmail({
+	await sendEmail({
 		to: user.email,
 		subject: `Rocket Rental Password Reset`,
 		text: `Please open this URL: ${resetPasswordUrl}`,
@@ -81,15 +97,6 @@ export async function action({ request }: DataFunctionArgs) {
 			</body>
 		`,
 	})
-
-	if (response.ok) {
-		return json({ status: 'success', errors: null })
-	} else {
-		return json({
-			status: 'error',
-			errors: { form: 'Email not sent successfully', usernameOrEmail: null },
-		})
-	}
 }
 
 export const meta: V2_MetaFunction = ({ matches }) => {
@@ -102,49 +109,35 @@ export const meta: V2_MetaFunction = ({ matches }) => {
 }
 
 export default function SignupRoute() {
+	const data = useLoaderData<typeof loader>()
 	const forgotPassword = useFetcher<typeof action>()
-	const hasUsernameOrEmailError = forgotPassword.data?.errors?.usernameOrEmail
+
+	const { form, fields } = useForm({
+		name: 'forgot-password',
+		errors: forgotPassword.data?.errors,
+		fieldMetadatas: data.fieldMetadatas,
+	})
 
 	return (
 		<div>
 			<h1>Forgot Password</h1>
-			<forgotPassword.Form
-				method="post"
-				noValidate
-				aria-invalid={forgotPassword.data?.errors?.form ? true : undefined}
-				aria-describedby={
-					forgotPassword.data?.errors?.form ? 'form-error' : undefined
-				}
-			>
+			<forgotPassword.Form method="post" {...form.props}>
 				<div>
 					<label
-						htmlFor="usernameOrEmail"
 						className="block text-sm font-medium text-gray-700"
+						{...fields.usernameOrEmail.labelProps}
 					>
 						Username or Email
 					</label>
 					<div className="mt-1">
 						<input
-							id="usernameOrEmail"
-							name="usernameOrEmail"
 							className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-							aria-describedby={
-								hasUsernameOrEmailError ? 'username-or-email-error' : undefined
-							}
-							aria-invalid={hasUsernameOrEmailError ? true : undefined}
+							{...fields.usernameOrEmail.props}
 						/>
-						{hasUsernameOrEmailError ? (
-							<span className="pt-1 text-red-700" id="username-or-email-error">
-								{forgotPassword.data?.errors?.usernameOrEmail}
-							</span>
-						) : null}
+						{fields.usernameOrEmail.errorUI}
 					</div>
 				</div>
-				{forgotPassword.data?.errors?.form ? (
-					<div className="pt-1 text-red-700" id="form-error">
-						{forgotPassword.data?.errors?.form}
-					</div>
-				) : null}
+				{form.errorUI}
 				<div>
 					<button type="submit" disabled={forgotPassword.state !== 'idle'}>
 						{forgotPassword.state === 'idle' ? 'Submit' : 'Submitting...'}

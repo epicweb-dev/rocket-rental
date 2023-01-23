@@ -15,7 +15,7 @@ import {
 	getIsShipAvailable,
 	validateBookerForm,
 } from '~/routes/resources+/booker'
-import { getFieldMetadatas } from '~/utils/forms'
+import { getFieldsFromSchema } from '~/utils/forms'
 
 function createFormDataFromEntries(
 	entries: Array<[string, FormDataEntryValue]>,
@@ -73,7 +73,7 @@ export async function loader({ request, params }: DataFunctionArgs) {
 		endDate,
 		shipId,
 		totalPrice,
-		inlineLoginFieldProps: getFieldMetadatas(LoginFormSchema),
+		inlineLoginFieldProps: getFieldsFromSchema(LoginFormSchema),
 	})
 }
 

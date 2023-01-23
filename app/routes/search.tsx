@@ -51,7 +51,23 @@ const SearchParamsSchema = z.object({
 		.optional(),
 })
 
+function ensureNoEmptySearchParams(request: Request) {
+	const searchParams = new URL(request.url).searchParams
+	const newSearchParams = new URLSearchParams(searchParams)
+	let hasEmptyParam = false
+	for (const [key, value] of searchParams) {
+		if (value === '') {
+			newSearchParams.delete(key)
+			hasEmptyParam = true
+		}
+	}
+	if (hasEmptyParam) {
+		throw redirect(`/search?${newSearchParams.toString()}`)
+	}
+}
+
 export async function loader({ request }: DataFunctionArgs) {
+	ensureNoEmptySearchParams(request)
 	const data = preprocessSearchParams(request, SearchParamsSchema)
 	const searchParameters = SearchParamsSchema.parse(data)
 	const { starportId, cityId, brandId, modelId, hostId } = searchParameters

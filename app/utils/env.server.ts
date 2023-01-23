@@ -1,28 +1,23 @@
 import invariant from 'tiny-invariant'
 
+const requiredServerEnvs = [
+	'NODE_ENV',
+	'DATABASE_PATH',
+	'DATABASE_URL',
+	'SESSION_SECRET',
+	'ENCRYPTION_SECRET',
+	'MAILGUN_SENDING_KEY',
+	'MAILGUN_DOMAIN',
+] as const
+
 declare global {
 	namespace NodeJS {
-		interface ProcessEnv {
-			DATABASE_PATH: string
-			DATABASE_URL: string
-			SESSION_SECRET: string
-			ENCRYPTION_SECRET: string
-			MAILGUN_SENDING_KEY: string
-			MAILGUN_DOMAIN: string
-		}
+		interface ProcessEnv
+			extends Record<typeof requiredServerEnvs[number], string> {}
 	}
 }
 
 export function init() {
-	const requiredServerEnvs = [
-		'NODE_ENV',
-		'DATABASE_PATH',
-		'DATABASE_URL',
-		'SESSION_SECRET',
-		'ENCRYPTION_SECRET',
-		'MAILGUN_SENDING_KEY',
-		'MAILGUN_DOMAIN',
-	] as const
 	for (const env of requiredServerEnvs) {
 		invariant(process.env[env], `${env} is required`)
 	}

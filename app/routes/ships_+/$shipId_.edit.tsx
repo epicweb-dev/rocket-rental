@@ -8,7 +8,7 @@ import {
 import { useActionData, useLoaderData } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server'
-import { getFieldMetadatas, preprocessFormData } from '~/utils/forms'
+import { getFieldsFromSchema, preprocessFormData } from '~/utils/forms'
 import ShipEditForm from './__shared'
 import {
 	insertImage,
@@ -59,7 +59,7 @@ export async function loader({ request, params }: DataFunctionArgs) {
 			...ship,
 			starport: { id: ship.starport.id, displayName: ship.starport.name },
 		},
-		fieldMetadata: getFieldMetadatas(LooseShipFormSchema),
+		fieldMetadata: getFieldsFromSchema(LooseShipFormSchema),
 	})
 }
 

@@ -6,16 +6,9 @@ import {
 	useLoaderData,
 	useNavigation,
 } from '@remix-run/react'
-import { useRef } from 'react'
 import { z } from 'zod'
 import { authenticator, resetUserPassword } from '~/utils/auth.server'
-import {
-	getFieldMetadatas,
-	getFields,
-	getFormProps,
-	preprocessFormData,
-	useFocusInvalid,
-} from '~/utils/forms'
+import { getFieldsFromSchema, preprocessFormData, useForm } from '~/utils/forms'
 import { commitSession, getSession } from '~/utils/session.server'
 import { passwordSchema } from '~/utils/user-validation'
 import { resetPasswordSessionKey } from './forgot-password'
@@ -49,7 +42,7 @@ export async function loader({ request }: DataFunctionArgs) {
 		{
 			formError: error?.message,
 			resetPasswordUsername,
-			fieldMetadata: getFieldMetadatas(ResetPasswordSchema),
+			fieldMetadatas: getFieldsFromSchema(ResetPasswordSchema),
 		},
 		{
 			headers: { 'Set-Cookie': await commitSession(session) },
@@ -95,27 +88,18 @@ export const meta: V2_MetaFunction = ({ matches }) => {
 export default function ResetPasswordPage() {
 	const data = useLoaderData<typeof loader>()
 	const actionData = useActionData<typeof action>()
-	const formRef = useRef<HTMLFormElement>(null)
 	const navigation = useNavigation()
 
-	const form = getFormProps({
+	const { form, fields } = useForm({
 		name: 'reset-password',
-		errors: actionData?.errors.formErrors,
+		errors: actionData?.errors,
+		fieldMetadatas: data.fieldMetadatas,
 	})
-	const fields = getFields(data.fieldMetadata, actionData?.errors?.fieldErrors)
-
-	useFocusInvalid(formRef.current, actionData?.errors)
 
 	return (
 		<div className="flex min-h-full flex-col justify-center">
 			<div className="mx-auto w-full max-w-md px-8">
-				<Form
-					method="post"
-					className="space-y-6"
-					ref={formRef}
-					noValidate
-					{...form.props}
-				>
+				<Form method="post" className="space-y-6" {...form.props}>
 					<div>Resetting password for {data.resetPasswordUsername}</div>
 
 					<div>

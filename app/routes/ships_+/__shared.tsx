@@ -1,16 +1,16 @@
-import { Form, Link, useCatch } from '@remix-run/react'
-import { useRef, useState } from 'react'
 import { type SerializeFrom } from '@remix-run/node'
-import { getFields, getFormProps, useFocusInvalid } from '~/utils/forms'
-import { getShipImgSrc } from '~/utils/misc'
+import { Form, Link, useCatch } from '@remix-run/react'
+import { useState } from 'react'
 import { BrandCombobox } from '~/routes/resources+/brand-combobox'
 import { ModelCombobox } from '~/routes/resources+/model-combobox'
 import { StarportCombobox } from '~/routes/resources+/starport-combobox'
-import { type loader as newLoader, type action as newAction } from './new'
+import { useForm } from '~/utils/forms'
+import { getShipImgSrc } from '~/utils/misc'
 import {
-	type loader as editLoader,
 	type action as editAction,
+	type loader as editLoader,
 } from './$shipId_.edit'
+import { type action as newAction, type loader as newLoader } from './new'
 
 export const labelClassName = 'block text-sm font-medium text-gray-700'
 export const inputClassName =
@@ -26,32 +26,30 @@ export default function ShipEditForm({
 		| SerializeFrom<typeof newAction>
 		| SerializeFrom<typeof editAction>
 }) {
-	const formRef = useRef<HTMLFormElement>(null)
-	const form = getFormProps({
+	const { form, fields } = useForm({
 		name: 'ship-edit',
-		errors: actionData?.errors?.formErrors,
+		errors: actionData?.errors,
+		fieldMetadatas: data.fieldMetadata,
 	})
-	const fields = getFields(data.fieldMetadata, actionData?.errors?.fieldErrors)
+
 	const [selectedStarport, setSelectedStarport] = useState<
 		NonNullable<typeof data.ship>['starport'] | null
 	>(data.ship?.starport ?? null)
+
 	const [selectedModel, setSelectedModel] = useState<Pick<
 		NonNullable<typeof data.ship>['model'],
 		'id' | 'name' | 'imageId'
 	> | null>(data.ship?.model ?? null)
+
 	const [selectedBrand, setSelectedBrand] = useState<
 		NonNullable<typeof data.ship>['model']['brand'] | null
 	>(data.ship?.model.brand ?? null)
-
-	useFocusInvalid(formRef.current, actionData?.errors)
 
 	return (
 		<Form
 			method="post"
 			className="flex flex-col gap-4"
 			encType="multipart/form-data"
-			noValidate
-			ref={formRef}
 			{...form.props}
 		>
 			<div className={fieldClassName}>

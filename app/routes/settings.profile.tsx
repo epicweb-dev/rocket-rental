@@ -1,10 +1,10 @@
 import {
-	type DataFunctionArgs,
+	json,
+	redirect,
 	unstable_createMemoryUploadHandler,
 	unstable_parseMultipartFormData,
-	redirect,
+	type DataFunctionArgs,
 } from '@remix-run/node'
-import { json } from '@remix-run/node'
 import {
 	Form,
 	useActionData,
@@ -16,32 +16,21 @@ import { useEffect, useRef } from 'react'
 import { z } from 'zod'
 import { authenticator, requireUserId } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'
-import {
-	getFieldMetadatas,
-	getFields,
-	getFormProps,
-	preprocessFormData,
-	useFocusInvalid,
-} from '~/utils/forms'
+import { getFieldsFromSchema, preprocessFormData, useForm } from '~/utils/forms'
 import { getUserImgSrc } from '~/utils/misc'
 import {
-	MAX_NAME_LENGTH,
-	MAX_USERNAME_LENGTH,
-	MIN_NAME_LENGTH,
-	MIN_USERNAME_LENGTH,
+	emailSchema,
+	nameSchema,
+	usernameSchema,
 } from '~/utils/user-validation'
 
 const MAX_SIZE = 1024 * 1024 * 5 // 5MB
 
 const ProfileFormSchema = z.object({
 	profileFile: z.instanceof(File).optional(),
-	name: z.string().min(MIN_NAME_LENGTH).max(MAX_NAME_LENGTH).optional(),
-	username: z
-		.string()
-		.min(MIN_USERNAME_LENGTH)
-		.max(MAX_USERNAME_LENGTH)
-		.optional(),
-	email: z.string().email().optional(),
+	name: nameSchema.optional(),
+	username: usernameSchema.optional(),
+	email: emailSchema.optional(),
 	phone: z.string().optional(),
 	address: z.string().optional(),
 	city: z.string().optional(),
@@ -77,7 +66,7 @@ export async function loader({ request }: DataFunctionArgs) {
 		await authenticator.logout(request, { redirectTo: '/' })
 		return redirect('/') // this is just here for types...
 	}
-	return json({ user, fieldMetadata: getFieldMetadatas(ProfileFormSchema) })
+	return json({ user, fieldMetadatas: getFieldsFromSchema(ProfileFormSchema) })
 }
 
 export async function action({ request }: DataFunctionArgs) {
@@ -213,14 +202,11 @@ export default function EditUserProfile() {
 		formRef.current.reset()
 	}, [actionData?.status, wasSubmittingButIsNoLonger])
 
-	const errors = actionData?.status === 'error' ? actionData.errors : null
-	useFocusInvalid(formRef.current, errors)
-
-	const form = getFormProps({
+	const { form, fields } = useForm({
 		name: 'edit-profile',
-		errors: errors?.formErrors,
+		errors: actionData?.status === 'error' ? actionData.errors : null,
+		fieldMetadatas: data.fieldMetadatas,
 	})
-	const fields = getFields(data.fieldMetadata, errors?.fieldErrors)
 
 	return (
 		<div className="container m-auto">
@@ -228,7 +214,6 @@ export default function EditUserProfile() {
 				method="post"
 				className="flex flex-col gap-4"
 				encType="multipart/form-data"
-				ref={formRef}
 				{...form.props}
 			>
 				<div className={fieldClassName}>

@@ -9,12 +9,7 @@ import {
 } from '@remix-run/react'
 import { z } from 'zod'
 import { authenticator, createUser } from '~/utils/auth.server'
-import {
-	getFieldMetadatas,
-	getFields,
-	getFormProps,
-	preprocessFormData,
-} from '~/utils/forms'
+import { getFieldsFromSchema, useForm, preprocessFormData } from '~/utils/forms'
 import { safeRedirect } from '~/utils/misc'
 import { commitSession, getSession } from '~/utils/session.server'
 import {
@@ -61,7 +56,7 @@ export async function loader({ request }: DataFunctionArgs) {
 		{
 			formError: error?.message,
 			onboardingEmail,
-			fieldMetadatas: getFieldMetadatas(OnboardingFormSchema),
+			fieldMetadatas: getFieldsFromSchema(OnboardingFormSchema),
 		},
 		{
 			headers: {
@@ -125,10 +120,10 @@ export default function OnboardingPage() {
 	const [searchParams] = useSearchParams()
 	const data = useLoaderData<typeof loader>()
 	const actionData = useActionData<typeof action>()
-	const fields = getFields(data.fieldMetadatas, actionData?.errors.fieldErrors)
-	const form = getFormProps({
+	const { form, fields } = useForm({
 		name: 'onboarding',
-		errors: [...(actionData?.errors.formErrors ?? []), data.formError],
+		fieldMetadatas: data.fieldMetadatas,
+		errors: actionData?.errors,
 	})
 
 	const redirectTo = searchParams.get('redirectTo') || '/'
@@ -136,7 +131,7 @@ export default function OnboardingPage() {
 	return (
 		<div className="flex min-h-full flex-col justify-center">
 			<div className="mx-auto w-full max-w-md px-8">
-				<Form method="post" className="space-y-6" noValidate {...form.props}>
+				<Form method="post" className="space-y-6" {...form.props}>
 					<div>Onboarding for {data.onboardingEmail}</div>
 					<div>
 						<label

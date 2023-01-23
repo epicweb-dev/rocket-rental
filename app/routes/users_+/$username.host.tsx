@@ -7,18 +7,11 @@ import {
 	useParams,
 } from '@remix-run/react'
 import invariant from 'tiny-invariant'
-import { prisma } from '~/utils/db.server'
-import { requireUserId } from '~/utils/auth.server'
-import { useOptionalUser } from '~/utils/misc'
-import { useRef } from 'react'
-import {
-	getFieldMetadatas,
-	getFields,
-	getFormProps,
-	preprocessFormData,
-	useFocusInvalid,
-} from '~/utils/forms'
 import { z } from 'zod'
+import { requireUserId } from '~/utils/auth.server'
+import { prisma } from '~/utils/db.server'
+import { getFieldsFromSchema, preprocessFormData, useForm } from '~/utils/forms'
+import { useOptionalUser } from '~/utils/misc'
 
 const MIN_BIO_LENGTH = 2
 const MAX_BIO_LENGTH = 2000
@@ -112,7 +105,7 @@ export async function loader({ params }: DataFunctionArgs) {
 	if (!user) {
 		throw new Response('not found', { status: 404 })
 	}
-	return json({ user, fieldMetadata: getFieldMetadatas(BioFormSchema) })
+	return json({ user, fieldMetadata: getFieldsFromSchema(BioFormSchema) })
 }
 
 export async function action({ request, params }: DataFunctionArgs) {
@@ -146,11 +139,11 @@ export async function action({ request, params }: DataFunctionArgs) {
 				where: { userId },
 				data: { bio },
 			})
-			return json({ status: 'bio-update-success', errors: null } as const)
+			return json({ status: 'bio-update-success' } as const)
 		}
 		case 'become-host': {
 			if (user.host) {
-				return json({ status: 'already-host', errors: null } as const, {
+				return json({ status: 'already-host' } as const, {
 					status: 400,
 				})
 			}
@@ -159,10 +152,10 @@ export async function action({ request, params }: DataFunctionArgs) {
 					userId: user.id,
 				},
 			})
-			return json({ status: 'become-host-success', errors: null } as const)
+			return json({ status: 'become-host-success' } as const)
 		}
 		default: {
-			return json({ status: 'Unhandled intent', errors: null } as const, {
+			return json({ status: 'Unhandled intent' } as const, {
 				status: 400,
 			})
 		}
@@ -193,7 +186,6 @@ export default function HostUserRoute() {
 }
 
 function HostUserDisplay() {
-	const bioFormRef = useRef<HTMLFormElement>(null)
 	const data = useLoaderData<typeof loader>()
 	const user = useOptionalUser()
 	const bioFetcher = useFetcher<typeof action>()
@@ -201,12 +193,12 @@ function HostUserDisplay() {
 	// we do this check earlier. Just added this to make TS happy
 	invariant(data.user.host, 'User is not a host')
 
-	const bioErrors =
-		bioFetcher.data?.status === 'bio-invalid' ? bioFetcher.data?.errors : null
-	const form = getFormProps({ name: 'bio', errors: bioErrors?.formErrors })
-	const fields = getFields(data.fieldMetadata, bioErrors?.fieldErrors)
-
-	useFocusInvalid(bioFormRef.current, bioErrors)
+	const { form, fields } = useForm({
+		name: 'bio',
+		errors:
+			bioFetcher.data?.status === 'bio-invalid' ? bioFetcher.data.errors : null,
+		fieldMetadatas: data.fieldMetadata,
+	})
 
 	return (
 		<div>
@@ -214,12 +206,7 @@ function HostUserDisplay() {
 			<pre>{JSON.stringify(data, null, 2)}</pre>
 			{data.user.id === user?.id ? (
 				<>
-					<bioFetcher.Form
-						method="post"
-						noValidate
-						ref={bioFormRef}
-						{...form.props}
-					>
+					<bioFetcher.Form method="post" {...form.props}>
 						<div>
 							<label
 								className="block text-sm font-medium text-gray-700"
