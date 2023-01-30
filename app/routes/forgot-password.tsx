@@ -1,14 +1,17 @@
-import type { DataFunctionArgs, V2_MetaFunction } from '@remix-run/node'
-import { redirect } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import {
+	json,
+	redirect,
+	type DataFunctionArgs,
+	type V2_MetaFunction,
+} from '@remix-run/node'
 import { useFetcher, useLoaderData } from '@remix-run/react'
+import { z } from 'zod'
 import { prisma } from '~/utils/db.server'
 import { sendEmail } from '~/utils/email.server'
 import { decrypt, encrypt } from '~/utils/encryption.server'
-import { commitSession, getSession } from '~/utils/session.server'
-import { getDomainUrl } from '~/utils/misc.server'
 import { getFieldsFromSchema, preprocessFormData, useForm } from '~/utils/forms'
-import { z } from 'zod'
+import { getDomainUrl } from '~/utils/misc.server'
+import { commitSession, getSession } from '~/utils/session.server'
 import { emailSchema, usernameSchema } from '~/utils/user-validation'
 
 export const resetPasswordSessionKey = 'resetPasswordToken'

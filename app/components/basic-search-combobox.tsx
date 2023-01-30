@@ -1,4 +1,4 @@
-import type { SearchComboboxProps } from './search-combobox'
+import { type SearchComboboxProps } from './search-combobox'
 
 export type BaseOptions<Item> = Pick<
 	SearchComboboxProps<Item>,

@@ -1,13 +1,16 @@
-import type { LoaderArgs, SerializeFrom } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import {
+	json,
+	type DataFunctionArgs,
+	type SerializeFrom,
+} from '@remix-run/node'
+import { z } from 'zod'
 import {
 	BasicSearchCombobox,
 	type BaseOptions,
 } from '~/components/basic-search-combobox'
 import { prisma } from '~/utils/db.server'
-import { z } from 'zod'
-import { getImgSrc, typedBoolean } from '~/utils/misc'
 import { preprocessSearchParams } from '~/utils/forms'
+import { getImgSrc, typedBoolean } from '~/utils/misc'
 
 export const SearchParamsSchema = z.object({
 	query: z.string().default(''),
@@ -15,7 +18,7 @@ export const SearchParamsSchema = z.object({
 	brandIds: z.array(z.string()).default([]),
 })
 
-export async function loader({ request }: LoaderArgs) {
+export async function loader({ request }: DataFunctionArgs) {
 	const data = preprocessSearchParams(request, SearchParamsSchema)
 	const { query, exclude, brandIds } = SearchParamsSchema.parse(data)
 

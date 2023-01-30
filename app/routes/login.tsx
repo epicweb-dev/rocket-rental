@@ -1,5 +1,9 @@
-import type { DataFunctionArgs, V2_MetaFunction } from '@remix-run/node'
-import { json, redirect } from '@remix-run/node'
+import {
+	json,
+	redirect,
+	type DataFunctionArgs,
+	type V2_MetaFunction,
+} from '@remix-run/node'
 import {
 	Form,
 	Link,

@@ -1,5 +1,4 @@
-import type { DataFunctionArgs } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import { json, type DataFunctionArgs } from '@remix-run/node'
 import {
 	useCatch,
 	useFetcher,
@@ -8,16 +7,16 @@ import {
 } from '@remix-run/react'
 import { useState } from 'react'
 import invariant from 'tiny-invariant'
-import { prisma } from '~/utils/db.server'
 import { requireUserId } from '~/utils/auth.server'
 import { chatEmitter, EVENTS } from '~/utils/chat.server'
+import { prisma } from '~/utils/db.server'
 import { useEventSource } from '~/utils/hooks'
+import { getUserImgSrc } from '~/utils/misc'
 import {
 	isNewMessageChange,
 	type Message,
 	type NewMessageChange,
 } from './$chatId.events'
-import { getUserImgSrc } from '~/utils/misc'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.chatId, 'Missing chatId')

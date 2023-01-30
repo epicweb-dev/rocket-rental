@@ -1,9 +1,9 @@
-import type {
-	LinksFunction,
-	DataFunctionArgs,
-	V2_MetaFunction,
+import {
+	json,
+	type DataFunctionArgs,
+	type LinksFunction,
+	type V2_MetaFunction,
 } from '@remix-run/node'
-import { json } from '@remix-run/node'
 import {
 	Links,
 	LiveReload,
@@ -16,9 +16,9 @@ import {
 import { authenticator } from './utils/auth.server'
 
 import tailwindStylesheetUrl from './styles/tailwind.css'
-import { links as vendorLinks } from './utils/vendor.css'
-import { getEnv } from './utils/env.server'
 import { prisma } from './utils/db.server'
+import { getEnv } from './utils/env.server'
+import { links as vendorLinks } from './utils/vendor.css'
 
 export const links: LinksFunction = () => {
 	return [{ rel: 'stylesheet', href: tailwindStylesheetUrl }, ...vendorLinks]

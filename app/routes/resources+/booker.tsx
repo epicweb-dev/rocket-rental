@@ -1,7 +1,6 @@
+import { json, type DataFunctionArgs } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
 import * as df from 'date-fns'
-import type { DataFunctionArgs } from '@remix-run/node'
-import { json } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server'
 import { commitSession, getSession } from '~/utils/session.server'

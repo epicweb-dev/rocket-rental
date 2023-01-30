@@ -1,11 +1,15 @@
 import 'dotenv/config'
-import { PassThrough } from 'stream'
-import type { EntryContext, HandleDataRequestFunction } from '@remix-run/node'
-import { Response } from '@remix-run/node'
+
+import {
+	Response,
+	type EntryContext,
+	type HandleDataRequestFunction,
+} from '@remix-run/node'
 import { RemixServer } from '@remix-run/react'
 import isbot from 'isbot'
 import { renderToPipeableStream } from 'react-dom/server'
-import { init, getEnv } from './utils/env.server'
+import { PassThrough } from 'stream'
+import { getEnv, init } from './utils/env.server'
 import { getInstanceInfo, handleTXID } from './utils/fly.server'
 
 const ABORT_DELAY = 5000
