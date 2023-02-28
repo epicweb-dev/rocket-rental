@@ -9,7 +9,6 @@ node_modules
 /prisma/data.test.db
 /prisma/data.test.db-journal
 
-/app/styles/tailwind.css
 *.local.*
 /test-results/
 /playwright-report/

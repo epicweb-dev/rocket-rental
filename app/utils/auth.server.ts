@@ -6,6 +6,8 @@ import type { Password, User } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { prisma } from '~/utils/db.server'
 
+export type { User }
+
 export const authenticator = new Authenticator<string>(sessionStorage, {
 	sessionKey: 'token',
 })
