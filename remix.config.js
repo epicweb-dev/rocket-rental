@@ -11,6 +11,7 @@ module.exports = {
 		unstable_postcss: true,
 		unstable_cssSideEffectImports: true,
 		unstable_cssModules: true,
+		unstable_dev: true,
 	},
 	routes: async defineRoutes => {
 		return flatRoutes('routes', defineRoutes, {
