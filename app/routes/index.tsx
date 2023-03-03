@@ -2,6 +2,8 @@ import { Form, Link } from '@remix-run/react'
 import { type V2_MetaFunction } from '@remix-run/node'
 import { useOptionalUser } from '~/utils/misc'
 import { useRef, useState } from 'react'
+import * as Tabs from '@radix-ui/react-tabs'
+import clsx from 'clsx'
 
 export const meta: V2_MetaFunction = ({ matches }) => {
 	return matches.find(match => match.route.id === 'root')?.meta ?? []
@@ -240,6 +242,8 @@ export default function Index() {
 						</div>
 					</div>
 				</div>
+				<Spacer size="4xl" />
+				<RocketModelsSection />
 				<Spacer size="xl" />
 			</main>
 		</>
@@ -406,6 +410,374 @@ function StarportListSection() {
 					))}
 				</div>
 			</div>
+		</div>
+	)
+}
+
+function RocketModelsSection() {
+	const [value, setValue] = useState('zheng')
+	const triggerClassName = 'py-3 px-8 text-3xl'
+	const inactiveTriggerClassName = 'text-gray-500 hover:text-white'
+	const activeTriggerClassName =
+		'rounded-full bg-primary hover:bg-primary-darker text-white'
+	const models: Record<
+		string,
+		Array<{ name: string; description: string; imageSrc: string }>
+	> = {
+		zheng: [
+			{
+				name: 'Zheng 1',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Zheng 2',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Zheng 3',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Zheng 4',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Zheng 5',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Zheng 6',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+		],
+		orbitalis: [
+			{
+				name: 'Orbitalis 1',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Orbitalis 2',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Orbitalis 3',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Orbitalis 4',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Orbitalis 5',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Orbitalis 6',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+		],
+		spaceship: [
+			{
+				name: 'Spaceship 1',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Spaceship 2',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Spaceship 3',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Spaceship 4',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Spaceship 5',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Spaceship 6',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+		],
+		cosmic: [
+			{
+				name: 'Cosmic 1',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Cosmic 2',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Cosmic 3',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Cosmic 4',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Cosmic 5',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Cosmic 6',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+		],
+		asteroid: [
+			{
+				name: 'Asteroid 1',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Asteroid 2',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Asteroid 3',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Asteroid 4',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Asteroid 5',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+			{
+				name: 'Asteroid 6',
+				imageSrc: '',
+				description:
+					'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			},
+		],
+	}
+	return (
+		<div className="container mx-auto">
+			<p className="text-base text-gray-500">Best known</p>
+			<Spacer size="4xs" />
+			<h2 className="max-w-lg text-5xl font-bold text-white">
+				A wide variety of rocket models
+			</h2>
+			<Spacer size="sm" />
+			<Tabs.Root value={value} onValueChange={newValue => setValue(newValue)}>
+				<Tabs.List className="flex gap-4">
+					<Tabs.Trigger
+						value="zheng"
+						className={clsx(
+							triggerClassName,
+							value === 'zheng'
+								? activeTriggerClassName
+								: inactiveTriggerClassName,
+						)}
+					>
+						Zheng
+					</Tabs.Trigger>
+					<Tabs.Trigger
+						value="orbitalis"
+						className={clsx(
+							triggerClassName,
+							value === 'orbitalis'
+								? activeTriggerClassName
+								: inactiveTriggerClassName,
+						)}
+					>
+						Orbitalis
+					</Tabs.Trigger>
+					<Tabs.Trigger
+						value="spaceship"
+						className={clsx(
+							triggerClassName,
+							value === 'spaceship'
+								? activeTriggerClassName
+								: inactiveTriggerClassName,
+						)}
+					>
+						Spaceship
+					</Tabs.Trigger>
+					<Tabs.Trigger
+						value="cosmic"
+						className={clsx(
+							triggerClassName,
+							value === 'cosmic'
+								? activeTriggerClassName
+								: inactiveTriggerClassName,
+						)}
+					>
+						Cosmic
+					</Tabs.Trigger>
+					<Tabs.Trigger
+						value="asteroid"
+						className={clsx(
+							triggerClassName,
+							value === 'asteroid'
+								? activeTriggerClassName
+								: inactiveTriggerClassName,
+						)}
+					>
+						Asteroid
+					</Tabs.Trigger>
+				</Tabs.List>
+				<Spacer size="2xs" />
+				<Tabs.Content className="grid grid-cols-3 gap-6" value="zheng">
+					{models.zheng.map(ship => (
+						<div
+							key={ship.name}
+							className="flex max-w-sm flex-col rounded-3xl bg-[#1E1E20]"
+						>
+							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
+							<div className="h-10" />
+							<div className="flex flex-col gap-2 px-6 pb-8">
+								<h3 className="text-2xl font-bold text-white line-clamp-1">
+									{ship.name}
+								</h3>
+								<p className="text-base text-gray-500 line-clamp-2">
+									{ship.description}
+								</p>
+							</div>
+						</div>
+					))}
+				</Tabs.Content>
+				<Tabs.Content className="grid grid-cols-3 gap-6" value="orbitalis">
+					{models.orbitalis.map(ship => (
+						<div
+							key={ship.name}
+							className="flex max-w-sm flex-col rounded-3xl bg-[#1E1E20]"
+						>
+							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
+							<div className="h-10" />
+							<div className="flex flex-col gap-2 px-6 pb-8">
+								<h3 className="text-2xl font-bold text-white line-clamp-1">
+									{ship.name}
+								</h3>
+								<p className="text-base text-gray-500 line-clamp-2">
+									{ship.description}
+								</p>
+							</div>
+						</div>
+					))}
+				</Tabs.Content>
+				<Tabs.Content className="grid grid-cols-3 gap-6" value="spaceship">
+					{models.spaceship.map(ship => (
+						<div
+							key={ship.name}
+							className="flex max-w-sm flex-col rounded-3xl bg-[#1E1E20]"
+						>
+							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
+							<div className="h-10" />
+							<div className="flex flex-col gap-2 px-6 pb-8">
+								<h3 className="text-2xl font-bold text-white line-clamp-1">
+									{ship.name}
+								</h3>
+								<p className="text-base text-gray-500 line-clamp-2">
+									{ship.description}
+								</p>
+							</div>
+						</div>
+					))}
+				</Tabs.Content>
+				<Tabs.Content className="grid grid-cols-3 gap-6" value="cosmic">
+					{models.cosmic.map(ship => (
+						<div
+							key={ship.name}
+							className="flex max-w-sm flex-col rounded-3xl bg-[#1E1E20]"
+						>
+							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
+							<div className="h-10" />
+							<div className="flex flex-col gap-2 px-6 pb-8">
+								<h3 className="text-2xl font-bold text-white line-clamp-1">
+									{ship.name}
+								</h3>
+								<p className="text-base text-gray-500 line-clamp-2">
+									{ship.description}
+								</p>
+							</div>
+						</div>
+					))}
+				</Tabs.Content>
+				<Tabs.Content className="grid grid-cols-3 gap-6" value="asteroid">
+					{models.asteroid.map(ship => (
+						<div
+							key={ship.name}
+							className="flex max-w-sm flex-col rounded-3xl bg-[#1E1E20]"
+						>
+							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
+							<div className="h-10" />
+							<div className="flex flex-col gap-2 px-6 pb-8">
+								<h3 className="text-2xl font-bold text-white line-clamp-1">
+									{ship.name}
+								</h3>
+								<p className="text-base text-gray-500 line-clamp-2">
+									{ship.description}
+								</p>
+							</div>
+						</div>
+					))}
+				</Tabs.Content>
+			</Tabs.Root>
 		</div>
 	)
 }
