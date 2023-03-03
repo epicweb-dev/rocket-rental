@@ -778,6 +778,16 @@ function RocketModelsSection() {
 					))}
 				</Tabs.Content>
 			</Tabs.Root>
+			<Spacer size="2xs" />
+			<div className="mx-auto flex w-full justify-center">
+				{/* TODO: link this to search with the selected brand */}
+				<Link
+					to="/search"
+					className="rounded-full border-[1.5px] border-gray-700 px-14 py-5 text-white"
+				>
+					See all
+				</Link>
+			</div>
 		</div>
 	)
 }
