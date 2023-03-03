@@ -16,6 +16,7 @@ import {
 import { authenticator } from './utils/auth.server'
 
 import tailwindStylesheetUrl from './styles/tailwind.css'
+import appStylesheetUrl from './styles/app.css'
 import { links as vendorLinks } from './utils/vendor.css'
 import { getEnv } from './utils/env.server'
 import { prisma } from './utils/db.server'
@@ -25,6 +26,7 @@ export const links: LinksFunction = () => {
 		{ rel: 'stylesheet', href: '/fonts/nunito-sans/font.css' },
 		{ rel: 'stylesheet', href: tailwindStylesheetUrl },
 		...vendorLinks,
+		{ rel: 'stylesheet', href: appStylesheetUrl },
 	]
 }
 

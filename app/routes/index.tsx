@@ -1,7 +1,7 @@
 import { Form, Link } from '@remix-run/react'
 import { type V2_MetaFunction } from '@remix-run/node'
 import { useOptionalUser } from '~/utils/misc'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 export const meta: V2_MetaFunction = ({ matches }) => {
 	return matches.find(match => match.route.id === 'root')?.meta ?? []
@@ -187,8 +187,60 @@ export default function Index() {
 				</div>
 				<BigSpacer />
 				<StarportListSection />
-				<Spacer size="lg" />
+				<Spacer size="xl" />
 				<Marquee />
+				<Spacer size="4xl" />
+				<div className="container mx-auto">
+					<div className="grid grid-cols-2 gap-36">
+						<div className="grid grid-cols-2 gap-6">
+							<div className="flex flex-col gap-6">
+								<div className="flex h-[160px] w-[216px] flex-col items-center justify-center gap-1 rounded-3xl bg-[#1E1E20]">
+									<img className="aspect-square w-16" src="" />
+									<span className="uppercase text-white">Zheng</span>
+								</div>
+								<div className="flex h-[160px] w-[216px] flex-col items-center justify-center gap-1 rounded-3xl bg-[#1E1E20]">
+									<img className="aspect-square w-16" src="" />
+									<span className="uppercase text-white">Oribtalis</span>
+								</div>
+								<div className="flex h-[160px] w-[216px] flex-col items-center justify-center gap-1 rounded-3xl bg-[#1E1E20]">
+									<img className="aspect-square w-16" src="" />
+									<span className="uppercase text-white">Cosmic</span>
+								</div>
+							</div>
+							<div className="flex flex-col gap-6 pt-16">
+								<div className="flex h-64 w-64 flex-col items-center justify-center gap-10 rounded-3xl bg-[#1E1E20]">
+									<img className="aspect-square w-24" src="" />
+									<span className="uppercase text-white">Asteroid</span>
+								</div>
+								<div className="flex h-64 w-64 flex-col items-center justify-center gap-10 rounded-3xl bg-[#1E1E20]">
+									<img className="aspect-square w-24" src="" />
+									<span className="uppercase text-white">Spaceship</span>
+								</div>
+							</div>
+						</div>
+						<div className="flex flex-col gap-14 pt-32">
+							<div className="flex flex-col gap-6">
+								<h2 className="text-6xl font-bold text-white">
+									We have only the best rocket brands!
+								</h2>
+								<p className="w-[76%] text-xl text-gray-500">
+									Hosts on our platform can only list reputable brands of
+									rockets - so you can be sure that you're getting the best
+									rocket for your trip.
+								</p>
+							</div>
+							<div>
+								<Link
+									to="/search"
+									className="rounded-full bg-primary py-3.5 px-10 text-sm font-bold text-white hover:bg-primary-darker"
+								>
+									Explore rockets
+								</Link>
+							</div>
+						</div>
+					</div>
+				</div>
+				<Spacer size="xl" />
 			</main>
 		</>
 	)
@@ -256,13 +308,59 @@ function StarportListSection() {
 				'https://images.unsplash.com/photo-1518365050014-70fe7232897f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=987&q=80',
 		},
 	]
-	// TODO: animate the transition between starports
-	const [index, setIndex] = useState(0)
-	const next = () => setIndex((index + 1) % starports.length)
-	const prev = () => setIndex((index - 1 + starports.length) % starports.length)
-	const starportsToRender = starports
-		.slice(index)
-		.concat(starports.slice(0, index))
+	// TODO: fix the scroll buttons
+	const scrollRef = useRef<HTMLDivElement>(null)
+	function scrollTo(delta: number) {
+		if (!(scrollRef.current instanceof HTMLDivElement)) return
+
+		const parentEl = scrollRef.current
+		const scrollLeft = parentEl.scrollLeft
+
+		// Loop through each child element
+		let leftMostElFullyInView: HTMLElement | null = null
+		for (let i = 0; i < parentEl.children.length; i++) {
+			const childEl = parentEl.children[i]
+			if (!(childEl instanceof HTMLElement)) continue
+
+			// Check if the child element is fully within view
+			if (
+				childEl.offsetLeft >= scrollLeft &&
+				childEl.offsetLeft + childEl.offsetWidth <=
+					scrollLeft + parentEl.offsetWidth
+			) {
+				// This child element is fully within view
+				leftMostElFullyInView = childEl
+				break
+			}
+		}
+
+		if (!leftMostElFullyInView) {
+			console.warn('No element fully in view')
+			return
+		}
+		let nextEl: HTMLElement | null = null
+		if (delta < 0) {
+			const prev = leftMostElFullyInView.previousSibling
+			if (!(prev instanceof HTMLElement)) {
+				console.warn('No previous element')
+				return
+			}
+			nextEl = prev
+		} else {
+			const next = leftMostElFullyInView.nextSibling
+			if (!(next instanceof HTMLElement)) {
+				console.warn('No next element')
+				return
+			}
+			nextEl = next
+		}
+
+		nextEl.scrollIntoView({
+			behavior: 'smooth',
+			block: 'nearest',
+			inline: 'start',
+		})
+	}
 	return (
 		<div className="container mx-auto">
 			<div className="grid grid-cols-3">
@@ -271,15 +369,28 @@ function StarportListSection() {
 						Many unique starports available
 					</h2>
 					<div>
-						<button onClick={prev}>👈</button>
-						<button onClick={next}>👉</button>
+						<button
+							className="rounded-full bg-primary p-6 text-3xl font-bold text-white"
+							onClick={() => scrollTo(-1)}
+						>
+							👈
+						</button>
+						<button
+							className="rounded-full bg-primary p-6 text-3xl font-bold text-white"
+							onClick={() => scrollTo(1)}
+						>
+							👉
+						</button>
 					</div>
 				</div>
-				<div className="col-span-2 flex gap-6 overflow-x-hidden py-7 pl-14">
-					{starportsToRender.map(s => (
+				<div
+					ref={scrollRef}
+					className="hide-scrollbar relative col-span-2 flex overflow-x-scroll scroll-smooth py-7 pl-14"
+				>
+					{starports.map(s => (
 						<div
 							key={s.name}
-							className="flex max-w-[280px] shrink-0 flex-col rounded-3xl bg-[#1E1E20]"
+							className="starport-card ml-6 flex max-w-[280px] shrink-0 flex-col rounded-3xl bg-[#1E1E20]"
 						>
 							<img className="aspect-[35/31] rounded-3xl" src={s.imageSrc} />
 							<div className="h-10" />
