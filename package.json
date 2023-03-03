@@ -85,6 +85,7 @@
     "@remix-run/dev": "^1.14.0",
     "@remix-run/eslint-config": "^1.14.0",
     "@remix-run/testing": "^1.14.0",
+    "@tailwindcss/line-clamp": "^0.4.2",
     "@testing-library/dom": "^9.0.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^14.0.0",

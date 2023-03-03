@@ -1,6 +1,7 @@
 import { Form, Link } from '@remix-run/react'
 import { type V2_MetaFunction } from '@remix-run/node'
 import { useOptionalUser } from '~/utils/misc'
+import { useState } from 'react'
 
 export const meta: V2_MetaFunction = ({ matches }) => {
 	return matches.find(match => match.route.id === 'root')?.meta ?? []
@@ -113,8 +114,7 @@ export default function Index() {
 					scroll 👇
 				</div>
 				<BigSpacer />
-				<div className="container">
-					{/* two column layout */}
+				<div className="container mx-auto">
 					<div className="grid grid-cols-2 gap-36">
 						<div className="flex flex-col gap-14">
 							<div className="flex flex-col gap-6">
@@ -185,6 +185,8 @@ export default function Index() {
 						</div>
 					</div>
 				</div>
+				<BigSpacer />
+				<StarportListSection />
 				<Spacer size="lg" />
 				<Marquee />
 			</main>
@@ -216,6 +218,83 @@ function Marquee() {
 			<ul className={ulClassName} aria-hidden={true}>
 				{children}
 			</ul>
+		</div>
+	)
+}
+
+function StarportListSection() {
+	const starports: Array<{
+		name: string
+		description: string
+		imageSrc: string
+	}> = [
+		{
+			name: 'Starport 1',
+			description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+			imageSrc:
+				'https://images.unsplash.com/photo-1614726365952-510103b1bbb4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1674&q=80',
+		},
+		{
+			name: 'Starport 2',
+			description:
+				'Lorem ipsum dolor sit amet, incididunt ut labore et dolore magna aliqua.',
+			imageSrc:
+				'https://images.unsplash.com/photo-1460186136353-977e9d6085a1?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
+		},
+		{
+			name: 'Starport 3',
+			description:
+				'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			imageSrc:
+				'https://images.unsplash.com/photo-1604111969833-dd2055a14090?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1634&q=80',
+		},
+		{
+			name: 'Starport 4',
+			description:
+				'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+			imageSrc:
+				'https://images.unsplash.com/photo-1518365050014-70fe7232897f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=987&q=80',
+		},
+	]
+	// TODO: animate the transition between starports
+	const [index, setIndex] = useState(0)
+	const next = () => setIndex((index + 1) % starports.length)
+	const prev = () => setIndex((index - 1 + starports.length) % starports.length)
+	const starportsToRender = starports
+		.slice(index)
+		.concat(starports.slice(0, index))
+	return (
+		<div className="container mx-auto">
+			<div className="grid grid-cols-3">
+				<div className="flex flex-col justify-between gap-14 border-r-2 border-r-gray-600 pr-10">
+					<h2 className="text-5xl font-bold text-white">
+						Many unique starports available
+					</h2>
+					<div>
+						<button onClick={prev}>👈</button>
+						<button onClick={next}>👉</button>
+					</div>
+				</div>
+				<div className="col-span-2 flex gap-6 overflow-x-hidden py-7 pl-14">
+					{starportsToRender.map(s => (
+						<div
+							key={s.name}
+							className="flex max-w-[280px] shrink-0 flex-col rounded-3xl bg-[#1E1E20]"
+						>
+							<img className="aspect-[35/31] rounded-3xl" src={s.imageSrc} />
+							<div className="h-10" />
+							<div className="flex flex-col gap-2 px-6 pb-8">
+								<h3 className="text-2xl font-bold text-white line-clamp-1">
+									{s.name}
+								</h3>
+								<p className="text-base text-gray-500 line-clamp-2">
+									{s.description}
+								</p>
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
 		</div>
 	)
 }
