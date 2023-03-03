@@ -21,7 +21,11 @@ import { getEnv } from './utils/env.server'
 import { prisma } from './utils/db.server'
 
 export const links: LinksFunction = () => {
-	return [{ rel: 'stylesheet', href: tailwindStylesheetUrl }, ...vendorLinks]
+	return [
+		{ rel: 'stylesheet', href: '/fonts/nunito-sans/font.css' },
+		{ rel: 'stylesheet', href: tailwindStylesheetUrl },
+		...vendorLinks,
+	]
 }
 
 export const meta: V2_MetaFunction = () => {

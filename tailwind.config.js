@@ -1,3 +1,5 @@
+const defaultTheme = require('tailwindcss/defaultTheme')
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
 	content: ['./app/**/*.{ts,tsx,jsx,js}'],
@@ -11,6 +13,9 @@ module.exports = {
 				},
 				secondary: '#FCBE25',
 				tertiary: '#FF7A00',
+			},
+			fontFamily: {
+				sans: ['Nunito Sans', ...defaultTheme.fontFamily.sans],
 			},
 			fontSize: {
 				'7.5xl': [
