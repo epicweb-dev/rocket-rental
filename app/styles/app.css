@@ -5,3 +5,9 @@
 .hide-scrollbar::-webkit-scrollbar {
 	display: none; /* Chrome, Safari, Opera*/
 }
+
+body {
+	background-image: url('/resources/starfield.svg');
+	background-size: 1280px 720px;
+	background-repeat: repeat;
+}
