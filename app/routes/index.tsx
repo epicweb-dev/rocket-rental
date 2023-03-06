@@ -190,7 +190,9 @@ export default function Index() {
 				<BigSpacer />
 				<StarportListSection />
 				<Spacer size="xl" />
-				<Marquee />
+				<div className="overflow-x-scroll py-12">
+					<Marquee />
+				</div>
 				<Spacer size="4xl" />
 				<div className="container mx-auto">
 					<div className="grid grid-cols-2 gap-36">
