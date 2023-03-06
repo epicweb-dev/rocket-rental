@@ -37,8 +37,8 @@ module.exports = {
 				},
 			},
 			animation: {
-				marquee: 'marquee 10s linear infinite',
-				'marquee-reverse': 'marqueeReverse 10s linear infinite',
+				marquee: 'marquee 40s linear infinite',
+				'marquee-reverse': 'marqueeReverse 40s linear infinite',
 			},
 		},
 	},

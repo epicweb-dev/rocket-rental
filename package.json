@@ -55,6 +55,7 @@
     "@radix-ui/react-tabs": "^1.0.2",
     "@reach/dialog": "^0.18.0",
     "@reach/tabs": "^0.18.0",
+    "@remix-run/css-bundle": "^1.14.0",
     "@remix-run/node": "^1.14.0",
     "@remix-run/react": "^1.14.0",
     "@remix-run/serve": "^1.14.0",

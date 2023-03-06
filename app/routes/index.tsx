@@ -2,6 +2,7 @@ import { Form, Link } from '@remix-run/react'
 import { type V2_MetaFunction } from '@remix-run/node'
 import { useOptionalUser } from '~/utils/misc'
 import { useRef, useState } from 'react'
+import styles from './index.module.css'
 import * as Tabs from '@radix-ui/react-tabs'
 import clsx from 'clsx'
 
@@ -190,7 +191,7 @@ export default function Index() {
 				<BigSpacer />
 				<StarportListSection />
 				<Spacer size="xl" />
-				<div className="overflow-x-scroll py-12">
+				<div className="overflow-x-scroll py-20">
 					<Marquee />
 				</div>
 				<Spacer size="4xl" />
@@ -247,6 +248,80 @@ export default function Index() {
 				<Spacer size="4xl" />
 				<RocketModelsSection />
 				<Spacer size="xl" />
+				<div className="container mx-auto">
+					<div className="text-center">
+						<p className="text-base text-gray-500">Our advantages</p>
+						<h2 className="mx-auto mt-4 max-w-4xl text-6xl font-bold tracking-wide text-white">
+							Nobody's better at rockets than Rocket Rental
+						</h2>
+					</div>
+					<Spacer size="sm" />
+					<div className="flex items-center justify-center rounded-3xl bg-[#1E1E20] py-16">
+						<div className="flex flex-1 flex-col items-center justify-center gap-1">
+							<div
+								className={clsx(
+									'text-7.5xl',
+									styles.statsNumber,
+									styles.statsDistance,
+								)}
+							>
+								876
+							</div>
+							<div className="text-center text-gray-500">light years flown</div>
+						</div>
+						<div className="flex flex-1 flex-col items-center justify-center gap-1 border-l-2 border-l-gray-500">
+							<div
+								className={clsx(
+									'text-7.5xl',
+									styles.statsNumber,
+									styles.statsHosts,
+								)}
+							>
+								2.5K
+							</div>
+							<div className="text-center text-gray-500">
+								hosts on our platform
+							</div>
+						</div>
+						<div className="flex flex-1 flex-col items-center justify-center gap-1 border-l-2 border-l-gray-500">
+							<div
+								className={clsx(
+									'text-7.5xl',
+									styles.statsNumber,
+									styles.statsRockets,
+								)}
+							>
+								16K
+							</div>
+							<div className="text-center text-gray-500">
+								rockets available for rent
+							</div>
+						</div>
+					</div>
+					<Spacer size="3xs" />
+					<div className="grid grid-cols-2">
+						<div className="rounded-3xl">
+							<img src="" alt="Beautiful close-up on a star" />
+						</div>
+						<div className="rounded-3xl bg-white py-12 px-14">
+							<h3 className="text-5xl text-black">
+								Buy reliable space travel insurance!
+							</h3>
+							<p className="mt-4 text-xl text-gray-500">
+								Life happens. And sometimes, it can mess up your space travel
+								plans. That's why we offer insurance for all or part of your
+								trip to give you peace of mind.
+							</p>
+							<Link
+								to="/insurance"
+								className="mt-14 inline-block rounded-full bg-primary py-5 px-14 text-lg font-bold text-white hover:bg-primary-darker"
+							>
+								Learn more
+							</Link>
+						</div>
+					</div>
+				</div>
+				<BigSpacer />
 			</main>
 		</>
 	)

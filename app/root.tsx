@@ -13,6 +13,7 @@ import {
 	ScrollRestoration,
 	useLoaderData,
 } from '@remix-run/react'
+import { cssBundleHref } from '@remix-run/css-bundle'
 import { authenticator } from './utils/auth.server'
 
 import tailwindStylesheetUrl from './styles/tailwind.css'
@@ -20,14 +21,16 @@ import appStylesheetUrl from './styles/app.css'
 import { links as vendorLinks } from './utils/vendor.css'
 import { getEnv } from './utils/env.server'
 import { prisma } from './utils/db.server'
+import { typedBoolean } from './utils/misc'
 
 export const links: LinksFunction = () => {
 	return [
 		{ rel: 'stylesheet', href: '/fonts/nunito-sans/font.css' },
 		{ rel: 'stylesheet', href: tailwindStylesheetUrl },
+		cssBundleHref ? { rel: 'stylesheet', href: cssBundleHref } : null,
 		...vendorLinks,
 		{ rel: 'stylesheet', href: appStylesheetUrl },
-	]
+	].filter(typedBoolean)
 }
 
 export const meta: V2_MetaFunction = () => {
@@ -59,7 +62,7 @@ export async function loader({ request }: DataFunctionArgs) {
 		}
 	}
 
-	return json({ user, ENV: getEnv() })
+	return json({ user, ENV: getEnv(), starsSvg: generateStarsSvg() })
 }
 
 export default function App() {
@@ -82,10 +85,7 @@ export default function App() {
 				<LiveReload />
 				<div
 					className="fixed inset-0 -z-10"
-					suppressHydrationWarning
-					dangerouslySetInnerHTML={{
-						__html: generateStarsSvg(),
-					}}
+					dangerouslySetInnerHTML={{ __html: data.starsSvg }}
 				/>
 			</body>
 		</html>
