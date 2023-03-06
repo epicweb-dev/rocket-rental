@@ -321,6 +321,8 @@ export default function Index() {
 						</div>
 					</div>
 				</div>
+				<Spacer size="4xl" />
+				<Testimonials />
 				<BigSpacer />
 			</main>
 		</>
@@ -866,6 +868,83 @@ function RocketModelsSection() {
 				</Link>
 			</div>
 		</div>
+	)
+}
+
+function Testimonials() {
+	const testimonials: Array<{
+		testimonial: string
+		host: { imageSrc: string; name: string; subtitle: string }
+	}> = [
+		{
+			testimonial:
+				"I love the fact that I can rent out my ship when I'm not using it. It's a great way to make some extra money.",
+			host: {
+				imageSrc: 'https://randomuser.me/api/portraits/men/56.jpg',
+				name: 'John Doe',
+				subtitle: 'Orbitalis 3000',
+			},
+		},
+		{
+			testimonial:
+				"I love the fact that I can rent out my ship when I'm not using it. It's a great way to make some extra money.",
+			host: {
+				imageSrc: 'https://randomuser.me/api/portraits/women/32.jpg',
+				name: 'Jane Doe',
+				subtitle: 'Spaceship 2500',
+			},
+		},
+		{
+			testimonial:
+				"I love the fact that I can rent out my ship when I'm not using it. It's a great way to make some extra money.",
+			host: {
+				imageSrc: 'https://randomuser.me/api/portraits/women/36.jpg',
+				name: 'Samantha Sweet',
+				subtitle: 'Zheng 15',
+			},
+		},
+		{
+			testimonial:
+				"I love the fact that I can rent out my ship when I'm not using it. It's a great way to make some extra money. I love the fact that I can rent out my ship when I'm not using it. It's a great way to make some extra money. I love the fact that I can rent out my ship when I'm not using it. It's a great way to make some extra money.",
+			host: {
+				imageSrc: 'https://randomuser.me/api/portraits/women/12.jpg',
+				name: 'Brooke Ricardo',
+				subtitle: 'Cosmic 999',
+			},
+		},
+		{
+			testimonial:
+				"I love the fact that I can rent out my ship when I'm not using it. It's a great way to make some extra money.",
+			host: {
+				imageSrc: 'https://randomuser.me/api/portraits/men/16.jpg',
+				name: 'Bobbo the Clown',
+				subtitle: 'Asteroid 1000',
+			},
+		},
+	]
+	return (
+		<>
+			<div className="container mx-auto">
+				<h2 className="max-w-sm text-6xl font-bold text-white">
+					What our top hosts say
+				</h2>
+			</div>
+			<Spacer size="sm" />
+			<div className="hide-scrollbar relative flex gap-8 overflow-x-scroll">
+				{testimonials.map(({ testimonial, host }) => (
+					<div className="flex h-[320px] w-[440px] shrink-0 flex-col justify-between rounded-3xl border-[1px] border-gray-500 p-10">
+						<p className="quote text-white line-clamp-5">{testimonial}</p>
+						<div className="flex gap-4">
+							<img className="h-14 w-14 rounded-full" src={host.imageSrc} />
+							<div className="flex flex-col gap-1">
+								<h3 className="text-base font-bold text-white">{host.name}</h3>
+								<p className="text-sm text-gray-500">{host.subtitle}</p>
+							</div>
+						</div>
+					</div>
+				))}
+			</div>
+		</>
 	)
 }
 

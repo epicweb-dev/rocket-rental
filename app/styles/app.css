@@ -5,3 +5,10 @@
 .hide-scrollbar::-webkit-scrollbar {
 	display: none; /* Chrome, Safari, Opera*/
 }
+
+.quote::before {
+	content: '“';
+}
+.quote::after {
+	content: '”';
+}
