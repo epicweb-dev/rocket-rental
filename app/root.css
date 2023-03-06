@@ -1,0 +1,10 @@
+.light .theme-switch-light {
+	background: linear-gradient(
+		212.86deg,
+		#ed82fb 10.36%,
+		#b16af8 37.58%,
+		#706df2 57.45%,
+		#5b72f5 72.74%,
+		rgba(91, 119, 220, 0.984611) 95.02%
+	);
+}

@@ -1,45 +1,17 @@
-import { Form, Link } from '@remix-run/react'
+import * as Tabs from '@radix-ui/react-tabs'
 import { type V2_MetaFunction } from '@remix-run/node'
-import { useOptionalUser } from '~/utils/misc'
+import { Form, Link } from '@remix-run/react'
+import clsx from 'clsx'
 import { useRef, useState } from 'react'
 import styles from './index.module.css'
-import * as Tabs from '@radix-ui/react-tabs'
-import clsx from 'clsx'
 
 export const meta: V2_MetaFunction = ({ matches }) => {
 	return matches.find(match => match.route.id === 'root')?.meta ?? []
 }
 
 export default function Index() {
-	const user = useOptionalUser()
 	return (
 		<>
-			<header className="mx-auto max-w-7xl py-6">
-				<nav className="flex justify-between">
-					<Link to="/" className="text-white">
-						<div className="font-light">rocket</div>
-						<div className="font-bold">Rental</div>
-					</Link>
-					<div className="flex items-center gap-10">
-						<Link to="/search" className="text-white">
-							🔍
-						</Link>
-						{user ? (
-							<Link to="me" className="text-white">
-								{user.name}
-							</Link>
-						) : (
-							<Link
-								to="/login"
-								className="rounded-full bg-primary py-3.5 px-10 text-sm font-bold text-white hover:bg-primary-darker"
-							>
-								Log In
-							</Link>
-						)}
-					</div>
-				</nav>
-			</header>
-
 			<Spacer size="4xl" />
 			<main>
 				<div className="mx-auto max-w-3xl text-center">
@@ -323,6 +295,24 @@ export default function Index() {
 				</div>
 				<Spacer size="4xl" />
 				<Testimonials />
+				<BigSpacer />
+				<BigSpacer />
+				<div className="container mx-auto">
+					<div className="mx-auto max-w-3xl text-center">
+						<h2 className="text-6xl text-white">
+							Travel to any planet in space on your favorite rocket.
+						</h2>
+						<Spacer size="xs" />
+						<div>
+							<Link
+								to="/search"
+								className="rounded-full bg-primary py-3.5 px-10 text-sm font-bold text-white hover:bg-primary-darker"
+							>
+								Explore rockets
+							</Link>
+						</div>
+					</div>
+				</div>
 				<BigSpacer />
 			</main>
 		</>
