@@ -62,7 +62,7 @@ export async function loader({ request }: DataFunctionArgs) {
 	if (userId) {
 		user = await getUserById(userId)
 		if (!user) {
-			console.log('something weird happened')
+			console.info('something weird happened')
 			// something weird happened... The user is authenticated but we can't find
 			// them in the database. Maybe they were deleted? Let's log them out.
 			await authenticator.logout(request, { redirectTo: '/' })

@@ -17,6 +17,9 @@ test('multi-user chat', async ({ browser, page: page1, baseURL }) => {
 	await page2.getByRole('link', { name: new RegExp(user1.username) }).click()
 	await expect(page1).toHaveURL(/\/chats\/.+/)
 
+	// wait for connection to be established
+	await page1.waitForTimeout(200)
+
 	// type from page 1
 	const page1Textbox = page1.getByRole('textbox', { name: /message/i })
 	const testMessage = faker.lorem.words(2)
