@@ -1,16 +1,11 @@
 import 'dotenv/config'
-
-import {
-	Response,
-	type EntryContext,
-	type HandleDataRequestFunction,
-} from '@remix-run/node'
+import { PassThrough } from 'stream'
+import { type EntryContext, Response } from '@remix-run/node'
 import { RemixServer } from '@remix-run/react'
 import isbot from 'isbot'
 import { renderToPipeableStream } from 'react-dom/server'
-import { PassThrough } from 'stream'
-import { getEnv, init } from './utils/env.server'
-import { getInstanceInfo, handleTXID } from './utils/fly.server'
+import { init, getEnv } from './utils/env.server'
+import { getInstanceInfo } from 'litefs-js'
 
 const ABORT_DELAY = 5000
 
@@ -29,9 +24,6 @@ export default async function handleRequest(
 	responseHeaders.set('fly-app', process.env.FLY_APP_NAME ?? 'unknown')
 	responseHeaders.set('fly-primary-instance', primaryInstance)
 	responseHeaders.set('fly-instance', currentInstance)
-
-	const maybeResponse = await handleTXID(request, responseHeaders)
-	if (maybeResponse) return maybeResponse
 
 	const callbackName = isbot(request.headers.get('user-agent'))
 		? 'onAllReady'
@@ -71,18 +63,12 @@ export default async function handleRequest(
 	})
 }
 
-export async function handleDataRequest(
-	response: Response,
-	{ request }: Parameters<HandleDataRequestFunction>[1],
-) {
+export async function handleDataRequest(response: Response) {
 	const { currentInstance, primaryInstance } = await getInstanceInfo()
 	response.headers.set('fly-region', process.env.FLY_REGION ?? 'unknown')
 	response.headers.set('fly-app', process.env.FLY_APP_NAME ?? 'unknown')
 	response.headers.set('fly-primary-instance', primaryInstance)
 	response.headers.set('fly-instance', currentInstance)
-
-	const maybeResponse = await handleTXID(request, response.headers)
-	if (maybeResponse) return maybeResponse
 
 	return response
 }

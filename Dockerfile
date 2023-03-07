@@ -5,7 +5,7 @@ FROM node:16-bullseye-slim as base
 ENV NODE_ENV production
 
 # Install openssl for Prisma
-RUN apt-get update && apt-get install -y fuse openssl sqlite3 ca-certificates
+RUN apt-get update && apt-get install -y fuse3 openssl sqlite3 ca-certificates
 
 # Install all node_modules, including dev dependencies
 FROM base as deps
@@ -41,10 +41,12 @@ RUN npm run build
 FROM base
 
 ENV FLY="true"
-ENV FLY_LITEFS_DIR="/litefs/data"
-ENV DATABASE_PATH="$FLY_LITEFS_DIR/sqlite.db"
-ENV DATABASE_URL="file:$FLY_LITEFS_DIR/sqlite.db"
-ENV PORT="8080"
+ENV LITEFS_DIR="/litefs/data"
+ENV DATABASE_FILENAME="sqlite.db"
+ENV DATABASE_PATH="$LITEFS_DIR/$DATABASE_FILENAME"
+ENV DATABASE_URL="file:$DATABASE_PATH"
+ENV INTERNAL_PORT="8080"
+ENV PORT="8081"
 ENV NODE_ENV="production"
 
 # add shortcut for connecting to database CLI
@@ -62,8 +64,10 @@ COPY --from=build /myapp/other/start.js /myapp/other/start.js
 COPY --from=build /myapp/prisma /myapp/prisma
 
 # prepare for litefs
-COPY --from=flyio/litefs:sha-d70e353 /usr/local/bin/litefs /usr/local/bin/litefs
+COPY --from=flyio/litefs:sha-42da211 /usr/local/bin/litefs /usr/local/bin/litefs
 ADD other/litefs.yml /etc/litefs.yml
-RUN mkdir -p /data ${FLY_LITEFS_DIR}
+RUN mkdir -p /data ${LITEFS_DIR}
+
+ADD . .
 
 CMD ["litefs", "mount", "--", "node", "./other/start.js"]

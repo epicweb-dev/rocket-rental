@@ -61,10 +61,10 @@ export function getImgSrc(imageId: string) {
 
 export function getShipImgSrc(imageId?: string | null) {
 	// TODO: make this real I guess
-	return imageId ? `/images/${imageId}` : `/images/ship.png`
+	return imageId ? `/images/${imageId}` : `/img/ship.png`
 }
 
 export function getUserImgSrc(imageId?: string | null) {
 	// TODO: make this real I guess
-	return imageId ? `/images/${imageId}` : `/images/user.png`
+	return imageId ? `/images/${imageId}` : `/img/user.png`
 }

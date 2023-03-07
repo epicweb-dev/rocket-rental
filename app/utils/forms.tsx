@@ -52,7 +52,7 @@ export function useForm<Key extends string>({
 			props: {
 				noValidate: hydrated,
 				'aria-invalid': hasFormErrors ? true : undefined,
-				'aria-describedby': hasFormErrors ? errorElId : undefined,
+				'aria-errormessage': hasFormErrors ? errorElId : undefined,
 				tabIndex: hasFormErrors ? -1 : undefined,
 				ref: formRef,
 			},
@@ -141,15 +141,15 @@ function getFieldProps(schema: z.ZodTypeAny): InputValidationProps {
 		const allProps: Array<InputValidationProps> = schema.options.map(
 			(option: z.ZodTypeAny) => getFieldProps(option),
 		)
+		let type = allProps[0].type
 		if (new Set(allProps.map(p => p.type)).size > 1) {
-			// Sorry future Kent. I just didn't know your use case...
-			throw new Error('TODO: support unions with different types')
+			// Make it the most loose type
+			type = 'text'
 		}
 		if (new Set(allProps.map(p => p.required)).size > 1) {
 			// Sorry future Kent. I just didn't know your use case...
 			throw new Error('TODO: support unions with different required')
 		}
-		const type = allProps[0].type
 		const required = allProps[0].required
 		if (type === 'number') {
 			const numberProps = allProps as Array<
@@ -418,7 +418,7 @@ export function getFields<Key extends string>(
 				id,
 				name,
 				'aria-invalid': fieldErrors.length ? true : undefined,
-				'aria-describedby': fieldErrors.length ? errorElId : undefined,
+				'aria-errormessage': fieldErrors.length ? errorElId : undefined,
 			},
 			labelProps: { htmlFor: id },
 			errorUI: fieldErrors.length ? (

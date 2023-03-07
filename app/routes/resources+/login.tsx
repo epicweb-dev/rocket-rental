@@ -1,10 +1,11 @@
 import { json, type DataFunctionArgs } from '@remix-run/node'
-import { Link, useFetcher } from '@remix-run/react'
+import { Link, useFetcher, useNavigate } from '@remix-run/react'
+import { useEffect } from 'react'
 import { AuthorizationError } from 'remix-auth'
 import { FormStrategy } from 'remix-auth-form'
 import { z } from 'zod'
 import { authenticator } from '~/utils/auth.server'
-import { preprocessFormData, useForm, type FieldMetadatas } from '~/utils/forms'
+import { getFieldsFromSchema, preprocessFormData, useForm } from '~/utils/forms'
 import { commitSession, getSession } from '~/utils/session.server'
 import { passwordSchema, usernameSchema } from '~/utils/user-validation'
 
@@ -20,7 +21,10 @@ export async function action({ request }: DataFunctionArgs) {
 		preprocessFormData(formData, LoginFormSchema),
 	)
 	if (!result.success) {
-		return json({ errors: result.error.flatten() }, { status: 400 })
+		return json(
+			{ status: 'form-invalid', errors: result.error.flatten() } as const,
+			{ status: 400 },
+		)
 	}
 
 	let userId: string | null = null
@@ -37,7 +41,7 @@ export async function action({ request }: DataFunctionArgs) {
 						formErrors: [error.message],
 						fieldErrors: {},
 					},
-				},
+				} as const,
 				{ status: 400 },
 			)
 		}
@@ -52,24 +56,40 @@ export async function action({ request }: DataFunctionArgs) {
 			? 60 * 60 * 24 * 7 // 7 days
 			: undefined,
 	})
-	return json(
-		{ status: 'success', errors: null },
-		{ headers: { 'Set-Cookie': newCookie } },
-	)
+	return json({ status: 'success', errors: null } as const, {
+		headers: { 'Set-Cookie': newCookie },
+	})
 }
 
 export function InlineLogin({
-	fieldMetadatas,
+	redirectTo,
+	formError,
 }: {
-	fieldMetadatas: FieldMetadatas<keyof z.infer<typeof LoginFormSchema>>
+	redirectTo?: string
+	formError?: string | null
 }) {
 	const loginFetcher = useFetcher<typeof action>()
 
 	const { form, fields } = useForm({
 		name: 'inline-login',
-		errors: loginFetcher.data?.errors,
-		fieldMetadatas,
+		errors: {
+			...loginFetcher.data?.errors,
+			formErrors: [
+				formError,
+				...(loginFetcher.data?.errors?.formErrors ?? []),
+			].filter(Boolean),
+		},
+		fieldMetadatas: getFieldsFromSchema(LoginFormSchema),
 	})
+
+	const navigate = useNavigate()
+	const success = loginFetcher.data?.status === 'success'
+	useEffect(() => {
+		if (!redirectTo) return
+		if (!success) return
+
+		navigate(redirectTo)
+	}, [success, redirectTo])
 
 	return (
 		<div>

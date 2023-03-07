@@ -6,12 +6,11 @@ import invariant from 'tiny-invariant'
 import {
 	bookingSessionKey,
 	getIsShipAvailable,
-	validateBookerForm,
+	validateBookerForm
 } from '~/routes/resources+/booker'
-import { InlineLogin, LoginFormSchema } from '~/routes/resources+/login'
+import { InlineLogin } from '~/routes/resources+/login'
 import { requireUserId } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'
-import { getFieldsFromSchema } from '~/utils/forms'
 import { useOptionalUser } from '~/utils/misc'
 import { commitSession, getSession } from '~/utils/session.server'
 
@@ -71,7 +70,6 @@ export async function loader({ request, params }: DataFunctionArgs) {
 		endDate,
 		shipId,
 		totalPrice,
-		inlineLoginFieldProps: getFieldsFromSchema(LoginFormSchema),
 	})
 }
 
@@ -158,7 +156,7 @@ export default function ShipBookRoute() {
 					</button>
 				</Form>
 			) : (
-				<InlineLogin fieldMetadatas={data.inlineLoginFieldProps} />
+				<InlineLogin />
 			)}
 			<Link to="..">Cancel</Link>
 		</div>

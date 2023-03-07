@@ -6,6 +6,8 @@ import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server'
 import { sessionStorage } from './session.server'
 
+export type { User }
+
 export const authenticator = new Authenticator<string>(sessionStorage, {
 	sessionKey: 'token',
 })

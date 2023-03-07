@@ -110,6 +110,7 @@ export default function ChatRoute() {
 			messages.push(change.message)
 		} else {
 			// TODO: Handle other change types
+			console.error('Unknown change type', { change })
 		}
 	}
 
@@ -133,7 +134,7 @@ export default function ChatRoute() {
 								alt={sender?.name ?? 'Unknown user'}
 								className="h-8 w-8 rounded-full"
 							/>
-							<div className="ml-2">{message.content}</div>
+							<div className="ml-2 text-white">{message.content}</div>
 						</li>
 					)
 				})}

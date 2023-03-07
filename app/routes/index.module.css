@@ -1,0 +1,32 @@
+.statsDistance {
+	background: linear-gradient(
+		269.6deg,
+		#657cff 13.84%,
+		rgba(174, 192, 255, 0.984611) 69.51%
+	);
+}
+
+.statsHosts {
+	background: linear-gradient(
+		236.46deg,
+		#f183ff -4.69%,
+		#7d68fc 28.05%,
+		rgba(132, 159, 254, 0.984611) 69.69%
+	);
+}
+
+.statsRockets {
+	background: linear-gradient(
+		271.76deg,
+		#c83dda -8.19%,
+		#536cff 59.85%,
+		rgba(189, 178, 255, 0.984611) 97.83%
+	);
+}
+
+.statsNumber {
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+	text-fill-color: transparent;
+}
