@@ -1,22 +1,22 @@
+import { faker } from '@faker-js/faker'
 import { differenceInDays } from 'date-fns'
 import {
+	createBrand,
 	createShip,
+	createShipModel,
 	createStarport,
 	createUser,
-	oneDay,
-	createShipModel,
-	createBrand,
+	downloadFile,
 	insertImage,
 	lockifyFakerImage,
-	downloadFile,
+	oneDay,
 } from 'prisma/seed-utils'
 import { BASE_URL } from 'test/utils'
 import { test } from 'vitest'
+import { bookingSessionKey } from '~/routes/resources+/booker'
 import { prisma } from '~/utils/db.server'
 import { commitSession, getSession } from '~/utils/session.server'
-import { bookingSessionKey } from '~/routes/resources+/booker'
 import { loader } from './$shipId.book'
-import { faker } from '@faker-js/faker'
 
 test('requires authenticated user', async () => {
 	const params = { shipId: '123' }

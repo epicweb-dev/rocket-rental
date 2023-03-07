@@ -1,6 +1,6 @@
+import { type User } from '@prisma/client'
 import { type SerializeFrom } from '@remix-run/node'
 import { useRouteLoaderData } from '@remix-run/react'
-import { type User } from '~/utils/auth.server'
 import { type loader as rootLoader } from '~/root'
 
 const DEFAULT_REDIRECT = '/'

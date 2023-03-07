@@ -1,13 +1,13 @@
+import { faker } from '@faker-js/faker'
+import invariant from 'tiny-invariant'
 import {
-	test,
+	deleteUserByUsername,
 	expect,
+	insertNewUser,
 	makeLoginForm,
 	readEmail,
-	insertNewUser,
-	deleteUserByUsername,
+	test,
 } from './test'
-import invariant from 'tiny-invariant'
-import { faker } from '@faker-js/faker'
 
 const urlRegex = /(?<url>https?:\/\/[^\s$.?#].[^\s]*)/
 function extractUrl(text: string) {

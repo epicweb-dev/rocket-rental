@@ -1,6 +1,4 @@
-import type { DataFunctionArgs } from '@remix-run/node'
-import { redirect } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
 import {
 	Form,
 	Link,
@@ -10,16 +8,16 @@ import {
 } from '@remix-run/react'
 import { useCallback, useEffect, useState } from 'react'
 import { z } from 'zod'
-import { db, interpolateArray, prisma } from '~/utils/db.server'
-import { getClosestStarports, getDistanceCalculation } from '~/utils/geo.server'
-import { getImgSrc, typedBoolean } from '~/utils/misc'
-import { addParamToSet, unappend } from '~/utils/search-params'
 import { BrandCombobox } from '~/routes/resources+/brand-combobox'
 import { CityCombobox } from '~/routes/resources+/city-combobox'
 import { HostCombobox } from '~/routes/resources+/host-combobox'
 import { ModelCombobox } from '~/routes/resources+/model-combobox'
 import { StarportCombobox } from '~/routes/resources+/starport-combobox'
+import { db, interpolateArray, prisma } from '~/utils/db.server'
 import { preprocessSearchParams } from '~/utils/forms'
+import { getClosestStarports, getDistanceCalculation } from '~/utils/geo.server'
+import { getImgSrc, typedBoolean } from '~/utils/misc'
+import { addParamToSet, unappend } from '~/utils/search-params'
 
 const MAX_RESULTS = 50
 

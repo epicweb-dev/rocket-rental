@@ -1,5 +1,4 @@
-import type { DataFunctionArgs } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import { json, type DataFunctionArgs } from '@remix-run/node'
 import { Outlet, useCatch, useLoaderData, useParams } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server'

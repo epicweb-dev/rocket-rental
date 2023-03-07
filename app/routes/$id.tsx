@@ -1,5 +1,4 @@
-import type { DataFunctionArgs } from '@remix-run/node'
-import { redirect } from '@remix-run/node'
+import { redirect, type DataFunctionArgs } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server'
 

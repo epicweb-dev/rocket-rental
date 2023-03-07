@@ -1,7 +1,5 @@
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from '@reach/tabs'
-import type { DataFunctionArgs } from '@remix-run/node'
-import { redirect } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
 import {
 	Form,
 	Link,
@@ -13,8 +11,8 @@ import {
 	useParams,
 } from '@remix-run/react'
 import invariant from 'tiny-invariant'
-import { prisma } from '~/utils/db.server'
 import { getUserId, requireUserId } from '~/utils/auth.server'
+import { prisma } from '~/utils/db.server'
 import { getUserImgSrc, useOptionalUser } from '~/utils/misc'
 
 export async function loader({ params, request }: DataFunctionArgs) {

@@ -1,10 +1,6 @@
-import type { DataFunctionArgs } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import { json, type DataFunctionArgs } from '@remix-run/node'
 import { useCatch, useLoaderData, useParams } from '@remix-run/react'
 import invariant from 'tiny-invariant'
-import { prisma } from '~/utils/db.server'
-import { requireUserId } from '~/utils/auth.server'
-import { useUser } from '~/utils/misc'
 import {
 	calculateCanReview,
 	calculateReviewTimeExperied,
@@ -12,7 +8,10 @@ import {
 	Reviewer,
 	ReviewFormSchema,
 } from '~/routes/resources+/reviewer'
+import { requireUserId } from '~/utils/auth.server'
+import { prisma } from '~/utils/db.server'
 import { getFieldsFromSchema } from '~/utils/forms'
+import { useUser } from '~/utils/misc'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.bookingId, 'Missing bookingId')

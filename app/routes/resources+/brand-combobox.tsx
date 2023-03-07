@@ -1,15 +1,18 @@
-import type { LoaderArgs, SerializeFrom } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import {
+	json,
+	type DataFunctionArgs,
+	type SerializeFrom,
+} from '@remix-run/node'
 import {
 	BasicSearchCombobox,
 	SearchParamsSchema,
 	type BaseOptions,
 } from '~/components/basic-search-combobox'
 import { prisma } from '~/utils/db.server'
-import { getImgSrc } from '~/utils/misc'
 import { preprocessSearchParams } from '~/utils/forms'
+import { getImgSrc } from '~/utils/misc'
 
-export async function loader({ request }: LoaderArgs) {
+export async function loader({ request }: DataFunctionArgs) {
 	const data = preprocessSearchParams(request, SearchParamsSchema)
 	const { query, exclude } = SearchParamsSchema.parse(data)
 

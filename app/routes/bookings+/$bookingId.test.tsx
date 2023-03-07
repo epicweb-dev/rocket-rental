@@ -1,20 +1,20 @@
+import { faker } from '@faker-js/faker'
 import {
 	createBooking,
 	createBrand,
 	createShip,
+	createShipModel,
 	createStarport,
 	createUser,
-	oneDay,
-	createShipModel,
 	insertImage,
 	lockifyFakerImage,
+	oneDay,
 } from 'prisma/seed-utils'
+import { BASE_URL, getUserCookie } from 'test/utils'
+import invariant from 'tiny-invariant'
 import { test } from 'vitest'
 import { prisma } from '~/utils/db.server'
 import { loader } from './$bookingId'
-import invariant from 'tiny-invariant'
-import { BASE_URL, getUserCookie } from 'test/utils'
-import { faker } from '@faker-js/faker'
 
 test('requires authenticated user', async () => {
 	const params = { bookingId: '123' }

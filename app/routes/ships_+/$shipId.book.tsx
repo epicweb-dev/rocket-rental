@@ -1,5 +1,4 @@
-import type { DataFunctionArgs } from '@remix-run/node'
-import { json, redirect } from '@remix-run/node'
+import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
 import { Form, useActionData, useLoaderData } from '@remix-run/react'
 import * as df from 'date-fns'
 import { Link } from 'react-router-dom'
@@ -7,7 +6,7 @@ import invariant from 'tiny-invariant'
 import {
 	bookingSessionKey,
 	getIsShipAvailable,
-	validateBookerForm,
+	validateBookerForm
 } from '~/routes/resources+/booker'
 import { InlineLogin } from '~/routes/resources+/login'
 import { requireUserId } from '~/utils/auth.server'

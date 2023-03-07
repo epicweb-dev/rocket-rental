@@ -1,9 +1,9 @@
-import type {
-	LinksFunction,
-	DataFunctionArgs,
-	V2_MetaFunction,
+import {
+	json,
+	type DataFunctionArgs,
+	type LinksFunction,
+	type V2_MetaFunction,
 } from '@remix-run/node'
-import { json } from '@remix-run/node'
 import {
 	Link,
 	Links,

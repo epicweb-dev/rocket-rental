@@ -1,5 +1,4 @@
-import type { DataFunctionArgs, V2_MetaFunction } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import { json, type DataFunctionArgs, type V2_MetaFunction } from '@remix-run/node'
 import { useLoaderData, useSearchParams } from '@remix-run/react'
 import { authenticator } from '~/utils/auth.server'
 import { commitSession, getSession } from '~/utils/session.server'

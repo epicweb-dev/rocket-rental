@@ -1,5 +1,9 @@
-import type { DataFunctionArgs, V2_MetaFunction } from '@remix-run/node'
-import { json, redirect } from '@remix-run/node'
+import {
+	json,
+	redirect,
+	type DataFunctionArgs,
+	type V2_MetaFunction,
+} from '@remix-run/node'
 import {
 	Form,
 	Link,
@@ -9,7 +13,7 @@ import {
 } from '@remix-run/react'
 import { z } from 'zod'
 import { authenticator, createUser } from '~/utils/auth.server'
-import { getFieldsFromSchema, useForm, preprocessFormData } from '~/utils/forms'
+import { getFieldsFromSchema, preprocessFormData, useForm } from '~/utils/forms'
 import { safeRedirect } from '~/utils/misc'
 import { commitSession, getSession } from '~/utils/session.server'
 import {

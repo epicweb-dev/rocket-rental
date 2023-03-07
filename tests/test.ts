@@ -1,13 +1,12 @@
-import type { Page } from '@playwright/test'
-import { test as base } from '@playwright/test'
-import bcrypt from 'bcryptjs'
 import { faker } from '@faker-js/faker'
+import { test as base, type Page } from '@playwright/test'
 import { PrismaClient } from '@prisma/client'
-import { createUser, createContactInfo } from '../prisma/seed-utils'
-import { commitSession, getSession } from '~/utils/session.server'
-import { authenticator } from '~/utils/auth.server'
+import bcrypt from 'bcryptjs'
 import { parse } from 'cookie'
+import { authenticator } from '~/utils/auth.server'
+import { commitSession, getSession } from '~/utils/session.server'
 import { readFixture } from '../mocks/utils'
+import { createContactInfo, createUser } from '../prisma/seed-utils'
 
 export const dataCleanup = {
 	users: new Set<string>(),
