@@ -922,7 +922,10 @@ function Testimonials() {
 			<Spacer size="sm" />
 			<div className="hide-scrollbar relative flex gap-8 overflow-x-scroll">
 				{testimonials.map(({ testimonial, host }) => (
-					<div className="flex h-[320px] w-[440px] shrink-0 flex-col justify-between rounded-3xl border-[1px] border-gray-500 p-10">
+					<div
+						key={host.name}
+						className="flex h-[320px] w-[440px] shrink-0 flex-col justify-between rounded-3xl border-[1px] border-gray-500 p-10"
+					>
 						<p className="quote text-white line-clamp-5">{testimonial}</p>
 						<div className="flex gap-4">
 							<img className="h-14 w-14 rounded-full" src={host.imageSrc} />
