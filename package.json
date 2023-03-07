@@ -15,7 +15,7 @@
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
     "setup": "prisma generate && prisma migrate deploy && prisma db seed",
     "start": "cross-env NODE_ENV=production node .",
-    "start:mocks": "cross-env NODE_ENV=production MOCKS=true remix-serve build",
+    "start:mocks": "cross-env NODE_ENV=production MOCKS=true tsx .",
     "test": "vitest",
     "test:e2e:dev": "playwright test",
     "pretest:e2e:run": "npm run build",
