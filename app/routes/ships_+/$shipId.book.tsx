@@ -1,21 +1,19 @@
 import type { DataFunctionArgs } from '@remix-run/node'
-import { redirect } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import { json, redirect } from '@remix-run/node'
 import { Form, useActionData, useLoaderData } from '@remix-run/react'
+import * as df from 'date-fns'
 import { Link } from 'react-router-dom'
 import invariant from 'tiny-invariant'
-import { prisma } from '~/utils/db.server'
-import { requireUserId } from '~/utils/auth.server'
-import { getSession, commitSession } from '~/utils/session.server'
-import { useOptionalUser } from '~/utils/misc'
-import { InlineLogin, LoginFormSchema } from '~/routes/resources+/login'
-import * as df from 'date-fns'
 import {
 	bookingSessionKey,
 	getIsShipAvailable,
 	validateBookerForm,
 } from '~/routes/resources+/booker'
-import { getFieldsFromSchema } from '~/utils/forms'
+import { InlineLogin } from '~/routes/resources+/login'
+import { requireUserId } from '~/utils/auth.server'
+import { prisma } from '~/utils/db.server'
+import { useOptionalUser } from '~/utils/misc'
+import { commitSession, getSession } from '~/utils/session.server'
 
 function createFormDataFromEntries(
 	entries: Array<[string, FormDataEntryValue]>,
@@ -73,7 +71,6 @@ export async function loader({ request, params }: DataFunctionArgs) {
 		endDate,
 		shipId,
 		totalPrice,
-		inlineLoginFieldProps: getFieldsFromSchema(LoginFormSchema),
 	})
 }
 
@@ -160,7 +157,7 @@ export default function ShipBookRoute() {
 					</button>
 				</Form>
 			) : (
-				<InlineLogin fieldMetadatas={data.inlineLoginFieldProps} />
+				<InlineLogin />
 			)}
 			<Link to="..">Cancel</Link>
 		</div>

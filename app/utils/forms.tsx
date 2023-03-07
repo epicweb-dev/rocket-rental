@@ -52,7 +52,7 @@ export function useForm<Key extends string>({
 			props: {
 				noValidate: hydrated,
 				'aria-invalid': hasFormErrors ? true : undefined,
-				'aria-describedby': hasFormErrors ? errorElId : undefined,
+				'aria-errormessage': hasFormErrors ? errorElId : undefined,
 				tabIndex: hasFormErrors ? -1 : undefined,
 				ref: formRef,
 			},
@@ -418,7 +418,7 @@ export function getFields<Key extends string>(
 				id,
 				name,
 				'aria-invalid': fieldErrors.length ? true : undefined,
-				'aria-describedby': fieldErrors.length ? errorElId : undefined,
+				'aria-errormessage': fieldErrors.length ? errorElId : undefined,
 			},
 			labelProps: { htmlFor: id },
 			errorUI: fieldErrors.length ? (
