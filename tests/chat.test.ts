@@ -15,7 +15,7 @@ test('multi-user chat', async ({ browser, page: page1, baseURL }) => {
 	// go to your own page and open an existing chat:
 	await page2.goto(`/users/${user2.username}`)
 	await page2.getByRole('link', { name: new RegExp(user1.username) }).click()
-	await expect(page1).toHaveURL(/\/chats\/.+/)
+	await expect(page2).toHaveURL(/\/chats\/.+/)
 
 	// wait for connection to be established
 	await page1.waitForTimeout(200)
