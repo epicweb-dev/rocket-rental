@@ -111,7 +111,7 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: 🛠 Setup Database
-        run: npx prisma migrate
+        run: npx prisma migrate deploy
 
       - name: 🏦 Cache Database
         id: db-cache
