@@ -347,6 +347,20 @@ function Marquee() {
 	)
 }
 
+const STARPORT_CARD_WIDTH = 280
+const STARPORT_CARDS_GAP = 24
+const STARPORT_CARD_PLUS_GAP = STARPORT_CARD_WIDTH + STARPORT_CARDS_GAP
+
+function getElapsedSincePrevious(scrollLeft: number): number {
+	return scrollLeft % STARPORT_CARD_PLUS_GAP === 0
+		? STARPORT_CARD_PLUS_GAP
+		: scrollLeft % STARPORT_CARD_PLUS_GAP
+}
+
+function getRemainingTillNext(scrollLeft: number): number {
+	return STARPORT_CARD_PLUS_GAP - (scrollLeft % STARPORT_CARD_PLUS_GAP)
+}
+
 function StarportListSection() {
 	const starports: Array<{
 		name: string
@@ -381,59 +395,18 @@ function StarportListSection() {
 				'https://images.unsplash.com/photo-1518365050014-70fe7232897f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=987&q=80',
 		},
 	]
-	// TODO: fix the scroll buttons
+
 	const scrollRef = useRef<HTMLDivElement>(null)
-	function scrollTo(delta: number) {
-		if (!(scrollRef.current instanceof HTMLDivElement)) return
-
-		const parentEl = scrollRef.current
-		const scrollLeft = parentEl.scrollLeft
-
-		// Loop through each child element
-		let leftMostElFullyInView: HTMLElement | null = null
-		for (let i = 0; i < parentEl.children.length; i++) {
-			const childEl = parentEl.children[i]
-			if (!(childEl instanceof HTMLElement)) continue
-
-			// Check if the child element is fully within view
-			if (
-				childEl.offsetLeft >= scrollLeft &&
-				childEl.offsetLeft + childEl.offsetWidth <=
-					scrollLeft + parentEl.offsetWidth
-			) {
-				// This child element is fully within view
-				leftMostElFullyInView = childEl
-				break
-			}
-		}
-
-		if (!leftMostElFullyInView) {
-			console.warn('No element fully in view')
-			return
-		}
-		let nextEl: HTMLElement | null = null
-		if (delta < 0) {
-			const prev = leftMostElFullyInView.previousSibling
-			if (!(prev instanceof HTMLElement)) {
-				console.warn('No previous element')
-				return
-			}
-			nextEl = prev
-		} else {
-			const next = leftMostElFullyInView.nextSibling
-			if (!(next instanceof HTMLElement)) {
-				console.warn('No next element')
-				return
-			}
-			nextEl = next
-		}
-
-		nextEl.scrollIntoView({
+	const scroll = (cb: (scrollLeft: number) => number) => {
+		if (!scrollRef.current) return
+		scrollRef.current.scroll({
+			left: cb(scrollRef.current.scrollLeft),
 			behavior: 'smooth',
-			block: 'nearest',
-			inline: 'start',
 		})
 	}
+	const goPrev = () => scroll(left => left - getElapsedSincePrevious(left))
+	const goNext = () => scroll(left => left + getRemainingTillNext(left))
+
 	return (
 		<div className="container mx-auto">
 			<div className="grid grid-cols-3">
@@ -444,13 +417,13 @@ function StarportListSection() {
 					<div>
 						<button
 							className="rounded-full bg-primary p-6 text-3xl font-bold text-white"
-							onClick={() => scrollTo(-1)}
+							onClick={goPrev}
 						>
 							👈
 						</button>
 						<button
 							className="rounded-full bg-primary p-6 text-3xl font-bold text-white"
-							onClick={() => scrollTo(1)}
+							onClick={goNext}
 						>
 							👉
 						</button>
@@ -458,12 +431,18 @@ function StarportListSection() {
 				</div>
 				<div
 					ref={scrollRef}
-					className="hide-scrollbar relative col-span-2 flex overflow-x-scroll scroll-smooth py-7 pl-14"
+					className="hide-scrollbar relative col-span-2 ml-20 flex overflow-x-scroll scroll-smooth py-7"
+					style={{
+						gap: STARPORT_CARDS_GAP,
+					}}
 				>
 					{starports.map(s => (
 						<div
 							key={s.name}
-							className="starport-card ml-6 flex max-w-[280px] shrink-0 flex-col rounded-3xl bg-[#1E1E20]"
+							className="starport-card flex shrink-0 flex-col rounded-3xl bg-[#1E1E20]"
+							style={{
+								width: STARPORT_CARD_WIDTH,
+							}}
 						>
 							<img className="aspect-[35/31] rounded-3xl" src={s.imageSrc} />
 							<div className="h-10" />
