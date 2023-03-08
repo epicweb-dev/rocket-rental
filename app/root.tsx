@@ -81,8 +81,8 @@ export default function App() {
 				<Meta />
 				<Links />
 			</head>
-			<body className="h-full bg-[#090909]">
-				<header className="mx-auto max-w-7xl py-6">
+			<body className="flex h-full flex-col justify-between bg-[#090909]">
+				<header className="container mx-auto py-6">
 					<nav className="flex justify-between">
 						<Link to="/" className="text-white">
 							<div className="font-light">rocket</div>
@@ -108,7 +108,9 @@ export default function App() {
 					</nav>
 				</header>
 
-				<Outlet />
+				<div className="flex-1">
+					<Outlet />
+				</div>
 
 				<div className="container mx-auto flex justify-between">
 					<Link to="/" className="text-white">

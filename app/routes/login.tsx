@@ -1,5 +1,10 @@
-import { json, type DataFunctionArgs, type V2_MetaFunction } from '@remix-run/node'
+import {
+	json,
+	type DataFunctionArgs,
+	type V2_MetaFunction,
+} from '@remix-run/node'
 import { useLoaderData, useSearchParams } from '@remix-run/react'
+import { Spacer } from '~/components/spacer'
 import { authenticator } from '~/utils/auth.server'
 import { commitSession, getSession } from '~/utils/session.server'
 import { InlineLogin } from './resources+/login'
@@ -40,8 +45,13 @@ export default function LoginPage() {
 	const redirectTo = searchParams.get('redirectTo') || '/'
 
 	return (
-		<div className="flex min-h-full flex-col justify-center">
-			<div className="mx-auto w-full max-w-md px-8">
+		<div className="flex min-h-full flex-col justify-center pt-20 pb-32">
+			<div className="mx-auto w-full max-w-md">
+				<div className="flex flex-col gap-3 text-center">
+					<h1 className="text-6xl font-bold text-white">Welcome back!</h1>
+					<p className="text-xl text-gray-500">Please enter your details</p>
+				</div>
+				<Spacer size="xs" />
 				<InlineLogin redirectTo={redirectTo} formError={data.formError} />
 			</div>
 		</div>

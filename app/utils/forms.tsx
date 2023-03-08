@@ -1,6 +1,8 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useId, useRef } from 'react'
 import { z } from 'zod'
 import { typedBoolean } from './misc'
+import styles from './forms.module.css'
+import * as Checkbox from '@radix-ui/react-checkbox'
 
 export type ListOfErrors = Array<string | null | undefined> | null | undefined
 
@@ -14,9 +16,9 @@ export function ErrorList({
 	const errorsToRender = errors?.filter(Boolean)
 	if (!errorsToRender?.length) return null
 	return (
-		<ul id={id}>
+		<ul id={id} className="space-y-1">
 			{errorsToRender.map(e => (
-				<li key={e} className="pt-1 text-red-700">
+				<li key={e} className="text-[10px] text-[#EF5A5A]">
 					{e}
 				</li>
 			))}
@@ -421,9 +423,100 @@ export function getFields<Key extends string>(
 				'aria-errormessage': fieldErrors.length ? errorElId : undefined,
 			},
 			labelProps: { htmlFor: id },
+			errors: fieldErrors,
 			errorUI: fieldErrors.length ? (
 				<ErrorList errors={fieldErrors} id={errorElId} />
 			) : null,
 		}
 	})
+}
+
+export function Field({
+	labelProps,
+	inputProps,
+	errors,
+}: {
+	labelProps: JSX.IntrinsicElements['label']
+	inputProps: JSX.IntrinsicElements['input']
+	errors?: ListOfErrors
+}) {
+	if (labelProps.className) {
+		// Sorry future Kent, I didn't know your use cases.
+		throw new Error(
+			'TODO: Support className prop in labelProps in the field component',
+		)
+	}
+	if (inputProps.className) {
+		// Sorry future Kent, I didn't know your use cases.
+		throw new Error(
+			'TODO: Support className prop in inputProps in the field component',
+		)
+	}
+	const fallbackId = useId()
+	const id = inputProps.id ?? fallbackId
+	const errorId = errors?.length ? `${id}-error` : undefined
+	return (
+		<div className={styles.field}>
+			<input
+				id={id}
+				aria-errormessage={errorId}
+				placeholder=" "
+				{...inputProps}
+				className="h-16 w-full rounded-lg border border-[#494949] bg-[#090909] px-4 pt-4 text-sm text-white caret-white"
+			/>
+			{/* the label comes after the input so we can use the sibling selector in the CSS to give us animated label control in CSS only */}
+			<label htmlFor={id} {...labelProps} />
+			<div className="px-4 pt-1 pb-3">
+				{errorId ? <ErrorList id={errorId} errors={errors} /> : null}
+			</div>
+		</div>
+	)
+}
+
+export function CheckboxField({
+	labelProps,
+	buttonProps,
+	errors,
+}: {
+	labelProps: JSX.IntrinsicElements['label']
+	buttonProps: React.ComponentPropsWithoutRef<typeof Checkbox.Root>
+	errors?: ListOfErrors
+}) {
+	if (labelProps.className) {
+		// Sorry future Kent, I didn't know your use cases.
+		throw new Error(
+			'TODO: Support className prop in labelProps in the checkbox field component',
+		)
+	}
+	if (buttonProps.className) {
+		// Sorry future Kent, I didn't know your use cases.
+		throw new Error(
+			'TODO: Support className prop in buttonProps in the checkbox field component',
+		)
+	}
+	const fallbackId = useId()
+	const id = buttonProps.id ?? fallbackId
+	const errorId = errors?.length ? `${id}-error` : undefined
+	return (
+		<div className={styles.checkboxField}>
+			<div className="flex gap-2">
+				<Checkbox.Root id={id} aria-errormessage={errorId} {...buttonProps}>
+					<Checkbox.Indicator className="h-4 w-4">
+						<svg viewBox="0 0 8 8">
+							<path
+								d="M1,4 L3,6 L7,2"
+								stroke="black"
+								strokeWidth="1"
+								fill="none"
+							/>
+						</svg>
+					</Checkbox.Indicator>
+				</Checkbox.Root>
+				<label htmlFor={id} {...labelProps} className="text-[#AAAAAA]" />
+			</div>
+			<div className="px-4 pt-1 pb-3">
+				{errorId ? <ErrorList id={errorId} errors={errors} /> : null}
+			</div>
+		</div>
+	)
 }

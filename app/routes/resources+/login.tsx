@@ -5,7 +5,13 @@ import { AuthorizationError } from 'remix-auth'
 import { FormStrategy } from 'remix-auth-form'
 import { z } from 'zod'
 import { authenticator } from '~/utils/auth.server'
-import { getFieldsFromSchema, preprocessFormData, useForm } from '~/utils/forms'
+import {
+	CheckboxField,
+	Field,
+	getFieldsFromSchema,
+	preprocessFormData,
+	useForm,
+} from '~/utils/forms'
 import { commitSession, getSession } from '~/utils/session.server'
 import { passwordSchema, usernameSchema } from '~/utils/user-validation'
 
@@ -97,74 +103,65 @@ export function InlineLogin({
 				<loginFetcher.Form
 					method="post"
 					action="/resources/login"
-					className="space-y-6"
 					{...form.props}
 				>
-					<div>
-						<label
-							className="block text-sm font-medium text-gray-700"
-							{...fields.username.labelProps}
-						>
-							Username
-						</label>
-						<div className="mt-1">
-							<input
-								autoComplete="username"
-								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-								{...fields.username.props}
-							/>
-							{fields.username.errorUI}
-						</div>
-					</div>
+					<Field
+						labelProps={{ ...fields.username.labelProps, children: 'Username' }}
+						inputProps={{
+							...fields.username.props,
+							autoComplete: 'username',
+						}}
+						errors={fields.username.errors}
+					/>
 
-					<div>
-						<label
-							className="block text-sm font-medium text-gray-700"
-							{...fields.password.labelProps}
-						>
-							Password
-						</label>
-						<div className="mt-1">
-							<input
-								autoComplete="current-password"
-								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-								{...fields.password.props}
-								type="password"
-							/>
-							{fields.password.errorUI}
-						</div>
-					</div>
+					<Field
+						labelProps={{ ...fields.password.labelProps, children: 'Password' }}
+						inputProps={{
+							...fields.password.props,
+							autoComplete: 'password',
+							type: 'password',
+						}}
+						errors={fields.password.errors}
+					/>
 
-					<div className="flex items-center">
-						<input
-							className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-							{...fields.remember.props}
+					<div className="flex justify-between">
+						<CheckboxField
+							labelProps={{
+								...fields.remember.labelProps,
+								children: 'Remember me',
+							}}
+							buttonProps={{
+								...fields.remember.props,
+								type: 'button',
+							}}
+							errors={fields.remember.errors}
 						/>
-						<label
-							className="ml-2 block text-sm text-gray-900"
-							{...fields.remember.labelProps}
-						>
-							Remember me
-						</label>
+
+						<div>
+							<Link
+								to="/forgot-password"
+								className="text-sm font-semibold text-white"
+							>
+								Forgot password?
+							</Link>
+						</div>
 					</div>
 
 					{form.errorUI}
 
-					<div className="flex items-center justify-between gap-6">
+					<div className="flex items-center justify-between gap-6 pt-3">
 						<button
 							type="submit"
-							className="w-full rounded bg-blue-500  py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400"
+							className="h-16 w-full rounded-full bg-primary py-3.5 px-10 text-lg font-bold text-white hover:bg-primary-darker"
 						>
 							Log in
 						</button>
 					</div>
 				</loginFetcher.Form>
-				<div className="flex justify-around pt-6">
-					<Link to="/signup" className="text-blue-600 underline">
-						New here?
-					</Link>
-					<Link to="/forgot-password" className="text-blue-600 underline">
-						Forgot password?
+				<div className="flex items-center justify-center gap-2 pt-6">
+					<span className="text-gray-500">New here?</span>
+					<Link to="/signup" className="text-white">
+						Create an account
 					</Link>
 				</div>
 			</div>

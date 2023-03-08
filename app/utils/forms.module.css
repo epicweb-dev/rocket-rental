@@ -1,0 +1,38 @@
+.field {
+	position: relative;
+	min-height: 96px;
+}
+
+.field input + label {
+	@apply absolute left-0 origin-top-left translate-x-4 text-sm text-[#AAAAAA] transition-transform;
+}
+
+.field input:placeholder-shown:not(:focus) + label {
+	@apply translate-y-[1.4rem] scale-100;
+}
+
+.field input:not(:placeholder-shown) + label,
+.field input:focus + label {
+	@apply translate-y-2 scale-75;
+}
+
+.checkboxField {
+	min-height: 56px;
+}
+
+.checkboxField button {
+	@apply flex h-6 w-6 items-center justify-center rounded border;
+}
+
+.checkboxField button[aria-checked='false'] {
+	@apply border-[#494949] bg-[#090909];
+}
+
+.checkboxField button[aria-checked='true'] {
+	@apply border-[#F183FF] bg-[#F183FF];
+}
+
+.field input[aria-errormessage],
+.checkboxField button[aria-errormessage] {
+	@apply border-[#EF5A5A];
+}

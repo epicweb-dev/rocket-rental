@@ -61,7 +61,7 @@ function generateStarCircles({
 			)
 
 			// Add a circle element for the star with random size and position within the grid
-			const size = (Math.random() * 2 + 0.5).toFixed(1)
+			const size = (Math.random() * 1.2 + 0.2).toFixed(1)
 			const twinkle = (Math.random() * 2.5 + 1.8).toFixed(1)
 			const startingOpacity = Math.random().toFixed(1)
 			circles.push(
