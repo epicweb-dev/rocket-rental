@@ -23,8 +23,10 @@ test('onboarding', async ({ page }) => {
 	await page.getByRole('link', { name: /log in/i }).click()
 	await expect(page).toHaveURL(`/login`)
 
-	const newHereLink = page.getByRole('link', { name: /new here/i })
-	await newHereLink.click()
+	const createAccountLink = page.getByRole('link', {
+		name: /create an account/i,
+	})
+	await createAccountLink.click()
 
 	await expect(page).toHaveURL(`/signup`)
 
