@@ -63,7 +63,7 @@ test('onboarding', async ({ page }) => {
 
 	await page.getByRole('checkbox', { name: /remember me/i }).check()
 
-	await page.getByRole('button', { name: /sign up/i }).click()
+	await page.getByRole('button', { name: /Create an account/i }).click()
 
 	await expect(page).toHaveURL(`/`)
 

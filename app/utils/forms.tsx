@@ -479,7 +479,12 @@ export function CheckboxField({
 	errors,
 }: {
 	labelProps: JSX.IntrinsicElements['label']
-	buttonProps: React.ComponentPropsWithoutRef<typeof Checkbox.Root>
+	buttonProps: Omit<
+		React.ComponentPropsWithoutRef<typeof Checkbox.Root>,
+		'type'
+	> & {
+		type?: string
+	}
 	errors?: ListOfErrors
 }) {
 	if (labelProps.className) {
@@ -500,7 +505,12 @@ export function CheckboxField({
 	return (
 		<div className={styles.checkboxField}>
 			<div className="flex gap-2">
-				<Checkbox.Root id={id} aria-errormessage={errorId} {...buttonProps}>
+				<Checkbox.Root
+					id={id}
+					aria-errormessage={errorId}
+					{...buttonProps}
+					type="button"
+				>
 					<Checkbox.Indicator className="h-4 w-4">
 						<svg viewBox="0 0 8 8">
 							<path
@@ -512,7 +522,11 @@ export function CheckboxField({
 						</svg>
 					</Checkbox.Indicator>
 				</Checkbox.Root>
-				<label htmlFor={id} {...labelProps} className="text-[#AAAAAA]" />
+				<label
+					htmlFor={id}
+					{...labelProps}
+					className="text-sm text-[#AAAAAA]"
+				/>
 			</div>
 			<div className="px-4 pt-1 pb-3">
 				{errorId ? <ErrorList id={errorId} errors={errors} /> : null}

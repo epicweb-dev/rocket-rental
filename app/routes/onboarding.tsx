@@ -12,8 +12,15 @@ import {
 	useSearchParams,
 } from '@remix-run/react'
 import { z } from 'zod'
+import { Spacer } from '~/components/spacer'
 import { authenticator, createUser } from '~/utils/auth.server'
-import { getFieldsFromSchema, preprocessFormData, useForm } from '~/utils/forms'
+import {
+	Field,
+	CheckboxField,
+	getFieldsFromSchema,
+	preprocessFormData,
+	useForm,
+} from '~/utils/forms'
 import { safeRedirect } from '~/utils/misc'
 import { commitSession, getSession } from '~/utils/session.server'
 import {
@@ -133,125 +140,83 @@ export default function OnboardingPage() {
 	const redirectTo = searchParams.get('redirectTo') || '/'
 
 	return (
-		<div className="flex min-h-full flex-col justify-center">
-			<div className="mx-auto w-full max-w-md px-8">
-				<Form method="post" className="space-y-6" {...form.props}>
-					<div>Onboarding for {data.onboardingEmail}</div>
-					<div>
-						<label
-							className="block text-sm font-medium text-gray-700"
-							{...fields.username.labelProps}
-						>
-							Username
-						</label>
-						<div className="mt-1">
-							<input
-								autoFocus={true}
-								autoComplete="username"
-								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-								{...fields.username.props}
-							/>
-							{fields.username.errorUI}
-						</div>
-					</div>
+		<div className="flex min-h-full flex-col justify-center pt-20 pb-32">
+			<div className="mx-auto w-full max-w-lg">
+				<div className="flex flex-col gap-3 text-center">
+					<h1 className="text-6xl font-bold text-white">Welcome aboard!</h1>
+					<p className="text-xl text-gray-500">Please enter your details.</p>
+				</div>
+				<Spacer size="xs" />
+				<Form method="post" className="mx-auto max-w-sm" {...form.props}>
+					<Field
+						labelProps={{ ...fields.username.labelProps, children: 'Username' }}
+						inputProps={{
+							...fields.username.props,
+							autoComplete: 'username',
+							autoFocus: true,
+						}}
+						errors={fields.username.errors}
+					/>
+					<Field
+						labelProps={{ ...fields.name.labelProps, children: 'Name' }}
+						inputProps={{
+							...fields.name.props,
+							autoComplete: 'name',
+							autoFocus: true,
+						}}
+						errors={fields.name.errors}
+					/>
+					<Field
+						labelProps={{ ...fields.password.labelProps, children: 'Password' }}
+						inputProps={{
+							...fields.password.props,
+							autoComplete: 'new-password',
+							type: 'password',
+						}}
+						errors={fields.password.errors}
+					/>
 
-					<div>
-						<label
-							className="block text-sm font-medium text-gray-700"
-							{...fields.name.labelProps}
-						>
-							Name
-						</label>
-						<div className="mt-1">
-							<input
-								autoComplete="name"
-								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-								{...fields.name.props}
-							/>
-							{fields.name.errorUI}
-						</div>
-					</div>
+					<Field
+						labelProps={{
+							...fields.confirmPassword.labelProps,
+							children: 'Confirm Password',
+						}}
+						inputProps={{
+							...fields.confirmPassword.props,
+							autoComplete: 'new-password',
+							type: 'password',
+						}}
+						errors={fields.confirmPassword.errors}
+					/>
 
-					<div>
-						<label
-							className="block text-sm font-medium text-gray-700"
-							{...fields.password.labelProps}
-						>
-							Password
-						</label>
-						<div className="mt-1">
-							<input
-								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-								autoComplete="new-password"
-								{...fields.password.props}
-								type="password"
-							/>
-							{fields.password.errorUI}
-						</div>
-					</div>
+					<CheckboxField
+						labelProps={{
+							...fields.agreeToTermsOfServiceAndPrivacyPolicy.labelProps,
+							children:
+								'Do you agree to our Terms of Service and Privacy Policy?',
+						}}
+						buttonProps={fields.agreeToTermsOfServiceAndPrivacyPolicy.props}
+						errors={fields.agreeToTermsOfServiceAndPrivacyPolicy.errors}
+					/>
 
-					<div>
-						<label
-							className="block text-sm font-medium text-gray-700"
-							{...fields.confirmPassword.labelProps}
-						>
-							Confirm Password
-						</label>
-						<div className="mt-1">
-							<input
-								autoComplete="new-password"
-								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-								{...fields.confirmPassword.props}
-								type="password"
-							/>
-							{fields.confirmPassword.errorUI}
-						</div>
-					</div>
+					<CheckboxField
+						labelProps={{
+							...fields.agreeToMailingList.labelProps,
+							children:
+								'Would you like to receive special discounts and offers?',
+						}}
+						buttonProps={fields.agreeToMailingList.props}
+						errors={fields.agreeToMailingList.errors}
+					/>
 
-					<div>
-						<div className="flex items-center">
-							<input
-								className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-								{...fields.agreeToTermsOfServiceAndPrivacyPolicy.props}
-							/>
-							<label
-								className="ml-2 block text-sm text-gray-900"
-								{...fields.agreeToTermsOfServiceAndPrivacyPolicy.labelProps}
-							>
-								Do you agree to our Terms of Service and Privacy Policy?
-							</label>
-						</div>
-						{fields.agreeToTermsOfServiceAndPrivacyPolicy.errorUI}
-					</div>
-
-					<div>
-						<div className="flex items-center">
-							<input
-								className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-								{...fields.agreeToMailingList.props}
-							/>
-							<label
-								className="ml-2 block text-sm text-gray-900"
-								{...fields.agreeToMailingList.labelProps}
-							>
-								Would you like to receive special discounts and offers?
-							</label>
-						</div>
-						{fields.agreeToMailingList.errorUI}
-					</div>
-
-					<div className="flex items-center">
-						<input
-							className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-							{...fields.remember.props}
-						/>
-						<label
-							className="ml-2 block text-sm text-gray-900"
-							{...fields.remember.labelProps}
-						>
-							Remember me
-						</label>
-					</div>
+					<CheckboxField
+						labelProps={{
+							...fields.remember.labelProps,
+							children: 'Remember me',
+						}}
+						buttonProps={fields.remember.props}
+						errors={fields.remember.errors}
+					/>
 
 					<input
 						{...fields.redirectTo.props}
@@ -264,15 +229,12 @@ export default function OnboardingPage() {
 					<div className="flex items-center justify-between gap-6">
 						<button
 							type="submit"
-							className="w-full rounded bg-gray-500  py-2 px-4 text-white hover:bg-gray-600 focus:bg-gray-400"
+							className="h-16 w-full rounded-full bg-primary py-3.5 px-10 text-lg font-bold text-white hover:bg-primary-darker"
 						>
-							Sign up
+							Create an account
 						</button>
 					</div>
 				</Form>
-				<Link to="/login" className="text-blue-600 underline">
-					Been here before?
-				</Link>
 			</div>
 		</div>
 	)

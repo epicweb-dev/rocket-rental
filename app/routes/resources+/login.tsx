@@ -130,10 +130,7 @@ export function InlineLogin({
 								...fields.remember.labelProps,
 								children: 'Remember me',
 							}}
-							buttonProps={{
-								...fields.remember.props,
-								type: 'button',
-							}}
+							buttonProps={fields.remember.props}
 							errors={fields.remember.errors}
 						/>
 

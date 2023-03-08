@@ -7,6 +7,11 @@
 	@apply absolute left-0 origin-top-left translate-x-4 text-sm text-[#AAAAAA] transition-transform;
 }
 
+.field input:required + label:after,
+.checkboxField button:required + label:after {
+	content: ' *';
+}
+
 .field input:placeholder-shown:not(:focus) + label {
 	@apply translate-y-[1.4rem] scale-100;
 }
