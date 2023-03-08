@@ -53,9 +53,8 @@
   "dependencies": {
     "@prisma/client": "^4.11.0",
     "@radix-ui/react-checkbox": "^1.0.2",
-    "@radix-ui/react-tabs": "^1.0.2",
+    "@radix-ui/react-tabs": "^1.0.3",
     "@reach/dialog": "^0.18.0",
-    "@reach/tabs": "^0.18.0",
     "@remix-run/css-bundle": "^1.14.0",
     "@remix-run/node": "^1.14.0",
     "@remix-run/react": "^1.14.0",
@@ -123,6 +122,7 @@
     "prettier-plugin-tailwindcss": "^0.2.3",
     "remix-flat-routes": "^0.5.7",
     "tailwindcss": "^3.2.7",
+    "tailwindcss-radix": "^2.8.0",
     "tsconfig-paths": "^4.1.1",
     "tsx": "^3.12.3",
     "typescript": "^4.9.5",
