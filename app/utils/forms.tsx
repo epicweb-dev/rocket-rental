@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { typedBoolean } from './misc'
 import styles from './forms.module.css'
 import * as Checkbox from '@radix-ui/react-checkbox'
+import clsx from 'clsx'
 
 export type ListOfErrors = Array<string | null | undefined> | null | undefined
 
@@ -435,34 +436,56 @@ export function Field({
 	labelProps,
 	inputProps,
 	errors,
+	className,
 }: {
-	labelProps: JSX.IntrinsicElements['label']
-	inputProps: JSX.IntrinsicElements['input']
+	labelProps: Omit<JSX.IntrinsicElements['label'], 'className'>
+	inputProps: Omit<JSX.IntrinsicElements['input'], 'className'>
 	errors?: ListOfErrors
+	className?: string
 }) {
-	if (labelProps.className) {
-		// Sorry future Kent, I didn't know your use cases.
-		throw new Error(
-			'TODO: Support className prop in labelProps in the field component',
-		)
-	}
-	if (inputProps.className) {
-		// Sorry future Kent, I didn't know your use cases.
-		throw new Error(
-			'TODO: Support className prop in inputProps in the field component',
-		)
-	}
 	const fallbackId = useId()
 	const id = inputProps.id ?? fallbackId
 	const errorId = errors?.length ? `${id}-error` : undefined
 	return (
-		<div className={styles.field}>
+		<div className={clsx(styles.field, className)}>
 			<input
 				id={id}
 				aria-errormessage={errorId}
 				placeholder=" "
 				{...inputProps}
-				className="h-16 w-full rounded-lg border border-[#494949] bg-[#090909] px-4 pt-4 text-sm text-white caret-white"
+				className="h-16 w-full rounded-lg border border-night-lite bg-night px-4 pt-4 text-sm text-white caret-white outline-none focus:border-primary disabled:bg-night-lite"
+			/>
+			{/* the label comes after the input so we can use the sibling selector in the CSS to give us animated label control in CSS only */}
+			<label htmlFor={id} {...labelProps} />
+			<div className="px-4 pt-1 pb-3">
+				{errorId ? <ErrorList id={errorId} errors={errors} /> : null}
+			</div>
+		</div>
+	)
+}
+
+export function TextareaField({
+	labelProps,
+	textareaProps,
+	errors,
+	className,
+}: {
+	labelProps: Omit<JSX.IntrinsicElements['label'], 'className'>
+	textareaProps: Omit<JSX.IntrinsicElements['textarea'], 'className'>
+	errors?: ListOfErrors
+	className?: string
+}) {
+	const fallbackId = useId()
+	const id = textareaProps.id ?? fallbackId
+	const errorId = errors?.length ? `${id}-error` : undefined
+	return (
+		<div className={clsx(styles.textareaField, className)}>
+			<textarea
+				id={id}
+				aria-errormessage={errorId}
+				placeholder=" "
+				{...textareaProps}
+				className="h-48 w-full rounded-lg border border-night-lite bg-night px-4 pt-8 text-sm text-white caret-white outline-none focus:border-primary disabled:bg-night-lite"
 			/>
 			{/* the label comes after the input so we can use the sibling selector in the CSS to give us animated label control in CSS only */}
 			<label htmlFor={id} {...labelProps} />
@@ -478,27 +501,15 @@ export function CheckboxField({
 	buttonProps,
 	errors,
 }: {
-	labelProps: JSX.IntrinsicElements['label']
+	labelProps: Omit<JSX.IntrinsicElements['label'], 'className'>
 	buttonProps: Omit<
 		React.ComponentPropsWithoutRef<typeof Checkbox.Root>,
-		'type'
+		'type' | 'className'
 	> & {
 		type?: string
 	}
 	errors?: ListOfErrors
 }) {
-	if (labelProps.className) {
-		// Sorry future Kent, I didn't know your use cases.
-		throw new Error(
-			'TODO: Support className prop in labelProps in the checkbox field component',
-		)
-	}
-	if (buttonProps.className) {
-		// Sorry future Kent, I didn't know your use cases.
-		throw new Error(
-			'TODO: Support className prop in buttonProps in the checkbox field component',
-		)
-	}
 	const fallbackId = useId()
 	const id = buttonProps.id ?? fallbackId
 	const errorId = errors?.length ? `${id}-error` : undefined
@@ -525,12 +536,66 @@ export function CheckboxField({
 				<label
 					htmlFor={id}
 					{...labelProps}
-					className="text-sm text-[#AAAAAA]"
+					className="text-sm text-label-light-gray"
 				/>
 			</div>
 			<div className="px-4 pt-1 pb-3">
 				{errorId ? <ErrorList id={errorId} errors={errors} /> : null}
 			</div>
 		</div>
+	)
+}
+
+function getButtonClassName({
+	size,
+	variant,
+	...props
+}: Omit<React.ComponentPropsWithoutRef<'button'>, 'className'> & {
+	size: 'small' | 'medium' | 'medium-wide'
+	variant: 'primary' | 'secondary'
+}) {
+	const baseClassName =
+		'rounded-full font-bold text-white outline-none transition-[background-color,color] duration-200 disabled:bg-night-muted disabled:text-label-light-gray'
+	const primaryClassName =
+		'bg-primary hover:bg-secondary hover:text-night focus:bg-secondary focus:text-night active:bg-tertiary'
+	const secondaryClassName =
+		'border-[1.5px] border-night-lite bg-night hover:border-primary focus:border-primary active:border-primary-lighter'
+	const smallClassName = 'px-10 py-[14px] text-sm'
+	const mediumClassName = 'px-14 py-5 text-lg'
+	const mediumWideClassName = 'px-24 py-5 text-lg'
+	const className = clsx(baseClassName, {
+		[primaryClassName]: variant === 'primary',
+		[secondaryClassName]: variant === 'secondary',
+		[smallClassName]: size === 'small',
+		[mediumClassName]: size === 'medium',
+		[mediumWideClassName]: size === 'medium-wide',
+	})
+	return className
+}
+
+export function Button({
+	size,
+	variant,
+	...props
+}: Omit<React.ComponentPropsWithoutRef<'button'>, 'className'> & {
+	size: 'small' | 'medium' | 'medium-wide'
+	variant: 'primary' | 'secondary'
+}) {
+	return <button {...props} className={getButtonClassName({ size, variant })} />
+}
+
+export function LabelButton({
+	size,
+	variant,
+	...props
+}: Omit<React.ComponentPropsWithoutRef<'label'>, 'className'> & {
+	size: 'small' | 'medium' | 'medium-wide'
+	variant: 'primary' | 'secondary'
+}) {
+	return (
+		<label
+			{...props}
+			className={clsx('cursor-pointer', getButtonClassName({ size, variant }))}
+		/>
 	)
 }

@@ -80,7 +80,7 @@ export async function createUser({
 	name: User['name']
 	password: string
 }) {
-	const hashedPassword = await bcrypt.hash(password, 10)
+	const hashedPassword = await getPasswordHash(password)
 
 	return prisma.user.create({
 		data: {
@@ -96,15 +96,18 @@ export async function createUser({
 	})
 }
 
-async function verifyLogin(
+export async function getPasswordHash(password: string) {
+	const hash = await bcrypt.hash(password, 10)
+	return hash
+}
+
+export async function verifyLogin(
 	username: User['username'],
 	password: Password['hash'],
 ) {
 	const userWithPassword = await prisma.user.findUnique({
 		where: { username },
-		include: {
-			password: true,
-		},
+		select: { id: true, password: { select: { hash: true } } },
 	})
 
 	if (!userWithPassword || !userWithPassword.password) {
@@ -117,7 +120,5 @@ async function verifyLogin(
 		return null
 	}
 
-	const { password: _password, ...userWithoutPassword } = userWithPassword
-
-	return userWithoutPassword
+	return { id: userWithPassword.id }
 }

@@ -13,7 +13,7 @@ model File {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  Image     Image?
+  image     Image?
 }
 
 model Image {
@@ -26,11 +26,11 @@ model Image {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  User      User?
-  ShipBrand ShipBrand?
-  ShipModel ShipModel?
-  Ship      Ship?
-  Starport  Starport?
+  user      User?
+  shipBrand ShipBrand?
+  shipModel ShipModel?
+  ship      Ship?
+  starport  Starport?
 }
 
 model User {

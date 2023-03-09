@@ -81,7 +81,7 @@ export default function App() {
 				<Meta />
 				<Links />
 			</head>
-			<body className="flex h-full flex-col justify-between bg-[#090909]">
+			<body className="bg-night flex h-full flex-col justify-between">
 				<header className="container mx-auto py-6">
 					<nav className="flex justify-between">
 						<Link to="/" className="text-white">
@@ -117,16 +117,7 @@ export default function App() {
 						<div className="font-light">rocket</div>
 						<div className="font-bold">Rental</div>
 					</Link>
-					<div className="flex gap-10">
-						<div>
-							<select>
-								<option value="en">EN</option>
-							</select>
-						</div>
-						<div>
-							<ThemeSwitch />
-						</div>
-					</div>
+					<ThemeSwitch />
 				</div>
 				<div className="h-5" />
 				<ScrollRestoration />
@@ -167,8 +158,8 @@ function ThemeSwitch() {
 		<fetcher.Form>
 			<label>
 				<Checkbox.Root
-					className={clsx('bg-gray-[#1E1E20] h-10 w-20 rounded-full p-1', {
-						'bg-[#1E1E20]': theme === 'dark',
+					className={clsx('bg-gray-night-muted h-10 w-20 rounded-full p-1', {
+						'bg-night-muted': theme === 'dark',
 						'bg-white': theme === 'light',
 					})}
 					checked={checked}

@@ -53,6 +53,7 @@
   "dependencies": {
     "@prisma/client": "^4.11.0",
     "@radix-ui/react-checkbox": "^1.0.2",
+    "@radix-ui/react-dialog": "^1.0.3",
     "@radix-ui/react-tabs": "^1.0.3",
     "@reach/dialog": "^0.18.0",
     "@remix-run/css-bundle": "^1.14.0",
