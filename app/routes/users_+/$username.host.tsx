@@ -1,5 +1,6 @@
 import { json, type DataFunctionArgs } from '@remix-run/node'
 import {
+	Link,
 	useCatch,
 	useFetcher,
 	useLoaderData,
@@ -57,9 +58,19 @@ export async function loader({ params }: DataFunctionArgs) {
 						select: {
 							createdAt: true,
 							id: true,
-							description: true,
+							content: true,
 							rating: true,
-							host: {
+							booking: {
+								select: {
+									ship: {
+										select: {
+											id: true,
+											name: true,
+										},
+									},
+								},
+							},
+							reviewer: {
 								select: {
 									user: {
 										select: {
@@ -88,10 +99,10 @@ export async function loader({ params }: DataFunctionArgs) {
 		where: { hostId: user.id },
 	})
 	const totalReviews = await prisma.hostReview.count({
-		where: { hostId: user.id },
+		where: { subjectId: user.id },
 	})
 	const averageReviews = await prisma.hostReview.aggregate({
-		where: { hostId: user.id },
+		where: { subjectId: user.id },
 		_avg: { rating: true },
 	})
 
@@ -116,8 +127,8 @@ export default function HostUserDisplay() {
 	const isLoggedInUser = loggedInUser?.id === data.user.id
 
 	return (
-		<div className="container mx-auto mt-11">
-			<div className="rounded-3xl bg-night-muted p-12">
+		<div className="mt-11">
+			<div className="container mx-auto rounded-3xl bg-night-muted p-12">
 				<div className="grid grid-cols-2 justify-items-center">
 					<div className="relative w-52">
 						<div className="absolute -top-40">
@@ -238,10 +249,81 @@ export default function HostUserDisplay() {
 					<div className="rounded-3xl bg-night-muted p-10">
 						<h2 className="font-3xl font-bold text-white">About</h2>
 						<p className="mt-6 max-h-56 overflow-y-scroll text-label-light-gray">
-							{(data.user.host.bio ?? 'No bio provided').repeat(100)}
+							{data.user.host.bio ?? 'No bio provided'}
 						</p>
 					</div>
 				</div>
+			</div>
+			<div className="container mx-auto mt-40">
+				{data.totalReviews ? (
+					<div>
+						<div className="flex justify-between">
+							<div className="flex gap-5">
+								<h2 className="text-3xl font-bold text-white">
+									{data.totalReviews} reviews from renters
+								</h2>
+								<StarRatingDisplay rating={data.rating ?? 0} />
+							</div>
+							<Link to="reviews" className="text-label-light-gray">
+								View all
+							</Link>
+						</div>
+						<div className="mt-10 flex snap-x gap-10 overflow-x-scroll">
+							{data.user.host.reviews.map(review => (
+								<div
+									key={review.id}
+									className="flex w-[440px] shrink-0 snap-start flex-col justify-between rounded-3xl border-[1px] border-gray-500 p-10"
+								>
+									<div>
+										<div className="">⭐ ⭐ ⭐ ⭐ ⭑</div>
+										<Link to={`/reviews/${review.id}`}>
+											<div className="mt-6 h-[160px]">
+												<p className="quote text-white line-clamp-5">
+													{review.content.repeat(2)}
+												</p>
+											</div>
+										</Link>
+									</div>
+									<div className="flex gap-4">
+										<Link to={`/users/${review.reviewer.user.username}/renter`}>
+											<img
+												className="h-14 w-14 rounded-full"
+												src={getUserImgSrc(review.reviewer.user.imageId)}
+											/>
+										</Link>
+										<div className="flex flex-col gap-1">
+											<Link
+												to={`/users/${review.reviewer.user.username}/renter`}
+											>
+												<h3 className="text-base font-bold text-white">
+													{review.reviewer.user.name ??
+														review.reviewer.user.username}
+												</h3>
+											</Link>
+											<Link
+												to={`/ships/${review.booking.ship.id}`}
+												className="text-sm text-gray-500"
+											>
+												{review.booking.ship.name}
+											</Link>
+										</div>
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+				) : (
+					<div className="flex flex-col gap-10">
+						<h2 className="text-3xl font-bold text-white">No reviews yet</h2>
+						<div className="flex flex-col gap-3">
+							<span>⭐️ ⭐️ ⭐️ ⭐️ ⭐️</span>
+							<p className="text-label-light-gray">
+								{data.user.name ?? data.user.username} hasn't received a review
+								yet
+							</p>
+						</div>
+					</div>
+				)}
 			</div>
 		</div>
 	)

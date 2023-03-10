@@ -38,7 +38,7 @@ export default function UsernameIndex() {
 	const isLoggedInUser = data.user.id === loggedInUser?.id
 
 	return (
-		<div className="flex flex-col items-center justify-center">
+		<div className="container flex flex-col items-center justify-center">
 			<img
 				className="h-52 w-52 rounded-full object-cover"
 				alt={data.user.name ?? data.user.username}
@@ -52,7 +52,7 @@ export default function UsernameIndex() {
 			{isLoggedInUser ? (
 				<Link
 					to="/settings/profile"
-					className="border-night-lite rounded-full border py-5 px-10 text-white"
+					className="rounded-full border border-night-lite py-5 px-10 text-white"
 				>
 					✏️ Create your profile
 				</Link>

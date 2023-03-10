@@ -62,9 +62,9 @@ export async function loader({ params }: DataFunctionArgs) {
 				select: {
 					id: true,
 					rating: true,
-					description: true,
+					content: true,
 					createdAt: true,
-					renter: {
+					reviewer: {
 						select: {
 							user: {
 								select: {
@@ -141,21 +141,21 @@ export default function ShipRoute() {
 							{data.ship.reviews.map(review => (
 								<li key={review.id}>
 									<p>
-										<Link to={`/users/${review.renter.user.username}`}>
-											{review.renter.user.imageId ? (
+										<Link to={`/users/${review.reviewer.user.username}`}>
+											{review.reviewer.user.imageId ? (
 												<img
-													src={getUserImgSrc(review.renter.user.imageId)}
-													alt={review.renter.user.name ?? "Ship's host"}
-													title={review.renter.user.name ?? "Ship's host"}
+													src={getUserImgSrc(review.reviewer.user.imageId)}
+													alt={review.reviewer.user.name ?? "Ship's host"}
+													title={review.reviewer.user.name ?? "Ship's host"}
 													className="aspect-square w-12"
 												/>
 											) : (
-												`Renter Name: ${review.renter.user.name}`
+												`Reviewer Name: ${review.reviewer.user.name}`
 											)}
 										</Link>
 									</p>
 									<p>Rating: {review.rating}</p>
-									<p>{review.description}</p>
+									<p>{review.content}</p>
 								</li>
 							))}
 						</ul>

@@ -1,19 +1,11 @@
-import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
 import {
-	Form,
 	NavLink,
 	Outlet,
 	useCatch,
-	useLoaderData,
 	useMatches,
-	useNavigate,
 	useParams,
 } from '@remix-run/react'
 import clsx from 'clsx'
-import invariant from 'tiny-invariant'
-import { getUserId, requireUserId } from '~/utils/auth.server'
-import { prisma } from '~/utils/db.server'
-import { getUserImgSrc, useOptionalUser } from '~/utils/misc'
 
 export default function UserRoute() {
 	const matches = useMatches()
@@ -21,10 +13,10 @@ export default function UserRoute() {
 	const onIndexPage = lastMatch.id.endsWith('index')
 
 	return (
-		<div className="container mx-auto mt-36 mb-48">
+		<div className="mx-auto mt-36 mb-48">
 			{onIndexPage ? null : (
 				<div className="flex justify-end">
-					<div className="border-night-lite bg-night flex justify-between rounded-full border">
+					<div className="flex justify-between rounded-full border border-night-lite bg-night">
 						<NavLink
 							preventScrollReset
 							prefetch="intent"
