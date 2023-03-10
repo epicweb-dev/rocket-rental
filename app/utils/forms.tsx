@@ -4,6 +4,7 @@ import { typedBoolean } from './misc'
 import styles from './forms.module.css'
 import * as Checkbox from '@radix-ui/react-checkbox'
 import clsx from 'clsx'
+import { Link } from '@remix-run/react'
 
 export type ListOfErrors = Array<string | null | undefined> | null | undefined
 
@@ -582,6 +583,17 @@ export function Button({
 	variant: 'primary' | 'secondary'
 }) {
 	return <button {...props} className={getButtonClassName({ size, variant })} />
+}
+
+export function ButtonLink({
+	size,
+	variant,
+	...props
+}: Omit<React.ComponentPropsWithoutRef<typeof Link>, 'className'> & {
+	size: 'small' | 'medium' | 'medium-wide'
+	variant: 'primary' | 'secondary'
+}) {
+	return <Link {...props} className={getButtonClassName({ size, variant })} />
 }
 
 export function LabelButton({

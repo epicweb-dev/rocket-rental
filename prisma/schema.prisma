@@ -223,13 +223,13 @@ model ShipReview {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  /// the renter who reviewed the ship
-  renter   Renter @relation(fields: [renterId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
-  renterId String
-
   /// the ship that was reviewed
-  ship      Ship    @relation(fields: [shipId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  shipId    String
+  ship   Ship   @relation(fields: [shipId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  shipId String
+
+  /// the renter who reviewed the ship
+  renter    Renter  @relation(fields: [renterId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  renterId  String
   booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   bookingId String  @unique
 }
@@ -243,18 +243,18 @@ model HostReview {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  /// the renter who reviewed the host
-  renter   Renter @relation(fields: [renterId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
-  renterId String
-
   /// the host that was reviewed
-  host      Host    @relation(fields: [hostId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
-  hostId    String
+  host   Host   @relation(fields: [hostId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  hostId String
+
+  /// the renter who reviewed the host
+  renter    Renter  @relation(fields: [renterId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  renterId  String
   booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   bookingId String  @unique
 }
 
-/// Review by the renter by the host
+/// Review of the renter by the host
 model RenterReview {
   id          String @id @unique @default(cuid())
   rating      Int
@@ -263,11 +263,11 @@ model RenterReview {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  /// the host who reviewed the renter
+  /// the renter that was reviewed
   renter   Renter @relation(fields: [renterId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
   renterId String
 
-  /// the renter that was reviewed
+  /// the host who reviewed the renter
   host      Host    @relation(fields: [hostId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
   hostId    String
   booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)

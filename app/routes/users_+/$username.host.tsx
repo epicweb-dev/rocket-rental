@@ -7,10 +7,10 @@ import {
 } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { z } from 'zod'
-import { requireUserId } from '~/utils/auth.server'
+import { StarRatingDisplay } from '~/components/star-rating-display'
 import { prisma } from '~/utils/db.server'
-import { getFieldsFromSchema, preprocessFormData, useForm } from '~/utils/forms'
-import { useOptionalUser } from '~/utils/misc'
+import { ButtonLink, getFieldsFromSchema } from '~/utils/forms'
+import { getUserImgSrc, useOptionalUser } from '~/utils/misc'
 
 const MIN_BIO_LENGTH = 2
 const MAX_BIO_LENGTH = 2000
@@ -26,6 +26,8 @@ export async function loader({ params }: DataFunctionArgs) {
 		select: {
 			id: true,
 			username: true,
+			name: true,
+			imageId: true,
 			host: {
 				select: {
 					bio: true,
@@ -35,13 +37,6 @@ export async function loader({ params }: DataFunctionArgs) {
 							id: true,
 							name: true,
 							imageId: true,
-							_count: {
-								select: {
-									// TODO: calculate only bookings they've had in the past
-									// not the total number of bookings
-									bookings: true,
-								},
-							},
 							model: {
 								select: {
 									id: true,
@@ -58,7 +53,6 @@ export async function loader({ params }: DataFunctionArgs) {
 							},
 						},
 					},
-					// TODO: calculate overall review rating (average of all reviews)
 					reviews: {
 						select: {
 							createdAt: true,
@@ -78,87 +72,38 @@ export async function loader({ params }: DataFunctionArgs) {
 							},
 						},
 					},
-					renterReviews: {
-						select: {
-							createdAt: true,
-							id: true,
-							description: true,
-							rating: true,
-							renter: {
-								select: {
-									user: {
-										select: {
-											imageId: true,
-											name: true,
-											username: true,
-										},
-									},
-								},
-							},
-						},
-					},
 				},
 			},
 		},
 	})
-	if (!user) {
+	if (!user?.host) {
 		throw new Response('not found', { status: 404 })
 	}
-	return json({ user, fieldMetadata: getFieldsFromSchema(BioFormSchema) })
-}
-
-export async function action({ request, params }: DataFunctionArgs) {
-	invariant(typeof params.username === 'string', 'Missing username param')
-	const userId = await requireUserId(request)
-	const user = await prisma.user.findUnique({
-		where: { username: params.username },
-		select: { id: true, host: { select: { userId: true } } },
+	const totalBookings = await prisma.booking.count({
+		where: {
+			AND: [{ ship: { hostId: user.id } }, { endDate: { lte: new Date() } }],
+		},
 	})
-	if (userId !== user?.id) {
-		return json({ status: 'unauthorized', errors: null } as const, {
-			status: 401,
-		})
-	}
-	const formData = await request.formData()
+	const totalShips = await prisma.ship.count({
+		where: { hostId: user.id },
+	})
+	const totalReviews = await prisma.hostReview.count({
+		where: { hostId: user.id },
+	})
+	const averageReviews = await prisma.hostReview.aggregate({
+		where: { hostId: user.id },
+		_avg: { rating: true },
+	})
 
-	const intent = formData.get('intent')
-	switch (intent) {
-		case 'update-bio': {
-			const result = BioFormSchema.safeParse(
-				preprocessFormData(formData, BioFormSchema),
-			)
-			if (!result.success) {
-				return json(
-					{ status: 'bio-invalid', errors: result.error.flatten() } as const,
-					{ status: 400 },
-				)
-			}
-			const { bio } = result.data
-			await prisma.host.update({
-				where: { userId },
-				data: { bio },
-			})
-			return json({ status: 'bio-update-success' } as const)
-		}
-		case 'become-host': {
-			if (user.host) {
-				return json({ status: 'already-host' } as const, {
-					status: 400,
-				})
-			}
-			await prisma.host.create({
-				data: {
-					userId: user.id,
-				},
-			})
-			return json({ status: 'become-host-success' } as const)
-		}
-		default: {
-			return json({ status: 'Unhandled intent' } as const, {
-				status: 400,
-			})
-		}
-	}
+	return json({
+		user,
+		userJoinedDisplay: user.host.createdAt.toLocaleDateString(),
+		totalBookings,
+		totalShips,
+		totalReviews,
+		rating: averageReviews._avg.rating,
+		fieldMetadata: getFieldsFromSchema(BioFormSchema),
+	})
 }
 
 export default function HostUserRoute() {
@@ -186,50 +131,79 @@ export default function HostUserRoute() {
 
 function HostUserDisplay() {
 	const data = useLoaderData<typeof loader>()
-	const user = useOptionalUser()
-	const bioFetcher = useFetcher<typeof action>()
-
-	// we do this check earlier. Just added this to make TS happy
-	invariant(data.user.host, 'User is not a host')
-
-	const { form, fields } = useForm({
-		name: 'bio',
-		errors:
-			bioFetcher.data?.status === 'bio-invalid' ? bioFetcher.data.errors : null,
-		fieldMetadatas: data.fieldMetadata,
-	})
+	const loggedInUser = useOptionalUser()
+	const isLoggedInUser = loggedInUser?.id === data.user.id
 
 	return (
-		<div>
-			<h2>Host</h2>
-			<pre>{JSON.stringify(data, null, 2)}</pre>
-			{data.user.id === user?.id ? (
-				<>
-					<bioFetcher.Form method="post" {...form.props}>
-						<div>
-							<label
-								className="block text-sm font-medium text-gray-700"
-								{...fields.bio.labelProps}
-							>
-								Host Bio
-							</label>
-							<div className="mt-1">
-								<textarea
-									defaultValue={data.user.host.bio ?? ''}
-									className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-									{...fields.bio.props}
+		<div className="container mx-auto mt-11">
+			<div className="rounded-3xl bg-night-muted p-12">
+				<div className="grid grid-cols-2 justify-items-center">
+					<div className="relative w-52">
+						<div className="absolute -top-40">
+							<div className="relative">
+								<img
+									src={getUserImgSrc(data.user.imageId)}
+									alt={data.user.username}
+									className="h-52 w-52 rounded-full object-cover"
 								/>
-
-								{fields.bio.errorUI}
+								{/* TODO: do not hardcode this */}
+								{data.rating ? (
+									<div className="absolute -bottom-3 flex w-full justify-center">
+										<StarRatingDisplay rating={data.rating} />
+									</div>
+								) : null}
 							</div>
 						</div>
-						{form.errorUI}
-						<button type="submit" name="intent" value="update-bio">
-							{bioFetcher.state === 'idle' ? 'Submit' : 'Submitting...'}
-						</button>
-					</bioFetcher.Form>
-				</>
-			) : null}
+					</div>
+
+					<div className="h-20" />
+
+					<div className="flex flex-col items-center">
+						<h1 className="text-center text-4xl font-bold text-white">
+							{data.user.name ?? data.user.username}
+						</h1>
+						<p className="mt-2 text-center text-gray-500">
+							Joined {data.userJoinedDisplay}
+						</p>
+						<div className="mt-10 flex gap-4">
+							<ButtonLink to="/chat" variant="primary" size="medium">
+								✉️ My chat
+							</ButtonLink>
+							{isLoggedInUser ? (
+								<ButtonLink
+									to="/settings/profile"
+									variant="secondary"
+									size="medium"
+								>
+									✏️ Edit profile
+								</ButtonLink>
+							) : null}
+						</div>
+					</div>
+					<div className="flex items-center justify-between justify-self-end text-center">
+						<div>
+							<div className="min-w-[120px] px-5 text-3xl font-bold text-white">
+								{data.totalBookings}
+							</div>
+							<span className="text-gray-500">trips</span>
+						</div>
+						<div className="h-14 border-l-[1.5px] border-night-lite" />
+						<div>
+							<div className="min-w-[120px] px-5 text-3xl font-bold text-white">
+								{data.totalShips}
+							</div>
+							<span className="text-gray-500">rockets</span>
+						</div>
+						<div className="h-14 border-l-[1.5px] border-night-lite" />
+						<div>
+							<div className="min-w-[120px] px-5 text-3xl font-bold text-white">
+								{data.totalReviews}
+							</div>
+							<span className="text-gray-500">reviews</span>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	)
 }
