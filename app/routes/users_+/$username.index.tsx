@@ -38,7 +38,7 @@ export default function UsernameIndex() {
 	const isLoggedInUser = data.user.id === loggedInUser?.id
 
 	return (
-		<div className="container flex flex-col items-center justify-center">
+		<div className="container mx-auto flex flex-col items-center justify-center">
 			<img
 				className="h-52 w-52 rounded-full object-cover"
 				alt={data.user.name ?? data.user.username}

@@ -13,7 +13,7 @@ export default function UserRoute() {
 	const onIndexPage = lastMatch.id.endsWith('index')
 
 	return (
-		<div className="mx-auto mt-36 mb-48">
+		<div className="mt-36 mb-48">
 			{onIndexPage ? null : (
 				<div className="container mx-auto flex justify-end">
 					<div className="flex justify-between rounded-full border border-night-lite bg-night">
