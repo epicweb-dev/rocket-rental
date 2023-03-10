@@ -8,9 +8,11 @@ import {
 import {
 	Form,
 	Link,
+	useActionData,
 	useFetcher,
 	useLoaderData,
 	useNavigate,
+	useNavigation,
 } from '@remix-run/react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { z } from 'zod'
@@ -19,15 +21,17 @@ import { authenticator, requireUserId } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'
 import {
 	Button,
+	ErrorList,
 	getFieldsFromSchema,
 	LabelButton,
 	preprocessFormData,
+	useForm,
 } from '~/utils/forms'
 import { getUserImgSrc } from '~/utils/misc'
 import * as deleteImageRoute from '~/routes/resources+/delete-image'
 import { useState } from 'react'
 
-const MAX_SIZE = 1024 * 1024 * 5 // 5MB
+const MAX_SIZE = 1024 * 1024 * 3 // 3MB
 
 const PhotoFormSchema = z.object({
 	photoFile: z.instanceof(File),
@@ -59,7 +63,7 @@ export async function action({ request }: DataFunctionArgs) {
 				status: 'error',
 				errors: {
 					formErrors: [],
-					fieldErrors: { profileFile: ['File too large'] },
+					fieldErrors: { photoFile: ['File too large'] },
 				},
 			} as const,
 			{ status: 400 },
@@ -124,6 +128,12 @@ export default function PhotoChooserModal() {
 	const [newImageSrc, setNewImageSrc] = useState<string | null>(null)
 	const navigate = useNavigate()
 	const deleteImageFetcher = useFetcher<typeof deleteImageRoute.action>()
+	const actionData = useActionData<typeof action>()
+	const { form, fields } = useForm({
+		fieldMetadatas: data.fieldMetadatas,
+		name: 'profile-photo',
+		errors: actionData?.errors,
+	})
 
 	const deleteProfilePhotoFormId = 'delete-profile-photo'
 	const dismissModal = () => navigate('..')
@@ -150,10 +160,10 @@ export default function PhotoChooserModal() {
 							src={newImageSrc ?? getUserImgSrc(data.user.imageId)}
 							className="h-64 w-64 rounded-full"
 						/>
+						{fields.photoFile.errorUI}
 						<input
-							id="photoFile"
+							{...fields.photoFile.props}
 							type="file"
-							name="photoFile"
 							accept="image/*"
 							className="sr-only"
 							tabIndex={newImageSrc ? -1 : 0}
@@ -180,7 +190,7 @@ export default function PhotoChooserModal() {
 						) : (
 							<div className="flex gap-4">
 								<LabelButton
-									htmlFor="photoFile"
+									{...fields.photoFile.labelProps}
 									size="medium"
 									variant="primary"
 								>
@@ -198,6 +208,7 @@ export default function PhotoChooserModal() {
 								) : null}
 							</div>
 						)}
+						{form.errorUI}
 					</Form>
 					<Dialog.Close asChild>
 						<Link

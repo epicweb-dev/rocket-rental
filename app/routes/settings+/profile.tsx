@@ -237,6 +237,8 @@ export default function EditUserProfile() {
 		fieldMetadatas: data.fieldMetadatas,
 	})
 
+	const createHostFormId = 'create-host-form'
+	const createRenterFormId = 'create-renter-form'
 	return (
 		<div className="container m-auto mt-16 mb-36 max-w-3xl">
 			<div className="flex gap-3">
@@ -376,7 +378,7 @@ export default function EditUserProfile() {
 											size="small"
 											variant="secondary"
 											type="submit"
-											form="create-host-form"
+											form={createHostFormId}
 											aria-errormessage={
 												createHostFetcher.data?.status === 'error'
 													? 'create-host-error'
@@ -423,7 +425,7 @@ export default function EditUserProfile() {
 											size="small"
 											variant="secondary"
 											type="submit"
-											form="create-renter-form"
+											form={createRenterFormId}
 											aria-errormessage={
 												createRenterFetcher.data?.status === 'error'
 													? 'create-renter-error'
@@ -493,12 +495,12 @@ export default function EditUserProfile() {
 				<createHostFetcher.Form
 					method="post"
 					action={createHost.ROUTE_PATH}
-					id="create-host-form"
+					id={createHostFormId}
 				/>
 				<createRenterFetcher.Form
 					method="post"
 					action={createRenter.ROUTE_PATH}
-					id="create-renter-form"
+					id={createRenterFormId}
 				/>
 			</div>
 			<Outlet />
