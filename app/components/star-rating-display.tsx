@@ -6,7 +6,7 @@ export function StarRatingDisplay({ rating }: { rating: number }) {
 		<div
 			className={clsx(
 				styles.starRatingDisplay,
-				'inline-block rounded-full px-3 py-[6px] text-xl text-[#141414]',
+				'text-muted-dark inline-block rounded-full px-3 py-[6px] text-xl',
 			)}
 		>
 			⭐ {rating.toFixed(1)}

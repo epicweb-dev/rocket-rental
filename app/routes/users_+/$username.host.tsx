@@ -106,31 +106,12 @@ export async function loader({ params }: DataFunctionArgs) {
 	})
 }
 
-export default function HostUserRoute() {
+export default function HostUserDisplay() {
 	const data = useLoaderData<typeof loader>()
-	const user = useOptionalUser()
-	const becomeHostFetcher = useFetcher()
-	if (data.user.host) {
-		return <HostUserDisplay />
-	}
-	if (user?.id === data.user.id) {
-		return (
-			<div>
-				You are not yet a host. Would you like to become one?
-				<becomeHostFetcher.Form method="post">
-					<button type="submit" name="intent" value="become-host">
-						Become a host
-					</button>
-				</becomeHostFetcher.Form>
-			</div>
-		)
-	} else {
-		return <div>This user is not a host... yet...</div>
-	}
-}
 
-function HostUserDisplay() {
-	const data = useLoaderData<typeof loader>()
+	// it's unclear why this is necessary 🤷‍♂️
+	invariant(data.user.host, 'This should not be possible...')
+
 	const loggedInUser = useOptionalUser()
 	const isLoggedInUser = loggedInUser?.id === data.user.id
 
@@ -181,26 +162,84 @@ function HostUserDisplay() {
 						</div>
 					</div>
 					<div className="flex items-center justify-between justify-self-end text-center">
-						<div>
-							<div className="min-w-[120px] px-5 text-3xl font-bold text-white">
+						<div className="min-w-[120px] px-5">
+							<div className="text-3xl font-bold text-white">
 								{data.totalBookings}
 							</div>
 							<span className="text-gray-500">trips</span>
 						</div>
 						<div className="h-14 border-l-[1.5px] border-night-lite" />
-						<div>
-							<div className="min-w-[120px] px-5 text-3xl font-bold text-white">
+						<div className="min-w-[120px] px-5">
+							<div className="text-3xl font-bold text-white">
 								{data.totalShips}
 							</div>
 							<span className="text-gray-500">rockets</span>
 						</div>
 						<div className="h-14 border-l-[1.5px] border-night-lite" />
-						<div>
-							<div className="min-w-[120px] px-5 text-3xl font-bold text-white">
+						<div className="min-w-[120px] px-5">
+							<div className="text-3xl font-bold text-white">
 								{data.totalReviews}
 							</div>
 							<span className="text-gray-500">reviews</span>
 						</div>
+					</div>
+				</div>
+			</div>
+			<div className="container mx-auto mt-6">
+				<div className="grid grid-cols-2 gap-6">
+					<div className="rounded-3xl bg-night-muted p-10">
+						<h2 className="font-3xl font-bold text-white">Verified Info</h2>
+						<div className="mt-8 flex items-center justify-around text-center">
+							<div className="flex flex-col items-center justify-center">
+								<div className="flex h-8 w-8 items-center justify-center">
+									🛡
+								</div>
+								<div className="mt-3 max-w-[92px] leading-5 text-label-light-gray">
+									Approved to fly
+								</div>
+							</div>
+							<div className="h-14 border-l-[1.5px] border-night-lite" />
+							<div className="flex flex-col items-center justify-center">
+								<div className="flex h-8 w-8 items-center justify-center">
+									🛡
+								</div>
+								<div className="mt-3 max-w-[92px] leading-5 text-label-light-gray">
+									Email address
+								</div>
+							</div>
+							<div className="h-14 border-l-[1.5px] border-night-lite" />
+							<div className="flex flex-col items-center justify-center">
+								<div className="flex h-8 w-8 items-center justify-center">
+									🛡
+								</div>
+								<div className="mt-3 max-w-[92px] leading-5 text-label-light-gray">
+									Phone number
+								</div>
+							</div>
+						</div>
+						<h2 className="font-3xl mt-14 font-bold text-white">
+							Share this profile
+						</h2>
+						<div className="mt-4 flex gap-4">
+							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-muted-dark text-white">
+								f
+							</div>
+							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-muted-dark text-white">
+								t
+							</div>
+							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-muted-dark text-white">
+								i
+							</div>
+							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-muted-dark text-white">
+								c
+							</div>
+						</div>
+					</div>
+					<div className="rounded-3xl bg-night-muted p-10">
+						<h2 className="font-3xl font-bold text-white">About</h2>
+						<p className="mt-6 max-h-56 overflow-y-scroll text-label-light-gray">
+							{(data.user.host.bio ?? 'No bio provided').repeat(100)}
+						</p>
 					</div>
 				</div>
 			</div>

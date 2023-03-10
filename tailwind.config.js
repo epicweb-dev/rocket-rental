@@ -17,6 +17,7 @@ module.exports = {
 				tertiary: '#FFD262',
 				night: {
 					DEFAULT: '#090909',
+					'muted-dark': '#141414',
 					muted: '#1E1E20',
 					lite: '#494949',
 				},
