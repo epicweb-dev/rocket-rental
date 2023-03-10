@@ -11,7 +11,7 @@ import invariant from 'tiny-invariant'
 import { z } from 'zod'
 import { StarRatingDisplay } from '~/components/star-rating-display'
 import { prisma } from '~/utils/db.server'
-import { ButtonLink, getFieldsFromSchema } from '~/utils/forms'
+import { Button, ButtonLink, getFieldsFromSchema } from '~/utils/forms'
 import { getShipImgSrc, getUserImgSrc, useOptionalUser } from '~/utils/misc'
 
 const MIN_BIO_LENGTH = 2
@@ -32,6 +32,7 @@ export async function loader({ params }: DataFunctionArgs) {
 			imageId: true,
 			host: {
 				select: {
+					userId: true,
 					bio: true,
 					createdAt: true,
 					ships: {
@@ -287,7 +288,7 @@ export default function HostUserDisplay() {
 					{data.user.name ?? data.user.username}'s rockets
 				</h2>
 				<div className="mt-10 flex flex-wrap justify-center gap-6">
-					{data.user.host.ships.map(ship => (
+					{data.user.host.ships.slice(0, 9).map(ship => (
 						<div
 							key={ship.name}
 							className="flex max-w-sm flex-col rounded-3xl bg-night-muted"
@@ -346,7 +347,21 @@ export default function HostUserDisplay() {
 						</div>
 					))}
 				</div>
+				{data.user.host.ships.length > 9 ? (
+					<div className="mt-20 text-center">
+						<ButtonLink
+							to={`/search?${new URLSearchParams({
+								hostId: data.user.host.userId,
+							})}`}
+							variant="secondary"
+							size="medium"
+						>
+							View all
+						</ButtonLink>
+					</div>
+				) : null}
 			</div>
+
 			<div className="container mx-auto mt-40">
 				{data.totalReviews ? (
 					<div>
