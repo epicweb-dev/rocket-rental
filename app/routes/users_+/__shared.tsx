@@ -1,6 +1,6 @@
 import * as Separator from '@radix-ui/react-separator'
 import { redirect } from '@remix-run/node'
-import { Form, useLocation, useNavigation } from '@remix-run/react'
+import { Form, Link, useLocation, useNavigation } from '@remix-run/react'
 import * as React from 'react'
 import { StarRatingDisplay } from '~/components/star-rating-display'
 import { prisma } from '~/utils/db.server'
@@ -222,5 +222,104 @@ export function UserProfileBasicInfo({
 				</div>
 			</div>
 		</>
+	)
+}
+
+export function Reviews({
+	title,
+	user,
+	rating,
+	reviews,
+	reviewerType,
+}: {
+	title: string
+	user: { name: string | null; username: string }
+	rating: number | null
+	reviewerType: 'renter' | 'host'
+	reviews: Array<{
+		id: string
+		content: string
+		reviewer: {
+			user: { name: string | null; username: string; imageId: string | null }
+		}
+		booking: {
+			ship: {
+				id: string
+				name: string
+			}
+		}
+	}>
+}) {
+	return (
+		<div className="container mx-auto mt-40">
+			{reviews.length ? (
+				<div>
+					<div className="flex justify-between">
+						<div className="flex gap-5">
+							<h2 className="text-3xl font-bold text-white">{title}</h2>
+							<StarRatingDisplay rating={rating ?? 0} />
+						</div>
+						<Link to="reviews" className="text-label-light-gray">
+							View all
+						</Link>
+					</div>
+					<div className="mt-10 flex snap-x gap-10 overflow-x-scroll">
+						{reviews.map(review => (
+							<div
+								key={review.id}
+								className="flex w-[440px] shrink-0 snap-start flex-col justify-between rounded-3xl border-[1px] border-gray-500 p-10"
+							>
+								<div>
+									<div className="">⭐ ⭐ ⭐ ⭐ ⭑</div>
+									<Link to={`/reviews/${review.id}`}>
+										<div className="mt-6 h-[160px]">
+											<p className="quote text-white line-clamp-5">
+												{review.content}
+											</p>
+										</div>
+									</Link>
+								</div>
+								<div className="flex gap-4">
+									<Link
+										to={`/users/${review.reviewer.user.username}/${reviewerType}`}
+									>
+										<img
+											className="h-14 w-14 rounded-full"
+											src={getUserImgSrc(review.reviewer.user.imageId)}
+										/>
+									</Link>
+									<div className="flex flex-col gap-1">
+										<Link
+											to={`/users/${review.reviewer.user.username}/${reviewerType}`}
+										>
+											<h3 className="text-base font-bold text-white">
+												{review.reviewer.user.name ??
+													review.reviewer.user.username}
+											</h3>
+										</Link>
+										<Link
+											to={`/ships/${review.booking.ship.id}`}
+											className="text-sm text-gray-500"
+										>
+											{review.booking.ship.name}
+										</Link>
+									</div>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			) : (
+				<div className="flex flex-col gap-10">
+					<h2 className="text-3xl font-bold text-white">No reviews yet</h2>
+					<div className="flex flex-col gap-3">
+						<span>⭐️ ⭐️ ⭐️ ⭐️ ⭐️</span>
+						<p className="text-label-light-gray">
+							{user.name ?? user.username} hasn't received a review yet
+						</p>
+					</div>
+				</div>
+			)}
+		</div>
 	)
 }

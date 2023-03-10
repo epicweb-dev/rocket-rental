@@ -4,7 +4,7 @@ import invariant from 'tiny-invariant'
 import { getUserId, requireUserId } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'
 import { useOptionalUser } from '~/utils/misc'
-import { createChat, UserProfileBasicInfo } from './__shared'
+import { createChat, Reviews, UserProfileBasicInfo } from './__shared'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	const loggedInUserId = await getUserId(request)
@@ -123,6 +123,14 @@ export default function RenterUser() {
 				]}
 				bio={data.user.renter.bio}
 			/>
+
+			<Reviews
+				title={`${data.user.renter.reviews.length} reviews from hosts`}
+				user={data.user}
+				rating={data.rating}
+				reviews={data.user.renter.reviews}
+				reviewerType="host"
+			/>
 		</div>
 	)
 }
@@ -132,7 +140,7 @@ export function CatchBoundary() {
 	const params = useParams()
 
 	if (caught.status === 404) {
-		return <div>User "{params.username}" not found</div>
+		return <div className="text-white">User "{params.username}" not found</div>
 	}
 
 	throw new Error(`Unexpected caught response with status: ${caught.status}`)

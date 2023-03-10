@@ -13,7 +13,7 @@ import { getUserId, requireUserId } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'
 import { Button, ButtonLink } from '~/utils/forms'
 import { getShipImgSrc, getUserImgSrc, useOptionalUser } from '~/utils/misc'
-import { createChat, UserProfileBasicInfo } from './__shared'
+import { createChat, Reviews, UserProfileBasicInfo } from './__shared'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	const loggedInUserId = await getUserId(request)
@@ -252,77 +252,13 @@ export default function HostUser() {
 				) : null}
 			</div>
 
-			<div className="container mx-auto mt-40">
-				{data.user.host.reviews.length ? (
-					<div>
-						<div className="flex justify-between">
-							<div className="flex gap-5">
-								<h2 className="text-3xl font-bold text-white">
-									{data.user.host.reviews.length} reviews from renters
-								</h2>
-								<StarRatingDisplay rating={data.rating ?? 0} />
-							</div>
-							<Link to="reviews" className="text-label-light-gray">
-								View all
-							</Link>
-						</div>
-						<div className="mt-10 flex snap-x gap-10 overflow-x-scroll">
-							{data.user.host.reviews.map(review => (
-								<div
-									key={review.id}
-									className="flex w-[440px] shrink-0 snap-start flex-col justify-between rounded-3xl border-[1px] border-gray-500 p-10"
-								>
-									<div>
-										<div className="">⭐ ⭐ ⭐ ⭐ ⭑</div>
-										<Link to={`/reviews/${review.id}`}>
-											<div className="mt-6 h-[160px]">
-												<p className="quote text-white line-clamp-5">
-													{review.content.repeat(2)}
-												</p>
-											</div>
-										</Link>
-									</div>
-									<div className="flex gap-4">
-										<Link to={`/users/${review.reviewer.user.username}/renter`}>
-											<img
-												className="h-14 w-14 rounded-full"
-												src={getUserImgSrc(review.reviewer.user.imageId)}
-											/>
-										</Link>
-										<div className="flex flex-col gap-1">
-											<Link
-												to={`/users/${review.reviewer.user.username}/renter`}
-											>
-												<h3 className="text-base font-bold text-white">
-													{review.reviewer.user.name ??
-														review.reviewer.user.username}
-												</h3>
-											</Link>
-											<Link
-												to={`/ships/${review.booking.ship.id}`}
-												className="text-sm text-gray-500"
-											>
-												{review.booking.ship.name}
-											</Link>
-										</div>
-									</div>
-								</div>
-							))}
-						</div>
-					</div>
-				) : (
-					<div className="flex flex-col gap-10">
-						<h2 className="text-3xl font-bold text-white">No reviews yet</h2>
-						<div className="flex flex-col gap-3">
-							<span>⭐️ ⭐️ ⭐️ ⭐️ ⭐️</span>
-							<p className="text-label-light-gray">
-								{data.user.name ?? data.user.username} hasn't received a review
-								yet
-							</p>
-						</div>
-					</div>
-				)}
-			</div>
+			<Reviews
+				title={`${data.user.host.reviews.length} reviews from renters`}
+				user={data.user}
+				rating={data.rating}
+				reviews={data.user.host.reviews}
+				reviewerType="renter"
+			/>
 		</div>
 	)
 }
@@ -332,7 +268,7 @@ export function CatchBoundary() {
 	const params = useParams()
 
 	if (caught.status === 404) {
-		return <div>User "{params.username}" not found</div>
+		return <div className="text-white">User "{params.username}" not found</div>
 	}
 
 	throw new Error(`Unexpected caught response with status: ${caught.status}`)
