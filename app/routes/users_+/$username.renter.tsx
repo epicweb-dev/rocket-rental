@@ -40,9 +40,9 @@ export async function loader({ params }: DataFunctionArgs) {
 						select: {
 							createdAt: true,
 							id: true,
-							description: true,
+							content: true,
 							rating: true,
-							host: {
+							subject: {
 								select: {
 									user: {
 										select: {
@@ -59,9 +59,9 @@ export async function loader({ params }: DataFunctionArgs) {
 						select: {
 							createdAt: true,
 							id: true,
-							description: true,
+							content: true,
 							rating: true,
-							host: {
+							reviewer: {
 								select: {
 									user: {
 										select: {

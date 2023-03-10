@@ -1,4 +1,4 @@
-import { json, type DataFunctionArgs } from '@remix-run/node'
+import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
 import { Link, useFetcher, useNavigate } from '@remix-run/react'
 import { useEffect } from 'react'
 import { AuthorizationError } from 'remix-auth'
@@ -12,12 +12,14 @@ import {
 	preprocessFormData,
 	useForm,
 } from '~/utils/forms'
+import { safeRedirect } from '~/utils/misc'
 import { commitSession, getSession } from '~/utils/session.server'
 import { passwordSchema, usernameSchema } from '~/utils/user-validation'
 
 export const LoginFormSchema = z.object({
 	username: usernameSchema,
 	password: passwordSchema,
+	redirectTo: z.string().optional(),
 	remember: z.boolean(),
 })
 
@@ -56,12 +58,17 @@ export async function action({ request }: DataFunctionArgs) {
 
 	const session = await getSession(request.headers.get('cookie'))
 	session.set(authenticator.sessionKey, userId)
-	const { remember } = result.data
+	const { remember, redirectTo } = result.data
 	const newCookie = await commitSession(session, {
 		maxAge: remember
 			? 60 * 60 * 24 * 7 // 7 days
 			: undefined,
 	})
+	if (redirectTo) {
+		throw redirect(safeRedirect(redirectTo), {
+			headers: { 'Set-Cookie': newCookie },
+		})
+	}
 	return json({ status: 'success', errors: null } as const, {
 		headers: { 'Set-Cookie': newCookie },
 	})
@@ -87,15 +94,6 @@ export function InlineLogin({
 		},
 		fieldMetadatas: getFieldsFromSchema(LoginFormSchema),
 	})
-
-	const navigate = useNavigate()
-	const success = loginFetcher.data?.status === 'success'
-	useEffect(() => {
-		if (!redirectTo) return
-		if (!success) return
-
-		navigate(redirectTo)
-	}, [success, redirectTo])
 
 	return (
 		<div>
@@ -143,6 +141,12 @@ export function InlineLogin({
 							</Link>
 						</div>
 					</div>
+
+					<input
+						value={redirectTo}
+						{...fields.redirectTo.props}
+						type="hidden"
+					/>
 
 					{form.errorUI}
 

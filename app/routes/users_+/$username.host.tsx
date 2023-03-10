@@ -1,27 +1,21 @@
 import * as Separator from '@radix-ui/react-separator'
-import { json, type DataFunctionArgs } from '@remix-run/node'
+import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
 import {
+	Form,
 	Link,
 	useCatch,
-	useFetcher,
 	useLoaderData,
 	useParams,
 } from '@remix-run/react'
 import invariant from 'tiny-invariant'
-import { z } from 'zod'
 import { StarRatingDisplay } from '~/components/star-rating-display'
+import { getUserId, requireUserId } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'
-import { Button, ButtonLink, getFieldsFromSchema } from '~/utils/forms'
+import { Button, ButtonLink } from '~/utils/forms'
 import { getShipImgSrc, getUserImgSrc, useOptionalUser } from '~/utils/misc'
 
-const MIN_BIO_LENGTH = 2
-const MAX_BIO_LENGTH = 2000
-
-const BioFormSchema = z.object({
-	bio: z.string().min(MIN_BIO_LENGTH).max(MAX_BIO_LENGTH),
-})
-
-export async function loader({ params }: DataFunctionArgs) {
+export async function loader({ request, params }: DataFunctionArgs) {
+	const loggedInUserId = await getUserId(request)
 	invariant(params.username, 'Missing username')
 	const user = await prisma.user.findUnique({
 		where: { username: params.username },
@@ -107,6 +101,18 @@ export async function loader({ params }: DataFunctionArgs) {
 		where: { subjectId: user.id },
 		_avg: { rating: true },
 	})
+	const oneOnOneChat = loggedInUserId
+		? await prisma.chat.findFirst({
+				where: {
+					users: {
+						every: {
+							id: { in: [user.id, loggedInUserId] },
+						},
+					},
+				},
+				select: { id: true },
+		  })
+		: null
 
 	return json({
 		user: {
@@ -125,13 +131,45 @@ export async function loader({ params }: DataFunctionArgs) {
 				})),
 			},
 		},
+		oneOnOneChat,
 		userJoinedDisplay: user.host.createdAt.toLocaleDateString(),
 		totalBookings,
 		totalShips,
 		totalReviews,
 		rating: averageReviews._avg.rating,
-		fieldMetadata: getFieldsFromSchema(BioFormSchema),
 	})
+}
+
+export async function action({ request, params }: DataFunctionArgs) {
+	const formData = await request.formData()
+	const loggedInUserId = await requireUserId(request)
+	invariant(params.username, 'Missing username')
+	const intent = formData.get('intent')
+	if (intent === 'create-chat') {
+		const existingChat = await prisma.chat.findFirst({
+			where: {
+				AND: [
+					{ users: { some: { id: loggedInUserId } } },
+					{ users: { some: { username: params.username } } },
+				],
+			},
+			select: { id: true },
+		})
+		if (existingChat) {
+			return redirect(`/chats/${existingChat.id}`)
+		}
+
+		const createdChat = await prisma.chat.create({
+			select: { id: true },
+			data: {
+				users: {
+					connect: [{ id: loggedInUserId }, { username: params.username }],
+				},
+			},
+		})
+		return redirect(`/chats/${createdChat.id}`)
+	}
+	throw new Error(`Unknown intent: ${intent}`)
 }
 
 export default function HostUserDisplay() {
@@ -168,17 +206,53 @@ export default function HostUserDisplay() {
 					<div className="h-20" />
 
 					<div className="flex flex-col items-center">
-						<h1 className="text-center text-4xl font-bold text-white">
-							{data.user.name ?? data.user.username}
-						</h1>
+						<div className="flex items-center justify-start gap-4">
+							<h1 className="text-center text-4xl font-bold text-white">
+								{data.user.name ?? data.user.username}
+							</h1>
+							{isLoggedInUser ? null : data.oneOnOneChat ? (
+								<ButtonLink
+									to={`/chats/${data.oneOnOneChat.id}`}
+									variant="primary"
+									size="xs"
+									title="Go to chat"
+								>
+									✉️ Message
+								</ButtonLink>
+							) : loggedInUser ? (
+								<Form method="post">
+									<Button
+										variant="primary"
+										size="xs"
+										type="submit"
+										name="intent"
+										value="create-chat"
+										title="Start new chat"
+									>
+										✉️ Message
+									</Button>
+								</Form>
+							) : (
+								<ButtonLink
+									to={`/login?${new URLSearchParams({
+										redirectTo: `/users/${data.user.username}/host`,
+									})}`}
+									variant="primary"
+									size="xs"
+									title="Login to message"
+								>
+									✉️ Message
+								</ButtonLink>
+							)}
+						</div>
 						<p className="mt-2 text-center text-gray-500">
 							Joined {data.userJoinedDisplay}
 						</p>
-						<div className="mt-10 flex gap-4">
-							<ButtonLink to="/chat" variant="primary" size="medium">
-								✉️ My chat
-							</ButtonLink>
-							{isLoggedInUser ? (
+						{isLoggedInUser ? (
+							<div className="mt-10 flex gap-4">
+								<ButtonLink to="/chats" variant="primary" size="medium">
+									✉️ My chat
+								</ButtonLink>
 								<ButtonLink
 									to="/settings/profile"
 									variant="secondary"
@@ -186,8 +260,8 @@ export default function HostUserDisplay() {
 								>
 									✏️ Edit profile
 								</ButtonLink>
-							) : null}
-						</div>
+							</div>
+						) : null}
 					</div>
 					<div className="flex items-center justify-between justify-self-end text-center">
 						<div className="min-w-[120px] px-5">

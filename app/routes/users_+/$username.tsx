@@ -15,7 +15,7 @@ export default function UserRoute() {
 	return (
 		<div className="mx-auto mt-36 mb-48">
 			{onIndexPage ? null : (
-				<div className="flex justify-end">
+				<div className="container mx-auto flex justify-end">
 					<div className="flex justify-between rounded-full border border-night-lite bg-night">
 						<NavLink
 							preventScrollReset

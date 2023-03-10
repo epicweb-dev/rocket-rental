@@ -550,9 +550,8 @@ export function CheckboxField({
 function getButtonClassName({
 	size,
 	variant,
-	...props
-}: Omit<React.ComponentPropsWithoutRef<'button'>, 'className'> & {
-	size: 'small' | 'medium' | 'medium-wide'
+}: {
+	size: 'xs' | 'small' | 'medium' | 'medium-wide'
 	variant: 'primary' | 'secondary'
 }) {
 	const baseClassName =
@@ -561,12 +560,14 @@ function getButtonClassName({
 		'bg-primary hover:bg-secondary hover:text-night focus:bg-secondary focus:text-night active:bg-tertiary'
 	const secondaryClassName =
 		'border-[1.5px] border-night-lite bg-night hover:border-primary focus:border-primary active:border-primary-lighter'
+	const extraSmallClassName = 'py-2 px-3 text-sm'
 	const smallClassName = 'px-10 py-[14px] text-sm'
 	const mediumClassName = 'px-14 py-5 text-lg'
 	const mediumWideClassName = 'px-24 py-5 text-lg'
 	const className = clsx(baseClassName, {
 		[primaryClassName]: variant === 'primary',
 		[secondaryClassName]: variant === 'secondary',
+		[extraSmallClassName]: size === 'xs',
 		[smallClassName]: size === 'small',
 		[mediumClassName]: size === 'medium',
 		[mediumWideClassName]: size === 'medium-wide',
@@ -578,10 +579,8 @@ export function Button({
 	size,
 	variant,
 	...props
-}: Omit<React.ComponentPropsWithoutRef<'button'>, 'className'> & {
-	size: 'small' | 'medium' | 'medium-wide'
-	variant: 'primary' | 'secondary'
-}) {
+}: Omit<React.ComponentPropsWithoutRef<'button'>, 'className'> &
+	Parameters<typeof getButtonClassName>[0]) {
 	return <button {...props} className={getButtonClassName({ size, variant })} />
 }
 
@@ -589,10 +588,8 @@ export function ButtonLink({
 	size,
 	variant,
 	...props
-}: Omit<React.ComponentPropsWithoutRef<typeof Link>, 'className'> & {
-	size: 'small' | 'medium' | 'medium-wide'
-	variant: 'primary' | 'secondary'
-}) {
+}: Omit<React.ComponentPropsWithoutRef<typeof Link>, 'className'> &
+	Parameters<typeof getButtonClassName>[0]) {
 	return <Link {...props} className={getButtonClassName({ size, variant })} />
 }
 
@@ -600,10 +597,8 @@ export function LabelButton({
 	size,
 	variant,
 	...props
-}: Omit<React.ComponentPropsWithoutRef<'label'>, 'className'> & {
-	size: 'small' | 'medium' | 'medium-wide'
-	variant: 'primary' | 'secondary'
-}) {
+}: Omit<React.ComponentPropsWithoutRef<'label'>, 'className'> &
+	Parameters<typeof getButtonClassName>[0]) {
 	return (
 		<label
 			{...props}
