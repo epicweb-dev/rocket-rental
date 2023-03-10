@@ -1,3 +1,4 @@
+import * as Separator from '@radix-ui/react-separator'
 import { json, type DataFunctionArgs } from '@remix-run/node'
 import {
 	Link,
@@ -11,7 +12,7 @@ import { z } from 'zod'
 import { StarRatingDisplay } from '~/components/star-rating-display'
 import { prisma } from '~/utils/db.server'
 import { ButtonLink, getFieldsFromSchema } from '~/utils/forms'
-import { getUserImgSrc, useOptionalUser } from '~/utils/misc'
+import { getShipImgSrc, getUserImgSrc, useOptionalUser } from '~/utils/misc'
 
 const MIN_BIO_LENGTH = 2
 const MAX_BIO_LENGTH = 2000
@@ -38,16 +39,16 @@ export async function loader({ params }: DataFunctionArgs) {
 							id: true,
 							name: true,
 							imageId: true,
+							dailyCharge: true,
+							reviews: { select: { rating: true } },
 							model: {
 								select: {
 									id: true,
 									name: true,
-									imageId: true,
 									brand: {
 										select: {
 											id: true,
 											name: true,
-											imageId: true,
 										},
 									},
 								},
@@ -107,7 +108,22 @@ export async function loader({ params }: DataFunctionArgs) {
 	})
 
 	return json({
-		user,
+		user: {
+			...user,
+			host: {
+				...user.host,
+				ships: user.host.ships.map(ship => ({
+					...ship,
+					averageRating:
+						ship.reviews.reduce((acc, review) => acc + review.rating, 0) /
+						(ship.reviews.length || 1),
+					dailyChargeFormatted: ship.dailyCharge.toLocaleString('en-US', {
+						style: 'currency',
+						currency: 'USD',
+					}),
+				})),
+			},
+		},
 		userJoinedDisplay: user.host.createdAt.toLocaleDateString(),
 		totalBookings,
 		totalShips,
@@ -179,14 +195,20 @@ export default function HostUserDisplay() {
 							</div>
 							<span className="text-gray-500">trips</span>
 						</div>
-						<div className="h-14 border-l-[1.5px] border-night-lite" />
+						<Separator.Root
+							orientation="vertical"
+							className="h-14 w-[1.5px] bg-night-lite"
+						/>
 						<div className="min-w-[120px] px-5">
 							<div className="text-3xl font-bold text-white">
 								{data.totalShips}
 							</div>
 							<span className="text-gray-500">rockets</span>
 						</div>
-						<div className="h-14 border-l-[1.5px] border-night-lite" />
+						<Separator.Root
+							orientation="vertical"
+							className="h-14 w-[1.5px] bg-night-lite"
+						/>
 						<div className="min-w-[120px] px-5">
 							<div className="text-3xl font-bold text-white">
 								{data.totalReviews}
@@ -209,7 +231,10 @@ export default function HostUserDisplay() {
 									Approved to fly
 								</div>
 							</div>
-							<div className="h-14 border-l-[1.5px] border-night-lite" />
+							<Separator.Root
+								orientation="vertical"
+								className="h-14 w-[1.5px] bg-night-lite"
+							/>
 							<div className="flex flex-col items-center justify-center">
 								<div className="flex h-8 w-8 items-center justify-center">
 									🛡
@@ -218,7 +243,10 @@ export default function HostUserDisplay() {
 									Email address
 								</div>
 							</div>
-							<div className="h-14 border-l-[1.5px] border-night-lite" />
+							<Separator.Root
+								orientation="vertical"
+								className="h-14 w-[1.5px] bg-night-lite"
+							/>
 							<div className="flex flex-col items-center justify-center">
 								<div className="flex h-8 w-8 items-center justify-center">
 									🛡
@@ -252,6 +280,71 @@ export default function HostUserDisplay() {
 							{data.user.host.bio ?? 'No bio provided'}
 						</p>
 					</div>
+				</div>
+			</div>
+			<div className="container mx-auto mt-20">
+				<h2 className="text-3xl font-bold text-white">
+					{data.user.name ?? data.user.username}'s rockets
+				</h2>
+				<div className="mt-10 flex flex-wrap justify-center gap-6">
+					{data.user.host.ships.map(ship => (
+						<div
+							key={ship.name}
+							className="flex max-w-sm flex-col rounded-3xl bg-night-muted"
+						>
+							<Link to={`/ships/${ship.id}`}>
+								<img
+									className="aspect-[35/31] rounded-3xl"
+									src={getShipImgSrc(ship.imageId)}
+								/>
+							</Link>
+							<div className="h-10" />
+							<div className="px-6 pb-8">
+								<div className="flex flex-col gap-2">
+									<div className="flex items-center gap-2">
+										<Link
+											to={`/search?${new URLSearchParams({
+												brandId: ship.model.brand.id,
+											})}`}
+										>
+											<p className="font-bold text-white">
+												{ship.model.brand.name}
+											</p>
+										</Link>
+										<Separator.Root
+											orientation="vertical"
+											className="h-[16px] w-[1.5px] bg-night-lite"
+										/>
+										<Link
+											to={`/search?${new URLSearchParams({
+												modelId: ship.model.id,
+											})}`}
+										>
+											<p className="text-label-light-gray">{ship.model.name}</p>
+										</Link>
+									</div>
+									<Link to={`/ships/${ship.id}`}>
+										<h3 className="text-3xl font-bold text-white">
+											{ship.name}
+										</h3>
+									</Link>
+								</div>
+								<div className="mt-8 flex justify-between">
+									<div className="flex items-baseline gap-1">
+										<span className="text-2xl text-white">
+											{ship.dailyChargeFormatted}
+										</span>
+										<span className="text-label-light-gray">day</span>
+									</div>
+									{ship.reviews.length ? (
+										<Link to={`/ships/${ship.id}/reviews`}>
+											<StarRatingDisplay rating={ship.averageRating} />
+										</Link>
+									) : null}
+								</div>
+							</div>
+						</div>
+					))}
 				</div>
 			</div>
 			<div className="container mx-auto mt-40">

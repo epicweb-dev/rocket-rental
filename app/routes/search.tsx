@@ -166,7 +166,7 @@ function searchShips({
 	const hostRatingSubquery = /* sql */ `
 		SELECT h.userId, AVG(hr.rating) AS avgRating
 		FROM Host h
-		INNER JOIN HostReview hr ON hr.hostId = h.userId
+		INNER JOIN HostReview hr ON hr.subjectId = h.userId
 		${
 			starportId.length ||
 			typeof dailyChargeMin === 'number' ||
@@ -203,7 +203,7 @@ function searchShips({
 	const shipRatingSubquery = /* sql */ `
 		SELECT ship.id, AVG(sr.rating) AS avgRating
 		FROM Ship ship
-		INNER JOIN ShipReview sr ON sr.shipId = ship.id
+		INNER JOIN ShipReview sr ON sr.subjectId = ship.id
 		${starportId.length ? 'INNER JOIN Starport sp ON sp.id = ship.starportId' : ''}
 		${hostId.length ? 'INNER JOIN Host h ON h.userId = ship.hostId' : ''}
 		${
