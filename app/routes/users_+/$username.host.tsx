@@ -173,69 +173,82 @@ export default function HostUser() {
 				]}
 				bio={data.user.host.bio}
 			/>
+
 			<div className="container mx-auto mt-20">
 				<h2 className="text-3xl font-bold text-white">
-					{data.user.name ?? data.user.username}'s rockets
+					{data.user.host.ships.length
+						? `${data.user.name ?? data.user.username}'s rockets`
+						: 'No rockets yet'}
 				</h2>
 				<div className="mt-10 flex flex-wrap justify-center gap-6">
-					{data.user.host.ships.slice(0, 9).map(ship => (
-						<div
-							key={ship.name}
-							className="flex max-w-sm flex-col rounded-3xl bg-night-muted"
-						>
-							<Link to={`/ships/${ship.id}`}>
-								<img
-									className="aspect-[35/31] rounded-3xl"
-									src={getShipImgSrc(ship.imageId)}
-								/>
-							</Link>
-							<div className="h-10" />
-							<div className="px-6 pb-8">
-								<div className="flex flex-col gap-2">
-									<div className="flex items-center gap-2">
-										<Link
-											to={`/search?${new URLSearchParams({
-												brandId: ship.model.brand.id,
-											})}`}
-										>
-											<p className="font-bold text-white">
-												{ship.model.brand.name}
-											</p>
-										</Link>
-										<Separator.Root
-											orientation="vertical"
-											className="h-[16px] w-[1.5px] bg-night-lite"
-										/>
-										<Link
-											to={`/search?${new URLSearchParams({
-												modelId: ship.model.id,
-											})}`}
-										>
-											<p className="text-label-light-gray">{ship.model.name}</p>
+					{data.user.host.ships.length ? (
+						data.user.host.ships.slice(0, 9).map(ship => (
+							<div
+								key={ship.name}
+								className="flex max-w-sm flex-col rounded-3xl bg-night-muted"
+							>
+								<Link to={`/ships/${ship.id}`}>
+									<img
+										className="aspect-[35/31] rounded-3xl"
+										src={getShipImgSrc(ship.imageId)}
+									/>
+								</Link>
+								<div className="h-10" />
+								<div className="px-6 pb-8">
+									<div className="flex flex-col gap-2">
+										<div className="flex items-center gap-2">
+											<Link
+												to={`/search?${new URLSearchParams({
+													brandId: ship.model.brand.id,
+												})}`}
+											>
+												<p className="font-bold text-white">
+													{ship.model.brand.name}
+												</p>
+											</Link>
+											<Separator.Root
+												orientation="vertical"
+												className="h-[16px] w-[1.5px] bg-night-lite"
+											/>
+											<Link
+												to={`/search?${new URLSearchParams({
+													modelId: ship.model.id,
+												})}`}
+											>
+												<p className="text-label-light-gray">
+													{ship.model.name}
+												</p>
+											</Link>
+										</div>
+										<Link to={`/ships/${ship.id}`}>
+											<h3 className="text-3xl font-bold text-white">
+												{ship.name}
+											</h3>
 										</Link>
 									</div>
-									<Link to={`/ships/${ship.id}`}>
-										<h3 className="text-3xl font-bold text-white">
-											{ship.name}
-										</h3>
-									</Link>
-								</div>
-								<div className="mt-8 flex justify-between">
-									<div className="flex items-baseline gap-1">
-										<span className="text-2xl text-white">
-											{ship.dailyChargeFormatted}
-										</span>
-										<span className="text-label-light-gray">day</span>
+									<div className="mt-8 flex justify-between">
+										<div className="flex items-baseline gap-1">
+											<span className="text-2xl text-white">
+												{ship.dailyChargeFormatted}
+											</span>
+											<span className="text-label-light-gray">day</span>
+										</div>
+										{ship.reviews.length ? (
+											<Link to={`/ships/${ship.id}/reviews`}>
+												<StarRatingDisplay rating={ship.averageRating} />
+											</Link>
+										) : null}
 									</div>
-									{ship.reviews.length ? (
-										<Link to={`/ships/${ship.id}/reviews`}>
-											<StarRatingDisplay rating={ship.averageRating} />
-										</Link>
-									) : null}
 								</div>
 							</div>
+						))
+					) : (
+						<div className="text-center text-label-light-gray">
+							{`${
+								data.user.name ?? data.user.username
+							} hasn't added any rockets yet.`}
 						</div>
-					))}
+					)}
 				</div>
 				{data.user.host.ships.length > 9 ? (
 					<div className="mt-20 text-center">
