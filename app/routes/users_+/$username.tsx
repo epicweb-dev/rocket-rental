@@ -1,6 +1,22 @@
 import { NavLink, Outlet, useMatches } from '@remix-run/react'
 import clsx from 'clsx'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
+import type { DataFunctionArgs } from '@remix-run/node'
+import { json } from '@remix-run/node'
+import invariant from 'tiny-invariant'
+import { prisma } from '~/utils/db.server'
+
+export async function loader({ params }: DataFunctionArgs) {
+	invariant(params.username, 'Missing username')
+	const user = await prisma.user.findUnique({
+		where: { username: params.username },
+	})
+	if (!user) {
+		throw new Response('not found', { status: 404 })
+	}
+
+	return json({})
+}
 
 export default function UserRoute() {
 	const matches = useMatches()
