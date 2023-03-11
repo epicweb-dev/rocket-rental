@@ -77,4 +77,4 @@ export default function NewShipRoute() {
 	)
 }
 
-export { CatchBoundary } from './__shared'
+export { ErrorBoundary } from './__shared'

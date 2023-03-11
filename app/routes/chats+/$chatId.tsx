@@ -7,6 +7,7 @@ import {
 } from '@remix-run/react'
 import { useState } from 'react'
 import invariant from 'tiny-invariant'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { requireUserId } from '~/utils/auth.server'
 import { chatEmitter, EVENTS } from '~/utils/chat.server'
 import { prisma } from '~/utils/db.server'
@@ -163,19 +164,12 @@ export default function ChatRoute() {
 	)
 }
 
-export function CatchBoundary() {
-	const caught = useCatch()
-	const params = useParams()
-
-	if (caught.status === 404) {
-		return <div>Chat "{params.starportId}" not found</div>
-	}
-
-	throw new Error(`Unexpected caught response with status: ${caught.status}`)
-}
-
-export function ErrorBoundary({ error }: { error: Error }) {
-	console.error(error)
-
-	return <div>An unexpected error occurred: {error.message}</div>
+export function ErrorBoundary() {
+	return (
+		<GeneralErrorBoundary
+			statusHandlers={{
+				404: () => <p>Chat not found</p>,
+			}}
+		/>
+	)
 }

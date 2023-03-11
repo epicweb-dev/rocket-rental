@@ -1,12 +1,12 @@
-import { DataFunctionArgs, redirect } from '@remix-run/node'
-import { json } from '@remix-run/node'
-import { Link, useCatch, useLoaderData } from '@remix-run/react'
+import { DataFunctionArgs, json, redirect } from '@remix-run/node'
+import { Link, useLoaderData } from '@remix-run/react'
 import invariant from 'tiny-invariant'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { Spacer } from '~/components/spacer'
 import { prisma } from '~/utils/db.server'
 import { getUserImgSrc, useOptionalUser } from '~/utils/misc'
 
-export async function loader({ request, params }: DataFunctionArgs) {
+export async function loader({ params }: DataFunctionArgs) {
 	invariant(params.username, 'Missing username')
 	const user = await prisma.user.findUnique({
 		where: { username: params.username },
@@ -65,12 +65,14 @@ export default function UsernameIndex() {
 	)
 }
 
-export function CatchBoundary() {
-	const caught = useCatch()
-
-	if (caught.status === 404) {
-		return <div>Not user found</div>
-	}
-
-	throw new Error(`Unexpected caught response with status: ${caught.status}`)
+export function ErrorBoundary() {
+	return (
+		<GeneralErrorBoundary
+			statusHandlers={{
+				404: ({ params }) => (
+					<p>No user with the username "{params.username}" exists</p>
+				),
+			}}
+		/>
+	)
 }

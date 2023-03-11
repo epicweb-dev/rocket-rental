@@ -136,4 +136,4 @@ export default function ShipEditRoute() {
 	)
 }
 
-export { CatchBoundary } from './__shared'
+export { ErrorBoundary } from './__shared'

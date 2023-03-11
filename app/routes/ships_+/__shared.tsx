@@ -1,6 +1,7 @@
 import { type SerializeFrom } from '@remix-run/node'
-import { Form, Link, useCatch } from '@remix-run/react'
+import { Form, Link } from '@remix-run/react'
 import { useState } from 'react'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { BrandCombobox } from '~/routes/resources+/brand-combobox'
 import { ModelCombobox } from '~/routes/resources+/model-combobox'
 import { StarportCombobox } from '~/routes/resources+/starport-combobox'
@@ -156,20 +157,20 @@ export default function ShipEditForm({
 	)
 }
 
-export function CatchBoundary() {
-	const caught = useCatch()
-
-	if (caught.status === 403) {
-		return (
-			<div>
-				You are not a host. You must{' '}
-				<Link to="/me" className="underline">
-					visit
-				</Link>{' '}
-				your profile page to create your host profile first.
-			</div>
-		)
-	}
-
-	throw new Error(`Unexpected caught response with status: ${caught.status}`)
+export function ErrorBoundary() {
+	return (
+		<GeneralErrorBoundary
+			statusHandlers={{
+				403: () => (
+					<div>
+						You are not a host. You must{' '}
+						<Link to="/settings/profile" className="underline">
+							visit your profile settings
+						</Link>{' '}
+						page to create your host profile first.
+					</div>
+				),
+			}}
+		/>
+	)
 }

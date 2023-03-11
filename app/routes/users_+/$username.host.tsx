@@ -1,18 +1,13 @@
 import * as Separator from '@radix-ui/react-separator'
-import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
-import {
-	Form,
-	Link,
-	useCatch,
-	useLoaderData,
-	useParams,
-} from '@remix-run/react'
+import { json, type DataFunctionArgs } from '@remix-run/node'
+import { Link, useLoaderData } from '@remix-run/react'
 import invariant from 'tiny-invariant'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { StarRatingDisplay } from '~/components/star-rating-display'
 import { getUserId, requireUserId } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'
-import { Button, ButtonLink } from '~/utils/forms'
-import { getShipImgSrc, getUserImgSrc, useOptionalUser } from '~/utils/misc'
+import { ButtonLink } from '~/utils/forms'
+import { getShipImgSrc, useOptionalUser } from '~/utils/misc'
 import { createChat, Reviews, UserProfileBasicInfo } from './__shared'
 
 export async function loader({ request, params }: DataFunctionArgs) {
@@ -276,19 +271,14 @@ export default function HostUser() {
 	)
 }
 
-export function CatchBoundary() {
-	const caught = useCatch()
-	const params = useParams()
-
-	if (caught.status === 404) {
-		return <div className="text-white">User "{params.username}" not found</div>
-	}
-
-	throw new Error(`Unexpected caught response with status: ${caught.status}`)
-}
-
-export function ErrorBoundary({ error }: { error: Error }) {
-	console.error(error)
-
-	return <div>An unexpected error occurred: {error.message}</div>
+export function ErrorBoundary() {
+	return (
+		<GeneralErrorBoundary
+			statusHandlers={{
+				404: ({ params }) => (
+					<p>{params.username} does not have a host profile</p>
+				),
+			}}
+		/>
+	)
 }

@@ -1,5 +1,4 @@
-import type { DataFunctionArgs } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import { json, type DataFunctionArgs } from '@remix-run/node'
 import { z } from 'zod'
 import { requireUserId } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'

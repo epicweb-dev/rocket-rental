@@ -23,8 +23,8 @@ export function calculateCanReview(booking: {
 	return bookingIsPast && !allReviewsSubmitted && !reviewTimeExpired
 }
 
-const MIN_DESCRIPTION_LENGTH = 10
-const MAX_DESCRIPTION_LENGTH = 10_000
+const MIN_CONTENT_LENGTH = 10
+const MAX_CONTENT_LENGTH = 10_000
 
 async function validatePermission({
 	intent,
@@ -71,13 +71,13 @@ export const ReviewFormSchema = z.object({
 		.number()
 		.min(1, { message: 'Rating must be 1 or more' })
 		.max(5, { message: 'Rating must be 5 or less' }),
-	description: z
+	content: z
 		.string()
-		.min(MIN_DESCRIPTION_LENGTH, {
-			message: `Description must be at least ${MIN_DESCRIPTION_LENGTH} characters`,
+		.min(MIN_CONTENT_LENGTH, {
+			message: `Content must be at least ${MIN_CONTENT_LENGTH} characters`,
 		})
-		.max(MAX_DESCRIPTION_LENGTH, {
-			message: `Description must be at most ${MAX_DESCRIPTION_LENGTH} characters`,
+		.max(MAX_CONTENT_LENGTH, {
+			message: `Content must be at most ${MAX_CONTENT_LENGTH} characters`,
 		}),
 	bookingId: z.string({ invalid_type_error: 'Invalid bookingId' }),
 })
@@ -91,7 +91,7 @@ export async function action({ request }: DataFunctionArgs) {
 		return json({ errors: result.error.flatten() }, { status: 400 })
 	}
 
-	const { intent, rating, description, bookingId } = result.data
+	const { intent, rating, content, bookingId } = result.data
 	const userId = await requireUserId(request)
 	const booking = await prisma.booking.findFirst({
 		where: {
@@ -135,10 +135,10 @@ export async function action({ request }: DataFunctionArgs) {
 		// review of the renter by the host
 		case 'renter': {
 			const data = {
-				hostId: booking.ship.hostId,
-				renterId: booking.renterId,
+				reviewerId: booking.ship.hostId,
+				subjectId: booking.renterId,
 				rating,
-				description,
+				content,
 				bookingId,
 			}
 			await prisma.renterReview.upsert({
@@ -151,11 +151,11 @@ export async function action({ request }: DataFunctionArgs) {
 		// review of the ship by the renter
 		case 'ship': {
 			const data = {
-				shipId: booking.ship.id,
+				subjectId: booking.ship.id,
 				bookingId,
 				rating,
-				description,
-				renterId: userId,
+				content,
+				reviewerId: userId,
 			}
 			await prisma.shipReview.upsert({
 				where: { bookingId },
@@ -167,11 +167,11 @@ export async function action({ request }: DataFunctionArgs) {
 		// review of the host by the renter
 		case 'host': {
 			const data = {
-				hostId: booking.ship.hostId,
+				subjectId: booking.ship.hostId,
 				bookingId,
 				rating,
-				description,
-				renterId: userId,
+				content,
+				reviewerId: userId,
 			}
 			await prisma.hostReview.upsert({
 				where: { bookingId },
@@ -199,7 +199,7 @@ export function ReviewCard({
 	reviewer,
 }: {
 	type: 'renter' | 'ship' | 'host'
-	review: { rating: number; description: string }
+	review: { rating: number; content: string }
 	reviewer: { name: string | null; imageId: string | null }
 }) {
 	return (
@@ -218,13 +218,13 @@ export function ReviewCard({
 						alt={reviewer.name ?? ''}
 					/>
 				) : null}{' '}
-				{review.description}
+				{review.content}
 			</div>
 		</section>
 	)
 }
 
-const REVIEW_DESCRIPTION_LABELS = {
+const REVIEW_CONTENT_LABELS = {
 	renter: 'Renter Review',
 	ship: 'Ship Review',
 	host: 'Host Review',
@@ -256,7 +256,7 @@ export function Reviewer({
 		imageId?: string | null
 		name?: string | null
 	}
-	existingReview?: { rating: number; description: string } | null
+	existingReview?: { rating: number; content: string } | null
 }) {
 	const reviewFetcher = useFetcher<typeof action>()
 	const { form, fields } = useForm({
@@ -321,15 +321,15 @@ export function Reviewer({
 				</fieldset>
 				{fields.rating.errorUI}
 				<div>
-					<label {...fields.description.labelProps}>
-						{REVIEW_DESCRIPTION_LABELS[type]}:
+					<label {...fields.content.labelProps}>
+						{REVIEW_CONTENT_LABELS[type]}:
 					</label>
 					<textarea
 						className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-						defaultValue={existingReview?.description ?? ''}
-						{...fields.description.props}
+						defaultValue={existingReview?.content ?? ''}
+						{...fields.content.props}
 					/>
-					{fields.description.errorUI}
+					{fields.content.errorUI}
 				</div>
 				<button type="submit" name="intent" value={type}>
 					{existingReview ? 'Update Review' : 'Create Review'}

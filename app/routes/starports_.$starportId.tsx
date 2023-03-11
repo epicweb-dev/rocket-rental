@@ -1,6 +1,7 @@
 import { json, type DataFunctionArgs } from '@remix-run/node'
-import { useCatch, useLoaderData, useParams } from '@remix-run/react'
+import { useLoaderData } from '@remix-run/react'
 import invariant from 'tiny-invariant'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { prisma } from '~/utils/db.server'
 import { getImgSrc, getShipImgSrc } from '~/utils/misc'
 
@@ -101,13 +102,12 @@ export default function StarportRoute() {
 const arrAvg = (arr: Array<number>) =>
 	arr.reduce((a, b) => a + b, 0) / arr.length
 
-export function CatchBoundary() {
-	const caught = useCatch()
-	const params = useParams()
-
-	if (caught.status === 404) {
-		return <div>Starport "{params.starportId}" not found</div>
-	}
-
-	throw new Error(`Unexpected caught response with status: ${caught.status}`)
+export function ErrorBoundary() {
+	return (
+		<GeneralErrorBoundary
+			statusHandlers={{
+				404: () => <p>Starport not found</p>,
+			}}
+		/>
+	)
 }

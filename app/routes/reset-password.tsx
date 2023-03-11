@@ -11,6 +11,7 @@ import {
 	useNavigation,
 } from '@remix-run/react'
 import { z } from 'zod'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { authenticator, resetUserPassword } from '~/utils/auth.server'
 import { getFieldsFromSchema, preprocessFormData, useForm } from '~/utils/forms'
 import { commitSession, getSession } from '~/utils/session.server'
@@ -158,8 +159,6 @@ export default function ResetPasswordPage() {
 	)
 }
 
-export function ErrorBoundary({ error }: { error: Error }) {
-	console.error(error)
-
-	return <div>An unexpected error occurred: {error.message}</div>
+export function ErrorBoundary() {
+	return <GeneralErrorBoundary />
 }

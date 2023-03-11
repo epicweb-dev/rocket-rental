@@ -68,3 +68,17 @@ export function getUserImgSrc(imageId?: string | null) {
 	// TODO: make this real I guess
 	return imageId ? `/images/${imageId}` : `/img/user.png`
 }
+
+export function getErrorMessage(error: unknown) {
+	if (typeof error === 'string') return error
+	if (
+		error &&
+		typeof error === 'object' &&
+		'message' in error &&
+		typeof error.message === 'string'
+	) {
+		return error.message
+	}
+	console.error('Unable to get error message for error', error)
+	return 'Unknown Error'
+}

@@ -6,6 +6,7 @@ import {
 } from '@remix-run/node'
 import { useFetcher, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { prisma } from '~/utils/db.server'
 import { sendEmail } from '~/utils/email.server'
 import { decrypt, encrypt } from '~/utils/encryption.server'
@@ -153,8 +154,6 @@ export default function SignupRoute() {
 	)
 }
 
-export function ErrorBoundary({ error }: { error: Error }) {
-	console.error(error)
-
-	return <div>An unexpected error occurred: {error.message}</div>
+export function ErrorBoundary() {
+	return <GeneralErrorBoundary />
 }

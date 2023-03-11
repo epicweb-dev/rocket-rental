@@ -1,6 +1,7 @@
 import { json, type DataFunctionArgs } from '@remix-run/node'
-import { Outlet, useCatch, useLoaderData, useParams } from '@remix-run/react'
+import { Outlet, useLoaderData } from '@remix-run/react'
 import invariant from 'tiny-invariant'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { prisma } from '~/utils/db.server'
 
 export async function loader({ params }: DataFunctionArgs) {
@@ -27,13 +28,12 @@ export default function BrandRoute() {
 	)
 }
 
-export function CatchBoundary() {
-	const caught = useCatch()
-	const params = useParams()
-
-	if (caught.status === 404) {
-		return <div>Brand "{params.brandId}" not found</div>
-	}
-
-	throw new Error(`Unexpected caught response with status: ${caught.status}`)
+export function ErrorBoundary() {
+	return (
+		<GeneralErrorBoundary
+			statusHandlers={{
+				404: ({ params }) => <p>Brand "{params.brandId}" not found</p>,
+			}}
+		/>
+	)
 }

@@ -8,6 +8,7 @@ module.exports = {
 	ignoredRouteFiles: ['**/*'],
 	future: {
 		v2_meta: true,
+		v2_errorBoundary: true,
 		unstable_postcss: true,
 		unstable_cssSideEffectImports: true,
 		unstable_cssModules: true,

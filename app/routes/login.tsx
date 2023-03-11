@@ -4,6 +4,7 @@ import {
 	type V2_MetaFunction,
 } from '@remix-run/node'
 import { useLoaderData, useSearchParams } from '@remix-run/react'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { Spacer } from '~/components/spacer'
 import { authenticator } from '~/utils/auth.server'
 import { commitSession, getSession } from '~/utils/session.server'
@@ -58,8 +59,6 @@ export default function LoginPage() {
 	)
 }
 
-export function ErrorBoundary({ error }: { error: Error }) {
-	console.error(error)
-
-	return <div>An unexpected error occurred: {error.message}</div>
+export function ErrorBoundary() {
+	return <GeneralErrorBoundary />
 }

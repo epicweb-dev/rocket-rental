@@ -1,11 +1,6 @@
-import {
-	NavLink,
-	Outlet,
-	useCatch,
-	useMatches,
-	useParams,
-} from '@remix-run/react'
+import { NavLink, Outlet, useMatches } from '@remix-run/react'
 import clsx from 'clsx'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
 
 export default function UserRoute() {
 	const matches = useMatches()
@@ -51,19 +46,14 @@ export default function UserRoute() {
 	)
 }
 
-export function CatchBoundary() {
-	const caught = useCatch()
-	const params = useParams()
-
-	if (caught.status === 404) {
-		return <div>User "{params.username}" not found</div>
-	}
-
-	throw new Error(`Unexpected caught response with status: ${caught.status}`)
-}
-
-export function ErrorBoundary({ error }: { error: Error }) {
-	console.error(error)
-
-	return <div>An unexpected error occurred: {error.message}</div>
+export function ErrorBoundary() {
+	return (
+		<GeneralErrorBoundary
+			statusHandlers={{
+				404: ({ params }) => (
+					<p>No user with the username "{params.username}" exists</p>
+				),
+			}}
+		/>
+	)
 }
