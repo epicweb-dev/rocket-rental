@@ -44,20 +44,6 @@ module.exports = {
 					},
 				],
 			},
-			keyframes: {
-				marquee: {
-					from: { transform: 'translateX(0)' },
-					to: { transform: 'translateX(-100%)' },
-				},
-				marqueeReverse: {
-					from: { transform: 'translateX(0)' },
-					to: { transform: 'translateX(100%)' },
-				},
-			},
-			animation: {
-				marquee: 'marquee 40s linear infinite',
-				'marquee-reverse': 'marqueeReverse 40s linear infinite',
-			},
 		},
 	},
 	plugins: [require('@tailwindcss/line-clamp'), require('tailwindcss-radix')],
