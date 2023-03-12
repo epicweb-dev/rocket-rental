@@ -1,6 +1,7 @@
 import * as Tabs from '@radix-ui/react-tabs'
 import { type V2_MetaFunction } from '@remix-run/node'
 import { Form, Link } from '@remix-run/react'
+import { Marquee } from 'dynamic-marquee-react'
 import clsx from 'clsx'
 import { useRef, useState } from 'react'
 import { Spacer } from '~/components/spacer'
@@ -165,7 +166,7 @@ export default function Index() {
 				<StarportListSection />
 				<Spacer size="xl" />
 				<div className="overflow-x-scroll py-20">
-					<Marquee />
+					<MyMarquee />
 				</div>
 				<Spacer size="4xl" />
 				<div className="container mx-auto">
@@ -320,30 +321,31 @@ export default function Index() {
 	)
 }
 
-function Marquee() {
-	const children = (
-		<>
-			<li className="shrink-0">
-				Esse consequat consectetur excepteur esse laborum amet
-			</li>
-			<li className="shrink-0">
-				Consequat ipsum ad ullamco duis voluptate deserunt reprehenderit
-			</li>
-			<li className="shrink-0">
-				Duis occaecat proident velit eu excepteur adipisicing ea et
-			</li>
-			<li className="shrink-0">
-				Exercitation laborum laborum laboris laborum.
-			</li>
-		</>
-	)
-	const ulClassName = 'flex shrink-0 animate-marquee gap-8 pl-8'
+function MyMarquee() {
+	const [paused, setPaused] = useState(false)
+
 	return (
-		<div className="-mx-2 flex rotate-[-4deg] overflow-x-hidden border-t-2 border-b-2 border-t-pink-500 border-b-primary py-2 text-white">
-			<ul className={ulClassName}>{children}</ul>
-			<ul className={ulClassName} aria-hidden={true}>
-				{children}
-			</ul>
+		<div
+			className="-mx-2 flex h-10 rotate-[-4deg] flex-row items-center border-t-2 border-b-2 border-t-pink-500 border-b-primary text-white"
+			onMouseEnter={() => setPaused(true)}
+			onMouseLeave={() => setPaused(false)}
+		>
+			<div className="flex-1">
+				<Marquee rate={paused ? 0 : -50} startOnScreen>
+					<div className="m-2">
+						Esse consequat consectetur excepteur esse laborum amet
+					</div>
+					<div className="m-2">
+						Consequat ipsum ad ullamco duis voluptate deserunt reprehenderit
+					</div>
+					<div className="m-2">
+						Duis occaecat proident vedivt eu excepteur adipisicing ea et
+					</div>
+					<div className="m-2">
+						Exercitation laborum laborum laboris laborum.
+					</div>
+				</Marquee>
+			</div>
 		</div>
 	)
 }
