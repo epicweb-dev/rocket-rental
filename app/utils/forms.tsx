@@ -454,7 +454,7 @@ export function Field({
 				aria-errormessage={errorId}
 				placeholder=" "
 				{...inputProps}
-				className="h-16 w-full rounded-lg border border-night-lite bg-night px-4 pt-4 text-sm text-white caret-white outline-none focus:border-primary disabled:bg-night-lite"
+				className="h-16 w-full rounded-lg border border-night-400 bg-night-700 px-4 pt-4 text-sm text-white caret-white outline-none focus:border-accent-purple disabled:bg-night-400"
 			/>
 			{/* the label comes after the input so we can use the sibling selector in the CSS to give us animated label control in CSS only */}
 			<label htmlFor={id} {...labelProps} />
@@ -486,7 +486,7 @@ export function TextareaField({
 				aria-errormessage={errorId}
 				placeholder=" "
 				{...textareaProps}
-				className="h-48 w-full rounded-lg border border-night-lite bg-night px-4 pt-8 text-sm text-white caret-white outline-none focus:border-primary disabled:bg-night-lite"
+				className="h-48 w-full rounded-lg border border-night-400 bg-night-700 px-4 pt-8 text-sm text-white caret-white outline-none focus:border-accent-purple disabled:bg-night-400"
 			/>
 			{/* the label comes after the input so we can use the sibling selector in the CSS to give us animated label control in CSS only */}
 			<label htmlFor={id} {...labelProps} />
@@ -537,7 +537,7 @@ export function CheckboxField({
 				<label
 					htmlFor={id}
 					{...labelProps}
-					className="text-sm text-label-light-gray"
+					className="text-sm text-night-200"
 				/>
 			</div>
 			<div className="px-4 pt-1 pb-3">
@@ -555,11 +555,11 @@ function getButtonClassName({
 	variant: 'primary' | 'secondary'
 }) {
 	const baseClassName =
-		'rounded-full font-bold text-white outline-none transition-[background-color,color] duration-200 disabled:bg-night-muted disabled:text-label-light-gray'
+		'rounded-full font-bold text-white outline-none transition-[background-color,color] duration-200 disabled:bg-night-500 disabled:text-night-200'
 	const primaryClassName =
-		'bg-primary hover:bg-secondary hover:text-night focus:bg-secondary focus:text-night active:bg-tertiary'
+		'bg-accent-purple hover:bg-accent-yellow hover:text-night-700 focus:bg-accent-yellow focus:text-night-700 active:bg-accent-yellow-muted'
 	const secondaryClassName =
-		'border-[1.5px] border-night-lite bg-night hover:border-primary focus:border-primary active:border-primary-lighter'
+		'border-[1.5px] border-night-400 bg-night-700 hover:border-accent-purple focus:border-accent-purple active:border-accent-purple-lighter'
 	const extraSmallClassName = 'py-2 px-3 text-sm'
 	const smallClassName = 'px-10 py-[14px] text-sm'
 	const mediumClassName = 'px-14 py-5 text-lg'

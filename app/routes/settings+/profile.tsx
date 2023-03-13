@@ -242,13 +242,10 @@ export default function EditUserProfile() {
 	return (
 		<div className="container m-auto mt-16 mb-36 max-w-3xl">
 			<div className="flex gap-3">
-				<Link
-					className="text-label-dark-gray"
-					to={`/users/${data.user.username}`}
-				>
+				<Link className="text-night-300" to={`/users/${data.user.username}`}>
 					Profile
 				</Link>
-				<span className="text-label-dark-gray">▶️</span>
+				<span className="text-night-300">▶️</span>
 				<span className="text-white">Edit Profile</span>
 			</div>
 			<div className="mt-16 flex flex-col gap-12">
@@ -261,7 +258,7 @@ export default function EditUserProfile() {
 						/>
 						<Link
 							to="photo"
-							className="absolute top-3 -right-3 flex h-4 w-4 items-center justify-center rounded-full border-4 border-night bg-night-muted p-5"
+							className="absolute top-3 -right-3 flex h-4 w-4 items-center justify-center rounded-full border-4 border-night-700 bg-night-500 p-5"
 						>
 							📷
 						</Link>
@@ -449,9 +446,9 @@ export default function EditUserProfile() {
 								</div>
 							)}
 						</div>
-						<div className="col-span-6 mt-6 mb-12 h-1 border-b-[1.5px] border-night-muted" />
+						<div className="col-span-6 mt-6 mb-12 h-1 border-b-[1.5px] border-night-500" />
 						<fieldset className="col-span-6">
-							<legend className="pb-6 text-lg text-label-light-gray">
+							<legend className="pb-6 text-lg text-night-200">
 								Change password
 							</legend>
 							<div className="flex justify-between gap-10">

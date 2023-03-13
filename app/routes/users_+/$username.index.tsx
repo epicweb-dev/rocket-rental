@@ -52,7 +52,7 @@ export default function UsernameIndex() {
 			{isLoggedInUser ? (
 				<Link
 					to="/settings/profile"
-					className="rounded-full border border-night-lite py-5 px-10 text-white"
+					className="border-night-400 rounded-full border py-5 px-10 text-white"
 				>
 					✏️ Create your profile
 				</Link>

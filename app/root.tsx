@@ -81,7 +81,7 @@ export default function App() {
 				<Meta />
 				<Links />
 			</head>
-			<body className="bg-night flex h-full flex-col justify-between">
+			<body className="flex h-full flex-col justify-between bg-night-700">
 				<header className="container mx-auto py-6">
 					<nav className="flex justify-between">
 						<Link to="/" className="text-white">
@@ -99,7 +99,7 @@ export default function App() {
 							) : (
 								<Link
 									to="/login"
-									className="rounded-full bg-primary py-3.5 px-10 text-sm font-bold text-white hover:bg-primary-darker"
+									className="hover:bg-accent-purple-darker rounded-full bg-accent-purple py-3.5 px-10 text-sm font-bold text-white"
 								>
 									Log In
 								</Link>
@@ -158,8 +158,8 @@ function ThemeSwitch() {
 		<fetcher.Form>
 			<label>
 				<Checkbox.Root
-					className={clsx('bg-gray-night-muted h-10 w-20 rounded-full p-1', {
-						'bg-night-muted': theme === 'dark',
+					className={clsx('bg-gray-night-500 h-10 w-20 rounded-full p-1', {
+						'bg-night-500': theme === 'dark',
 						'bg-white': theme === 'light',
 					})}
 					checked={checked}

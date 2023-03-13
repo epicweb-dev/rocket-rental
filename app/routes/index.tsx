@@ -17,7 +17,7 @@ export default function Index() {
 			<main>
 				<div className="mx-auto max-w-3xl text-center">
 					<p className="text-2xl text-white/70">Explore the universe</p>
-					<h1 className="text-7.5xl tracking-wide text-white">
+					<h1 className="text-mega tracking-wide text-white">
 						Rent a space rocket in two clicks!
 					</h1>
 				</div>
@@ -79,7 +79,7 @@ export default function Index() {
 					<div className="shrink-0">
 						<button
 							type="submit"
-							className="m-3 h-16 w-16 rounded-full bg-primary text-white hover:bg-primary-darker"
+							className="hover:bg-accent-purple-darker m-3 h-16 w-16 rounded-full bg-accent-purple text-white"
 						>
 							🔍
 						</button>
@@ -106,7 +106,7 @@ export default function Index() {
 							<div>
 								<Link
 									to="/search"
-									className="rounded-full bg-primary py-3.5 px-10 text-sm font-bold text-white hover:bg-primary-darker"
+									className="hover:bg-accent-purple-darker rounded-full bg-accent-purple py-3.5 px-10 text-sm font-bold text-white"
 								>
 									Explore rockets
 								</Link>
@@ -128,8 +128,8 @@ export default function Index() {
 				<Spacer size="sm" />
 				<div className="container mx-auto">
 					<div className="grid grid-cols-3 gap-6">
-						<div className="flex h-96 flex-col justify-between rounded-3xl bg-night-muted p-10">
-							<div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary">
+						<div className="flex h-96 flex-col justify-between rounded-3xl bg-night-500 p-10">
+							<div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent-purple">
 								📡
 							</div>
 							<div className="flex flex-col gap-7">
@@ -137,8 +137,8 @@ export default function Index() {
 								<p className="text-3xl text-white">Find your dream rocket</p>
 							</div>
 						</div>
-						<div className="flex h-96 flex-col justify-between rounded-3xl bg-night-muted p-10">
-							<div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary">
+						<div className="flex h-96 flex-col justify-between rounded-3xl bg-night-500 p-10">
+							<div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent-purple">
 								🚀
 							</div>
 							<div className="flex flex-col gap-7">
@@ -148,8 +148,8 @@ export default function Index() {
 								</p>
 							</div>
 						</div>
-						<div className="flex h-96 flex-col justify-between rounded-3xl bg-night-muted p-10">
-							<div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary">
+						<div className="flex h-96 flex-col justify-between rounded-3xl bg-night-500 p-10">
+							<div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent-purple">
 								✨
 							</div>
 							<div className="flex flex-col gap-7">
@@ -172,25 +172,25 @@ export default function Index() {
 					<div className="grid grid-cols-2 gap-36">
 						<div className="grid grid-cols-2 gap-6">
 							<div className="flex flex-col gap-6">
-								<div className="flex h-[160px] w-[216px] flex-col items-center justify-center gap-1 rounded-3xl bg-night-muted">
+								<div className="flex h-[160px] w-[216px] flex-col items-center justify-center gap-1 rounded-3xl bg-night-500">
 									<img className="aspect-square w-16" src="" />
 									<span className="uppercase text-white">Zheng</span>
 								</div>
-								<div className="flex h-[160px] w-[216px] flex-col items-center justify-center gap-1 rounded-3xl bg-night-muted">
+								<div className="flex h-[160px] w-[216px] flex-col items-center justify-center gap-1 rounded-3xl bg-night-500">
 									<img className="aspect-square w-16" src="" />
 									<span className="uppercase text-white">Oribtalis</span>
 								</div>
-								<div className="flex h-[160px] w-[216px] flex-col items-center justify-center gap-1 rounded-3xl bg-night-muted">
+								<div className="flex h-[160px] w-[216px] flex-col items-center justify-center gap-1 rounded-3xl bg-night-500">
 									<img className="aspect-square w-16" src="" />
 									<span className="uppercase text-white">Cosmic</span>
 								</div>
 							</div>
 							<div className="flex flex-col gap-6 pt-16">
-								<div className="flex h-64 w-64 flex-col items-center justify-center gap-10 rounded-3xl bg-night-muted">
+								<div className="flex h-64 w-64 flex-col items-center justify-center gap-10 rounded-3xl bg-night-500">
 									<img className="aspect-square w-24" src="" />
 									<span className="uppercase text-white">Asteroid</span>
 								</div>
-								<div className="flex h-64 w-64 flex-col items-center justify-center gap-10 rounded-3xl bg-night-muted">
+								<div className="flex h-64 w-64 flex-col items-center justify-center gap-10 rounded-3xl bg-night-500">
 									<img className="aspect-square w-24" src="" />
 									<span className="uppercase text-white">Spaceship</span>
 								</div>
@@ -210,7 +210,7 @@ export default function Index() {
 							<div>
 								<Link
 									to="/search"
-									className="rounded-full bg-primary py-3.5 px-10 text-sm font-bold text-white hover:bg-primary-darker"
+									className="hover:bg-accent-purple-darker rounded-full bg-accent-purple py-3.5 px-10 text-sm font-bold text-white"
 								>
 									Explore rockets
 								</Link>
@@ -229,11 +229,11 @@ export default function Index() {
 						</h2>
 					</div>
 					<Spacer size="sm" />
-					<div className="flex items-center justify-center rounded-3xl bg-night-muted py-16">
+					<div className="flex items-center justify-center rounded-3xl bg-night-500 py-16">
 						<div className="flex flex-1 flex-col items-center justify-center gap-1">
 							<div
 								className={clsx(
-									'text-7.5xl',
+									'text-mega',
 									styles.statsNumber,
 									styles.statsDistance,
 								)}
@@ -245,7 +245,7 @@ export default function Index() {
 						<div className="flex flex-1 flex-col items-center justify-center gap-1 border-l-2 border-l-gray-500">
 							<div
 								className={clsx(
-									'text-7.5xl',
+									'text-mega',
 									styles.statsNumber,
 									styles.statsHosts,
 								)}
@@ -259,7 +259,7 @@ export default function Index() {
 						<div className="flex flex-1 flex-col items-center justify-center gap-1 border-l-2 border-l-gray-500">
 							<div
 								className={clsx(
-									'text-7.5xl',
+									'text-mega',
 									styles.statsNumber,
 									styles.statsRockets,
 								)}
@@ -287,7 +287,7 @@ export default function Index() {
 							</p>
 							<Link
 								to="/insurance"
-								className="mt-14 inline-block rounded-full bg-primary py-5 px-14 text-lg font-bold text-white hover:bg-primary-darker"
+								className="hover:bg-accent-purple-darker mt-14 inline-block rounded-full bg-accent-purple py-5 px-14 text-lg font-bold text-white"
 							>
 								Learn more
 							</Link>
@@ -307,7 +307,7 @@ export default function Index() {
 						<div>
 							<Link
 								to="/search"
-								className="rounded-full bg-primary py-3.5 px-10 text-sm font-bold text-white hover:bg-primary-darker"
+								className="hover:bg-accent-purple-darker rounded-full bg-accent-purple py-3.5 px-10 text-sm font-bold text-white"
 							>
 								Explore rockets
 							</Link>
@@ -339,7 +339,7 @@ function Marquee() {
 	)
 	const ulClassName = 'flex shrink-0 animate-marquee gap-8 pl-8'
 	return (
-		<div className="-mx-2 flex rotate-[-4deg] border-t-2 border-b-2 border-t-pink-500 border-b-primary py-2 text-white">
+		<div className="-mx-2 flex rotate-[-4deg] border-t-2 border-b-2 border-t-pink-500 border-b-accent-purple py-2 text-white">
 			<ul className={ulClassName}>{children}</ul>
 			<ul className={ulClassName} aria-hidden={true}>
 				{children}
@@ -417,13 +417,13 @@ function StarportListSection() {
 					</h2>
 					<div>
 						<button
-							className="rounded-full bg-primary p-6 text-3xl font-bold text-white"
+							className="rounded-full bg-accent-purple p-6 text-3xl font-bold text-white"
 							onClick={goPrev}
 						>
 							👈
 						</button>
 						<button
-							className="rounded-full bg-primary p-6 text-3xl font-bold text-white"
+							className="rounded-full bg-accent-purple p-6 text-3xl font-bold text-white"
 							onClick={goNext}
 						>
 							👉
@@ -440,7 +440,7 @@ function StarportListSection() {
 					{starports.map(s => (
 						<div
 							key={s.name}
-							className="starport-card flex shrink-0 flex-col rounded-3xl bg-night-muted"
+							className="starport-card flex shrink-0 flex-col rounded-3xl bg-night-500"
 							style={{
 								width: STARPORT_CARD_WIDTH,
 							}}
@@ -468,7 +468,7 @@ function RocketModelsSection() {
 	const triggerClassName = 'py-3 px-8 text-3xl'
 	const inactiveTriggerClassName = 'text-gray-500 hover:text-white'
 	const activeTriggerClassName =
-		'rounded-full bg-primary hover:bg-primary-darker text-white'
+		'rounded-full bg-accent-purple hover:bg-accent-purple-darker text-white'
 	const models: Record<
 		string,
 		Array<{ name: string; description: string; imageSrc: string }>
@@ -735,7 +735,7 @@ function RocketModelsSection() {
 					{models.zheng.map(ship => (
 						<div
 							key={ship.name}
-							className="flex max-w-sm flex-col rounded-3xl bg-night-muted"
+							className="flex max-w-sm flex-col rounded-3xl bg-night-500"
 						>
 							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
 							<div className="h-10" />
@@ -754,7 +754,7 @@ function RocketModelsSection() {
 					{models.orbitalis.map(ship => (
 						<div
 							key={ship.name}
-							className="flex max-w-sm flex-col rounded-3xl bg-night-muted"
+							className="flex max-w-sm flex-col rounded-3xl bg-night-500"
 						>
 							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
 							<div className="h-10" />
@@ -773,7 +773,7 @@ function RocketModelsSection() {
 					{models.spaceship.map(ship => (
 						<div
 							key={ship.name}
-							className="flex max-w-sm flex-col rounded-3xl bg-night-muted"
+							className="flex max-w-sm flex-col rounded-3xl bg-night-500"
 						>
 							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
 							<div className="h-10" />
@@ -792,7 +792,7 @@ function RocketModelsSection() {
 					{models.cosmic.map(ship => (
 						<div
 							key={ship.name}
-							className="flex max-w-sm flex-col rounded-3xl bg-night-muted"
+							className="flex max-w-sm flex-col rounded-3xl bg-night-500"
 						>
 							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
 							<div className="h-10" />
@@ -811,7 +811,7 @@ function RocketModelsSection() {
 					{models.asteroid.map(ship => (
 						<div
 							key={ship.name}
-							className="flex max-w-sm flex-col rounded-3xl bg-night-muted"
+							className="flex max-w-sm flex-col rounded-3xl bg-night-500"
 						>
 							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
 							<div className="h-10" />

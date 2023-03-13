@@ -153,7 +153,7 @@ export function InlineLogin({
 					<div className="flex items-center justify-between gap-6 pt-3">
 						<button
 							type="submit"
-							className="h-16 w-full rounded-full bg-primary py-3.5 px-10 text-lg font-bold text-white hover:bg-primary-darker"
+							className="hover:bg-accent-purple-darker h-16 w-full rounded-full bg-accent-purple py-3.5 px-10 text-lg font-bold text-white"
 						>
 							Log in
 						</button>

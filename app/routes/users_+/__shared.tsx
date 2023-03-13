@@ -60,7 +60,7 @@ export function UserProfileBasicInfo({
 	const location = useLocation()
 	return (
 		<>
-			<div className="container mx-auto rounded-3xl bg-night-muted p-12">
+			<div className="container mx-auto rounded-3xl bg-night-500 p-12">
 				<div className="grid grid-cols-2 justify-items-center">
 					<div className="relative w-52">
 						<div className="absolute -top-40">
@@ -145,7 +145,7 @@ export function UserProfileBasicInfo({
 								{index > 0 ? (
 									<Separator.Root
 										orientation="vertical"
-										className="h-14 w-[1.5px] bg-night-lite"
+										className="h-14 w-[1.5px] bg-night-400"
 									/>
 								) : null}
 								<div className="min-w-[120px] px-5">
@@ -159,38 +159,38 @@ export function UserProfileBasicInfo({
 			</div>
 			<div className="container mx-auto mt-6">
 				<div className="grid grid-cols-2 gap-6">
-					<div className="rounded-3xl bg-night-muted p-10">
+					<div className="rounded-3xl bg-night-500 p-10">
 						<h2 className="font-3xl font-bold text-white">Verified Info</h2>
 						<div className="mt-8 flex items-center justify-around text-center">
 							<div className="flex flex-col items-center justify-center">
 								<div className="flex h-8 w-8 items-center justify-center">
 									🛡
 								</div>
-								<div className="mt-3 max-w-[92px] leading-5 text-label-light-gray">
+								<div className="mt-3 max-w-[92px] leading-5 text-night-200">
 									Approved to fly
 								</div>
 							</div>
 							<Separator.Root
 								orientation="vertical"
-								className="h-14 w-[1.5px] bg-night-lite"
+								className="h-14 w-[1.5px] bg-night-400"
 							/>
 							<div className="flex flex-col items-center justify-center">
 								<div className="flex h-8 w-8 items-center justify-center">
 									🛡
 								</div>
-								<div className="mt-3 max-w-[92px] leading-5 text-label-light-gray">
+								<div className="mt-3 max-w-[92px] leading-5 text-night-200">
 									Email address
 								</div>
 							</div>
 							<Separator.Root
 								orientation="vertical"
-								className="h-14 w-[1.5px] bg-night-lite"
+								className="h-14 w-[1.5px] bg-night-400"
 							/>
 							<div className="flex flex-col items-center justify-center">
 								<div className="flex h-8 w-8 items-center justify-center">
 									🛡
 								</div>
-								<div className="mt-3 max-w-[92px] leading-5 text-label-light-gray">
+								<div className="mt-3 max-w-[92px] leading-5 text-night-200">
 									Phone number
 								</div>
 							</div>
@@ -199,23 +199,23 @@ export function UserProfileBasicInfo({
 							Share this profile
 						</h2>
 						<div className="mt-4 flex gap-4">
-							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-muted-dark text-white">
+							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-600 text-white">
 								f
 							</div>
-							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-muted-dark text-white">
+							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-600 text-white">
 								t
 							</div>
-							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-muted-dark text-white">
+							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-600 text-white">
 								i
 							</div>
-							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-muted-dark text-white">
+							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-600 text-white">
 								c
 							</div>
 						</div>
 					</div>
-					<div className="flex flex-col rounded-3xl bg-night-muted p-10">
+					<div className="flex flex-col rounded-3xl bg-night-500 p-10">
 						<h2 className="font-3xl font-bold text-white">About</h2>
-						<div className="mt-6 max-h-56 flex-grow overflow-y-auto text-label-light-gray">
+						<div className="mt-6 max-h-56 flex-grow overflow-y-auto text-night-200">
 							{bio
 								? bio
 										.split('\n')
@@ -263,7 +263,7 @@ export function Reviews({
 							<h2 className="text-3xl font-bold text-white">{title}</h2>
 							<StarRatingDisplay rating={rating ?? 0} />
 						</div>
-						<Link to="reviews" className="text-label-light-gray">
+						<Link to="reviews" className="text-night-200">
 							View all
 						</Link>
 					</div>
@@ -318,7 +318,7 @@ export function Reviews({
 					<h2 className="text-3xl font-bold text-white">No reviews yet</h2>
 					<div className="flex flex-col gap-3">
 						<span>⭐️ ⭐️ ⭐️ ⭐️ ⭐️</span>
-						<p className="text-label-light-gray">
+						<p className="text-night-200">
 							{user.name ?? user.username} hasn't received a review yet
 						</p>
 					</div>

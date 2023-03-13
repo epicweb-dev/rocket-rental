@@ -180,7 +180,7 @@ export default function HostUser() {
 						data.user.host.ships.slice(0, 9).map(ship => (
 							<div
 								key={ship.name}
-								className="flex max-w-sm flex-col rounded-3xl bg-night-muted"
+								className="flex max-w-sm flex-col rounded-3xl bg-night-500"
 							>
 								<Link to={`/ships/${ship.id}`}>
 									<img
@@ -203,16 +203,14 @@ export default function HostUser() {
 											</Link>
 											<Separator.Root
 												orientation="vertical"
-												className="h-[16px] w-[1.5px] bg-night-lite"
+												className="h-[16px] w-[1.5px] bg-night-400"
 											/>
 											<Link
 												to={`/search?${new URLSearchParams({
 													modelId: ship.model.id,
 												})}`}
 											>
-												<p className="text-label-light-gray">
-													{ship.model.name}
-												</p>
+												<p className="text-night-200">{ship.model.name}</p>
 											</Link>
 										</div>
 										<Link to={`/ships/${ship.id}`}>
@@ -226,7 +224,7 @@ export default function HostUser() {
 											<span className="text-2xl text-white">
 												{ship.dailyChargeFormatted}
 											</span>
-											<span className="text-label-light-gray">day</span>
+											<span className="text-night-200">day</span>
 										</div>
 										{ship.reviews.length ? (
 											<Link to={`/ships/${ship.id}/reviews`}>
@@ -238,7 +236,7 @@ export default function HostUser() {
 							</div>
 						))
 					) : (
-						<div className="text-center text-label-light-gray">
+						<div className="text-center text-night-200">
 							{`${
 								data.user.name ?? data.user.username
 							} hasn't added any rockets yet.`}

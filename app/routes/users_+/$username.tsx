@@ -27,14 +27,14 @@ export default function UserRoute() {
 		<div className="mt-36 mb-48">
 			{onIndexPage ? null : (
 				<div className="container mx-auto flex justify-end">
-					<div className="flex justify-between rounded-full border border-night-lite bg-night">
+					<div className="flex justify-between rounded-full border border-night-400 bg-night-700">
 						<NavLink
 							preventScrollReset
 							prefetch="intent"
 							to="host"
 							className={({ isActive }) =>
 								clsx('rounded-full py-3 px-12 leading-3', {
-									'bg-night text-white': !isActive,
+									'bg-night-700 text-white': !isActive,
 									'bg-white text-black': isActive,
 								})
 							}
@@ -47,7 +47,7 @@ export default function UserRoute() {
 							to="renter"
 							className={({ isActive }) =>
 								clsx('rounded-full py-3 px-12 leading-3', {
-									'bg-night text-white': !isActive,
+									'bg-night-700 text-white': !isActive,
 									' bg-white text-black': isActive,
 								})
 							}
