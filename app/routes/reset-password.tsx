@@ -145,7 +145,7 @@ export default function ResetPasswordPage() {
 					<div className="flex items-center justify-between gap-6">
 						<button
 							type="submit"
-							className="w-full rounded bg-gray-500  py-2 px-4 text-white hover:bg-gray-600 focus:bg-gray-400"
+							className="w-full rounded bg-gray-500  py-2 px-4 hover:bg-gray-600 focus:bg-gray-400"
 							disabled={Boolean(navigation.state === 'submitting')}
 						>
 							{navigation.state === 'submitting'

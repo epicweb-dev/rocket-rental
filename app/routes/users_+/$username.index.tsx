@@ -44,7 +44,7 @@ export default function UsernameIndex() {
 				alt={data.user.name ?? data.user.username}
 				src={getUserImgSrc(data.user.imageId)}
 			/>
-			<h1 className="text-4xl font-bold text-white">
+			<h1 className="text-4xl font-bold">
 				{data.user.name ?? data.user.username}
 			</h1>
 			<p className="text-gray-500">Joined {data.userJoinedDisplay}</p>
@@ -52,7 +52,7 @@ export default function UsernameIndex() {
 			{isLoggedInUser ? (
 				<Link
 					to="/settings/profile"
-					className="border-night-400 rounded-full border py-5 px-10 text-white"
+					className="rounded-full border border-night-400 py-5 px-10"
 				>
 					✏️ Create your profile
 				</Link>

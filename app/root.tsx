@@ -28,6 +28,7 @@ import { typedBoolean } from './utils/misc'
 import { useId, useState } from 'react'
 import clsx from 'clsx'
 import { generateStarsSvg } from './utils/starfield.server'
+import { ButtonLink } from './utils/forms'
 
 export const links: LinksFunction = () => {
 	return [
@@ -81,28 +82,21 @@ export default function App() {
 				<Meta />
 				<Links />
 			</head>
-			<body className="flex h-full flex-col justify-between bg-night-700">
+			<body className="flex h-full flex-col justify-between bg-night-700 text-white">
 				<header className="container mx-auto py-6">
 					<nav className="flex justify-between">
-						<Link to="/" className="text-white">
+						<Link to="/">
 							<div className="font-light">rocket</div>
 							<div className="font-bold">Rental</div>
 						</Link>
 						<div className="flex items-center gap-10">
-							<Link to="/search" className="text-white">
-								🔍
-							</Link>
+							<Link to="/search">🔍</Link>
 							{user ? (
-								<Link to="me" className="text-white">
-									{user.name}
-								</Link>
+								<Link to="me">{user.name}</Link>
 							) : (
-								<Link
-									to="/login"
-									className="hover:bg-accent-purple-darker rounded-full bg-accent-purple py-3.5 px-10 text-sm font-bold text-white"
-								>
+								<ButtonLink to="/login" size="medium" variant="primary">
 									Log In
-								</Link>
+								</ButtonLink>
 							)}
 						</div>
 					</nav>
@@ -113,7 +107,7 @@ export default function App() {
 				</div>
 
 				<div className="container mx-auto flex justify-between">
-					<Link to="/" className="text-white">
+					<Link to="/">
 						<div className="font-light">rocket</div>
 						<div className="font-bold">Rental</div>
 					</Link>

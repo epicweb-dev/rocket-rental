@@ -83,7 +83,7 @@ export function UserProfileBasicInfo({
 
 					<div className="flex flex-col items-center">
 						<div className="flex flex-wrap items-center justify-center gap-4">
-							<h1 className="text-center text-4xl font-bold text-white">
+							<h1 className="text-center text-4xl font-bold">
 								{user.name ?? user.username}
 							</h1>
 							{isSelf ? null : oneOnOneChatId ? (
@@ -149,7 +149,7 @@ export function UserProfileBasicInfo({
 									/>
 								) : null}
 								<div className="min-w-[120px] px-5">
-									<div className="text-3xl font-bold text-white">{num}</div>
+									<div className="text-3xl font-bold">{num}</div>
 									<span className="text-gray-500">{label}</span>
 								</div>
 							</React.Fragment>
@@ -160,7 +160,7 @@ export function UserProfileBasicInfo({
 			<div className="container mx-auto mt-6">
 				<div className="grid grid-cols-2 gap-6">
 					<div className="rounded-3xl bg-night-500 p-10">
-						<h2 className="font-3xl font-bold text-white">Verified Info</h2>
+						<h2 className="font-3xl font-bold">Verified Info</h2>
 						<div className="mt-8 flex items-center justify-around text-center">
 							<div className="flex flex-col items-center justify-center">
 								<div className="flex h-8 w-8 items-center justify-center">
@@ -195,26 +195,24 @@ export function UserProfileBasicInfo({
 								</div>
 							</div>
 						</div>
-						<h2 className="font-3xl mt-14 font-bold text-white">
-							Share this profile
-						</h2>
+						<h2 className="font-3xl mt-14 font-bold">Share this profile</h2>
 						<div className="mt-4 flex gap-4">
-							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-600 text-white">
+							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-600">
 								f
 							</div>
-							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-600 text-white">
+							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-600">
 								t
 							</div>
-							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-600 text-white">
+							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-600">
 								i
 							</div>
-							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-600 text-white">
+							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-night-600">
 								c
 							</div>
 						</div>
 					</div>
 					<div className="flex flex-col rounded-3xl bg-night-500 p-10">
-						<h2 className="font-3xl font-bold text-white">About</h2>
+						<h2 className="font-3xl font-bold">About</h2>
 						<div className="mt-6 max-h-56 flex-grow overflow-y-auto text-night-200">
 							{bio
 								? bio
@@ -260,7 +258,7 @@ export function Reviews({
 				<div>
 					<div className="flex justify-between">
 						<div className="flex gap-5">
-							<h2 className="text-3xl font-bold text-white">{title}</h2>
+							<h2 className="text-3xl font-bold">{title}</h2>
 							<StarRatingDisplay rating={rating ?? 0} />
 						</div>
 						<Link to="reviews" className="text-night-200">
@@ -277,9 +275,7 @@ export function Reviews({
 									<div className="">⭐ ⭐ ⭐ ⭐ ⭑</div>
 									<Link to={`/reviews/${review.id}`}>
 										<div className="mt-6 h-[160px]">
-											<p className="quote text-white line-clamp-5">
-												{review.content}
-											</p>
+											<p className="quote line-clamp-5">{review.content}</p>
 										</div>
 									</Link>
 								</div>
@@ -296,7 +292,7 @@ export function Reviews({
 										<Link
 											to={`/users/${review.reviewer.user.username}/${reviewerType}`}
 										>
-											<h3 className="text-base font-bold text-white">
+											<h3 className="text-base font-bold">
 												{review.reviewer.user.name ??
 													review.reviewer.user.username}
 											</h3>
@@ -315,7 +311,7 @@ export function Reviews({
 				</div>
 			) : (
 				<div className="flex flex-col gap-10">
-					<h2 className="text-3xl font-bold text-white">No reviews yet</h2>
+					<h2 className="text-3xl font-bold">No reviews yet</h2>
 					<div className="flex flex-col gap-3">
 						<span>⭐️ ⭐️ ⭐️ ⭐️ ⭐️</span>
 						<p className="text-night-200">

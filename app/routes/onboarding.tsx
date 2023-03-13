@@ -143,7 +143,7 @@ export default function OnboardingPage() {
 		<div className="flex min-h-full flex-col justify-center pt-20 pb-32">
 			<div className="mx-auto w-full max-w-lg">
 				<div className="flex flex-col gap-3 text-center">
-					<h1 className="text-6xl font-bold text-white">Welcome aboard!</h1>
+					<h1 className="text-6xl font-bold">Welcome aboard!</h1>
 					<p className="text-xl text-gray-500">Please enter your details.</p>
 				</div>
 				<Spacer size="xs" />
@@ -229,7 +229,7 @@ export default function OnboardingPage() {
 					<div className="flex items-center justify-between gap-6">
 						<button
 							type="submit"
-							className="hover:bg-accent-purple-darker h-16 w-full rounded-full bg-accent-purple py-3.5 px-10 text-lg font-bold text-white"
+							className="hover:bg-accent-purple-darker h-16 w-full rounded-full bg-accent-purple py-3.5 px-10 text-lg font-bold"
 						>
 							Create an account
 						</button>

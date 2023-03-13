@@ -16,8 +16,8 @@ export default function Index() {
 			<Spacer size="4xl" />
 			<main>
 				<div className="mx-auto max-w-3xl text-center">
-					<p className="text-2xl text-white/70">Explore the universe</p>
-					<h1 className="text-mega tracking-wide text-white">
+					<p className="text-2xl/70">Explore the universe</p>
+					<h1 className="text-mega tracking-wide">
 						Rent a space rocket in two clicks!
 					</h1>
 				</div>
@@ -79,7 +79,7 @@ export default function Index() {
 					<div className="shrink-0">
 						<button
 							type="submit"
-							className="hover:bg-accent-purple-darker m-3 h-16 w-16 rounded-full bg-accent-purple text-white"
+							className="hover:bg-accent-purple-darker m-3 h-16 w-16 rounded-full bg-accent-purple"
 						>
 							🔍
 						</button>
@@ -94,7 +94,7 @@ export default function Index() {
 					<div className="grid grid-cols-2 gap-36">
 						<div className="flex flex-col gap-14">
 							<div className="flex flex-col gap-6">
-								<h2 className="text-6xl font-bold text-white">
+								<h2 className="text-6xl font-bold">
 									Largest selection of high-speed rockets in the galaxy
 								</h2>
 								<p className="w-[76%] text-xl text-gray-500">
@@ -106,7 +106,7 @@ export default function Index() {
 							<div>
 								<Link
 									to="/search"
-									className="hover:bg-accent-purple-darker rounded-full bg-accent-purple py-3.5 px-10 text-sm font-bold text-white"
+									className="hover:bg-accent-purple-darker rounded-full bg-accent-purple py-3.5 px-10 text-sm font-bold"
 								>
 									Explore rockets
 								</Link>
@@ -118,7 +118,7 @@ export default function Index() {
 				<BigSpacer />
 				<div className="container mx-auto">
 					<div className="mx-auto flex max-w-xl flex-col gap-4 text-center">
-						<h2 className="text-6xl font-bold text-white">How it works</h2>
+						<h2 className="text-6xl font-bold">How it works</h2>
 						<p className="text-xl text-gray-500">
 							At Rocket Rental, we bring people who have rockets and people who
 							need rockets together so anyone can explore the stars.
@@ -134,7 +134,7 @@ export default function Index() {
 							</div>
 							<div className="flex flex-col gap-7">
 								<div className="text-xl text-gray-500">01</div>
-								<p className="text-3xl text-white">Find your dream rocket</p>
+								<p className="text-3xl">Find your dream rocket</p>
 							</div>
 						</div>
 						<div className="flex h-96 flex-col justify-between rounded-3xl bg-night-500 p-10">
@@ -143,9 +143,7 @@ export default function Index() {
 							</div>
 							<div className="flex flex-col gap-7">
 								<div className="text-xl text-gray-500">02</div>
-								<p className="text-3xl text-white">
-									Rent a rocket in two clicks
-								</p>
+								<p className="text-3xl">Rent a rocket in two clicks</p>
 							</div>
 						</div>
 						<div className="flex h-96 flex-col justify-between rounded-3xl bg-night-500 p-10">
@@ -154,7 +152,7 @@ export default function Index() {
 							</div>
 							<div className="flex flex-col gap-7">
 								<div className="text-xl text-gray-500">03</div>
-								<p className="text-3xl text-white">
+								<p className="text-3xl">
 									Choose a destination and go on a journey
 								</p>
 							</div>
@@ -174,31 +172,31 @@ export default function Index() {
 							<div className="flex flex-col gap-6">
 								<div className="flex h-[160px] w-[216px] flex-col items-center justify-center gap-1 rounded-3xl bg-night-500">
 									<img className="aspect-square w-16" src="" />
-									<span className="uppercase text-white">Zheng</span>
+									<span className="uppercase">Zheng</span>
 								</div>
 								<div className="flex h-[160px] w-[216px] flex-col items-center justify-center gap-1 rounded-3xl bg-night-500">
 									<img className="aspect-square w-16" src="" />
-									<span className="uppercase text-white">Oribtalis</span>
+									<span className="uppercase">Oribtalis</span>
 								</div>
 								<div className="flex h-[160px] w-[216px] flex-col items-center justify-center gap-1 rounded-3xl bg-night-500">
 									<img className="aspect-square w-16" src="" />
-									<span className="uppercase text-white">Cosmic</span>
+									<span className="uppercase">Cosmic</span>
 								</div>
 							</div>
 							<div className="flex flex-col gap-6 pt-16">
 								<div className="flex h-64 w-64 flex-col items-center justify-center gap-10 rounded-3xl bg-night-500">
 									<img className="aspect-square w-24" src="" />
-									<span className="uppercase text-white">Asteroid</span>
+									<span className="uppercase">Asteroid</span>
 								</div>
 								<div className="flex h-64 w-64 flex-col items-center justify-center gap-10 rounded-3xl bg-night-500">
 									<img className="aspect-square w-24" src="" />
-									<span className="uppercase text-white">Spaceship</span>
+									<span className="uppercase">Spaceship</span>
 								</div>
 							</div>
 						</div>
 						<div className="flex flex-col gap-14 pt-32">
 							<div className="flex flex-col gap-6">
-								<h2 className="text-6xl font-bold text-white">
+								<h2 className="text-6xl font-bold">
 									We have only the best rocket brands!
 								</h2>
 								<p className="w-[76%] text-xl text-gray-500">
@@ -210,7 +208,7 @@ export default function Index() {
 							<div>
 								<Link
 									to="/search"
-									className="hover:bg-accent-purple-darker rounded-full bg-accent-purple py-3.5 px-10 text-sm font-bold text-white"
+									className="hover:bg-accent-purple-darker rounded-full bg-accent-purple py-3.5 px-10 text-sm font-bold"
 								>
 									Explore rockets
 								</Link>
@@ -224,7 +222,7 @@ export default function Index() {
 				<div className="container mx-auto">
 					<div className="text-center">
 						<p className="text-base text-gray-500">Our advantages</p>
-						<h2 className="mx-auto mt-4 max-w-4xl text-6xl font-bold tracking-wide text-white">
+						<h2 className="mx-auto mt-4 max-w-4xl text-6xl font-bold tracking-wide">
 							Nobody's better at rockets than Rocket Rental
 						</h2>
 					</div>
@@ -287,7 +285,7 @@ export default function Index() {
 							</p>
 							<Link
 								to="/insurance"
-								className="hover:bg-accent-purple-darker mt-14 inline-block rounded-full bg-accent-purple py-5 px-14 text-lg font-bold text-white"
+								className="hover:bg-accent-purple-darker mt-14 inline-block rounded-full bg-accent-purple py-5 px-14 text-lg font-bold"
 							>
 								Learn more
 							</Link>
@@ -300,14 +298,14 @@ export default function Index() {
 				<BigSpacer />
 				<div className="container mx-auto">
 					<div className="mx-auto max-w-3xl text-center">
-						<h2 className="text-6xl text-white">
+						<h2 className="text-6xl">
 							Travel to any planet in space on your favorite rocket.
 						</h2>
 						<Spacer size="xs" />
 						<div>
 							<Link
 								to="/search"
-								className="hover:bg-accent-purple-darker rounded-full bg-accent-purple py-3.5 px-10 text-sm font-bold text-white"
+								className="hover:bg-accent-purple-darker rounded-full bg-accent-purple py-3.5 px-10 text-sm font-bold"
 							>
 								Explore rockets
 							</Link>
@@ -339,7 +337,7 @@ function Marquee() {
 	)
 	const ulClassName = 'flex shrink-0 animate-marquee gap-8 pl-8'
 	return (
-		<div className="-mx-2 flex rotate-[-4deg] border-t-2 border-b-2 border-t-pink-500 border-b-accent-purple py-2 text-white">
+		<div className="-mx-2 flex rotate-[-4deg] border-t-2 border-b-2 border-t-pink-500 border-b-accent-purple py-2">
 			<ul className={ulClassName}>{children}</ul>
 			<ul className={ulClassName} aria-hidden={true}>
 				{children}
@@ -412,18 +410,18 @@ function StarportListSection() {
 		<div className="container mx-auto">
 			<div className="grid grid-cols-3">
 				<div className="flex flex-col justify-between gap-14 border-r-2 border-r-gray-600 pr-10">
-					<h2 className="text-5xl font-bold text-white">
+					<h2 className="text-5xl font-bold">
 						Many unique starports available
 					</h2>
 					<div>
 						<button
-							className="rounded-full bg-accent-purple p-6 text-3xl font-bold text-white"
+							className="rounded-full bg-accent-purple p-6 text-3xl font-bold"
 							onClick={goPrev}
 						>
 							👈
 						</button>
 						<button
-							className="rounded-full bg-accent-purple p-6 text-3xl font-bold text-white"
+							className="rounded-full bg-accent-purple p-6 text-3xl font-bold"
 							onClick={goNext}
 						>
 							👉
@@ -448,9 +446,7 @@ function StarportListSection() {
 							<img className="aspect-[35/31] rounded-3xl" src={s.imageSrc} />
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
-								<h3 className="text-2xl font-bold text-white line-clamp-1">
-									{s.name}
-								</h3>
+								<h3 className="text-2xl font-bold line-clamp-1">{s.name}</h3>
 								<p className="text-base text-gray-500 line-clamp-2">
 									{s.description}
 								</p>
@@ -468,7 +464,7 @@ function RocketModelsSection() {
 	const triggerClassName = 'py-3 px-8 text-3xl'
 	const inactiveTriggerClassName = 'text-gray-500 hover:text-white'
 	const activeTriggerClassName =
-		'rounded-full bg-accent-purple hover:bg-accent-purple-darker text-white'
+		'rounded-full bg-accent-purple hover:bg-accent-purple-darker'
 	const models: Record<
 		string,
 		Array<{ name: string; description: string; imageSrc: string }>
@@ -668,7 +664,7 @@ function RocketModelsSection() {
 		<div className="container mx-auto">
 			<p className="text-base text-gray-500">Best known</p>
 			<Spacer size="4xs" />
-			<h2 className="max-w-lg text-5xl font-bold text-white">
+			<h2 className="max-w-lg text-5xl font-bold">
 				A wide variety of rocket models
 			</h2>
 			<Spacer size="sm" />
@@ -740,9 +736,7 @@ function RocketModelsSection() {
 							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
-								<h3 className="text-2xl font-bold text-white line-clamp-1">
-									{ship.name}
-								</h3>
+								<h3 className="text-2xl font-bold line-clamp-1">{ship.name}</h3>
 								<p className="text-base text-gray-500 line-clamp-2">
 									{ship.description}
 								</p>
@@ -759,9 +753,7 @@ function RocketModelsSection() {
 							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
-								<h3 className="text-2xl font-bold text-white line-clamp-1">
-									{ship.name}
-								</h3>
+								<h3 className="text-2xl font-bold line-clamp-1">{ship.name}</h3>
 								<p className="text-base text-gray-500 line-clamp-2">
 									{ship.description}
 								</p>
@@ -778,9 +770,7 @@ function RocketModelsSection() {
 							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
-								<h3 className="text-2xl font-bold text-white line-clamp-1">
-									{ship.name}
-								</h3>
+								<h3 className="text-2xl font-bold line-clamp-1">{ship.name}</h3>
 								<p className="text-base text-gray-500 line-clamp-2">
 									{ship.description}
 								</p>
@@ -797,9 +787,7 @@ function RocketModelsSection() {
 							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
-								<h3 className="text-2xl font-bold text-white line-clamp-1">
-									{ship.name}
-								</h3>
+								<h3 className="text-2xl font-bold line-clamp-1">{ship.name}</h3>
 								<p className="text-base text-gray-500 line-clamp-2">
 									{ship.description}
 								</p>
@@ -816,9 +804,7 @@ function RocketModelsSection() {
 							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
-								<h3 className="text-2xl font-bold text-white line-clamp-1">
-									{ship.name}
-								</h3>
+								<h3 className="text-2xl font-bold line-clamp-1">{ship.name}</h3>
 								<p className="text-base text-gray-500 line-clamp-2">
 									{ship.description}
 								</p>
@@ -832,7 +818,7 @@ function RocketModelsSection() {
 				{/* TODO: link this to search with the selected brand */}
 				<Link
 					to="/search"
-					className="rounded-full border-[1.5px] border-gray-700 px-14 py-5 text-white"
+					className="rounded-full border-[1.5px] border-gray-700 px-14 py-5"
 				>
 					See all
 				</Link>
@@ -895,9 +881,7 @@ function Testimonials() {
 	return (
 		<>
 			<div className="container mx-auto">
-				<h2 className="max-w-sm text-6xl font-bold text-white">
-					What our top hosts say
-				</h2>
+				<h2 className="max-w-sm text-6xl font-bold">What our top hosts say</h2>
 			</div>
 			<Spacer size="sm" />
 			<div className="hide-scrollbar relative flex gap-8 overflow-x-scroll">
@@ -906,11 +890,11 @@ function Testimonials() {
 						key={host.name}
 						className="flex h-[320px] w-[440px] shrink-0 flex-col justify-between rounded-3xl border-[1px] border-gray-500 p-10"
 					>
-						<p className="quote text-white line-clamp-5">{testimonial}</p>
+						<p className="quote line-clamp-5">{testimonial}</p>
 						<div className="flex gap-4">
 							<img className="h-14 w-14 rounded-full" src={host.imageSrc} />
 							<div className="flex flex-col gap-1">
-								<h3 className="text-base font-bold text-white">{host.name}</h3>
+								<h3 className="text-base font-bold">{host.name}</h3>
 								<p className="text-sm text-gray-500">{host.subtitle}</p>
 							</div>
 						</div>

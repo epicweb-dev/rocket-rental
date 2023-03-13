@@ -135,7 +135,7 @@ export default function ChatRoute() {
 								alt={sender?.name ?? 'Unknown user'}
 								className="h-8 w-8 rounded-full"
 							/>
-							<div className="ml-2 text-white">{message.content}</div>
+							<div className="ml-2">{message.content}</div>
 						</li>
 					)
 				})}

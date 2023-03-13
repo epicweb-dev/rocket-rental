@@ -246,7 +246,7 @@ export default function EditUserProfile() {
 					Profile
 				</Link>
 				<span className="text-night-300">▶️</span>
-				<span className="text-white">Edit Profile</span>
+				<span>Edit Profile</span>
 			</div>
 			<div className="mt-16 flex flex-col gap-12">
 				<div className="flex justify-center">

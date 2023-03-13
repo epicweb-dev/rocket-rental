@@ -19,7 +19,7 @@ export function Text<TagName extends TagNameBase = void>(
 ) {
 	return React.createElement(props.as || 'span', {
 		...props,
-		className: clsx(props.className, 'text-white'),
+		className: clsx(props.className),
 	})
 }
 

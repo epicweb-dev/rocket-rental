@@ -170,7 +170,7 @@ export default function HostUser() {
 			/>
 
 			<div className="container mx-auto mt-20">
-				<h2 className="text-3xl font-bold text-white">
+				<h2 className="text-3xl font-bold">
 					{data.user.host.ships.length
 						? `${data.user.name ?? data.user.username}'s rockets`
 						: 'No rockets yet'}
@@ -197,9 +197,7 @@ export default function HostUser() {
 													brandId: ship.model.brand.id,
 												})}`}
 											>
-												<p className="font-bold text-white">
-													{ship.model.brand.name}
-												</p>
+												<p className="font-bold">{ship.model.brand.name}</p>
 											</Link>
 											<Separator.Root
 												orientation="vertical"
@@ -214,14 +212,12 @@ export default function HostUser() {
 											</Link>
 										</div>
 										<Link to={`/ships/${ship.id}`}>
-											<h3 className="text-3xl font-bold text-white">
-												{ship.name}
-											</h3>
+											<h3 className="text-3xl font-bold">{ship.name}</h3>
 										</Link>
 									</div>
 									<div className="mt-8 flex justify-between">
 										<div className="flex items-baseline gap-1">
-											<span className="text-2xl text-white">
+											<span className="text-2xl">
 												{ship.dailyChargeFormatted}
 											</span>
 											<span className="text-night-200">day</span>

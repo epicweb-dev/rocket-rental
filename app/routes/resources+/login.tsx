@@ -133,10 +133,7 @@ export function InlineLogin({
 						/>
 
 						<div>
-							<Link
-								to="/forgot-password"
-								className="text-sm font-semibold text-white"
-							>
+							<Link to="/forgot-password" className="text-sm font-semibold">
 								Forgot password?
 							</Link>
 						</div>
@@ -153,7 +150,7 @@ export function InlineLogin({
 					<div className="flex items-center justify-between gap-6 pt-3">
 						<button
 							type="submit"
-							className="hover:bg-accent-purple-darker h-16 w-full rounded-full bg-accent-purple py-3.5 px-10 text-lg font-bold text-white"
+							className="hover:bg-accent-purple-darker h-16 w-full rounded-full bg-accent-purple py-3.5 px-10 text-lg font-bold"
 						>
 							Log in
 						</button>
@@ -161,9 +158,7 @@ export function InlineLogin({
 				</loginFetcher.Form>
 				<div className="flex items-center justify-center gap-2 pt-6">
 					<span className="text-gray-500">New here?</span>
-					<Link to="/signup" className="text-white">
-						Create an account
-					</Link>
+					<Link to="/signup">Create an account</Link>
 				</div>
 			</div>
 		</div>

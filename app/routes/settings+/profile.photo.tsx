@@ -145,10 +145,10 @@ export default function PhotoChooserModal() {
 					onEscapeKeyDown={dismissModal}
 					onInteractOutside={dismissModal}
 					onPointerDownOutside={dismissModal}
-					className="bg-night-500 fixed top-1/2 left-1/2 w-[90vw] max-w-3xl -translate-x-1/2 -translate-y-1/2 transform rounded-lg p-12 shadow-lg"
+					className="fixed top-1/2 left-1/2 w-[90vw] max-w-3xl -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-night-500 p-12 shadow-lg"
 				>
 					<Dialog.Title asChild className="text-center">
-						<h2 className="text-4xl font-bold text-white">Profile photo</h2>
+						<h2 className="text-4xl font-bold">Profile photo</h2>
 					</Dialog.Title>
 					<Form
 						method="post"
