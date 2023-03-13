@@ -44,10 +44,8 @@ export default function UsernameIndex() {
 				alt={data.user.name ?? data.user.username}
 				src={getUserImgSrc(data.user.imageId)}
 			/>
-			<h1 className="text-4xl font-bold">
-				{data.user.name ?? data.user.username}
-			</h1>
-			<p className="text-gray-500">Joined {data.userJoinedDisplay}</p>
+			<h1 className="text-h2">{data.user.name ?? data.user.username}</h1>
+			<p className="text-night-200">Joined {data.userJoinedDisplay}</p>
 			<Spacer size="4xs" />
 			{isLoggedInUser ? (
 				<Link
@@ -57,7 +55,7 @@ export default function UsernameIndex() {
 					✏️ Create your profile
 				</Link>
 			) : (
-				<p className="text-xs text-gray-500">
+				<p className="text-body-2xs text-night-200">
 					This user does not have a renter or host profile yet.
 				</p>
 			)}

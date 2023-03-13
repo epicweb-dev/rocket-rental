@@ -109,7 +109,7 @@ export default function ResetPasswordPage() {
 
 					<div>
 						<label
-							className="block text-sm font-medium text-gray-700"
+							className="block text-body-xs font-medium text-gray-700"
 							{...fields.password.labelProps}
 						>
 							Password
@@ -126,7 +126,7 @@ export default function ResetPasswordPage() {
 
 					<div>
 						<label
-							className="block text-sm font-medium text-gray-700"
+							className="block text-body-xs font-medium text-gray-700"
 							{...fields.confirmPassword.labelProps}
 						>
 							Confirm Password

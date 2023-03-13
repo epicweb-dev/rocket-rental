@@ -94,7 +94,7 @@ export default function App() {
 							{user ? (
 								<Link to="me">{user.name}</Link>
 							) : (
-								<ButtonLink to="/login" size="medium" variant="primary">
+								<ButtonLink to="/login" size="md" variant="primary">
 									Log In
 								</ButtonLink>
 							)}

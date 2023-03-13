@@ -148,7 +148,7 @@ export default function PhotoChooserModal() {
 					className="fixed top-1/2 left-1/2 w-[90vw] max-w-3xl -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-night-500 p-12 shadow-lg"
 				>
 					<Dialog.Title asChild className="text-center">
-						<h2 className="text-4xl font-bold">Profile photo</h2>
+						<h2 className="text-h2">Profile photo</h2>
 					</Dialog.Title>
 					<Form
 						method="post"
@@ -180,10 +180,10 @@ export default function PhotoChooserModal() {
 						/>
 						{newImageSrc ? (
 							<div className="flex gap-4">
-								<Button type="submit" size="medium" variant="primary">
+								<Button type="submit" size="md" variant="primary">
 									Save Photo
 								</Button>
-								<Button type="reset" size="medium" variant="secondary">
+								<Button type="reset" size="md" variant="secondary">
 									Reset
 								</Button>
 							</div>
@@ -191,14 +191,14 @@ export default function PhotoChooserModal() {
 							<div className="flex gap-4">
 								<LabelButton
 									{...fields.photoFile.labelProps}
-									size="medium"
+									size="md"
 									variant="primary"
 								>
 									✏️ Change
 								</LabelButton>
 								{data.user.imageId ? (
 									<Button
-										size="medium"
+										size="md"
 										variant="secondary"
 										type="submit"
 										form={deleteProfilePhotoFormId}

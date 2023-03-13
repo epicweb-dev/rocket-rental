@@ -18,7 +18,7 @@ export default function BookingsRoute() {
 	const data = useLoaderData<typeof loader>()
 	return (
 		<div>
-			<h1>Bookings</h1>
+			<h1 className="text-h1">Bookings</h1>
 			<details>
 				<summary>Data</summary>
 				<pre>{JSON.stringify(data, null, 2)}</pre>

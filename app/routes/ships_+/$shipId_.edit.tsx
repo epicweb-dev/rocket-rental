@@ -129,7 +129,7 @@ export default function ShipEditRoute() {
 	const actionData = useActionData<typeof action>()
 	return (
 		<div className="container m-auto">
-			<h1>Ship Edit</h1>
+			<h1 className="text-h1">Ship Edit</h1>
 
 			<ShipEditForm data={data} actionData={actionData} />
 		</div>

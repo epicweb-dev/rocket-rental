@@ -170,7 +170,7 @@ export default function HostUser() {
 			/>
 
 			<div className="container mx-auto mt-20">
-				<h2 className="text-3xl font-bold">
+				<h2 className="text-h3">
 					{data.user.host.ships.length
 						? `${data.user.name ?? data.user.username}'s rockets`
 						: 'No rockets yet'}
@@ -212,19 +212,22 @@ export default function HostUser() {
 											</Link>
 										</div>
 										<Link to={`/ships/${ship.id}`}>
-											<h3 className="text-3xl font-bold">{ship.name}</h3>
+											<h3 className="text-h4">{ship.name}</h3>
 										</Link>
 									</div>
 									<div className="mt-8 flex justify-between">
 										<div className="flex items-baseline gap-1">
-											<span className="text-2xl">
+											<span className="text-h5">
 												{ship.dailyChargeFormatted}
 											</span>
 											<span className="text-night-200">day</span>
 										</div>
 										{ship.reviews.length ? (
 											<Link to={`/ships/${ship.id}/reviews`}>
-												<StarRatingDisplay rating={ship.averageRating} />
+												<StarRatingDisplay
+													size="sm"
+													rating={ship.averageRating}
+												/>
 											</Link>
 										) : null}
 									</div>
@@ -246,7 +249,7 @@ export default function HostUser() {
 								hostId: data.user.host.userId,
 							})}`}
 							variant="secondary"
-							size="medium"
+							size="md"
 						>
 							View all
 						</ButtonLink>

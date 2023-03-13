@@ -72,7 +72,7 @@ export function UserProfileBasicInfo({
 								/>
 								{rating ? (
 									<div className="absolute -bottom-3 flex w-full justify-center">
-										<StarRatingDisplay rating={rating} />
+										<StarRatingDisplay size="md" rating={rating} />
 									</div>
 								) : null}
 							</div>
@@ -83,7 +83,7 @@ export function UserProfileBasicInfo({
 
 					<div className="flex flex-col items-center">
 						<div className="flex flex-wrap items-center justify-center gap-4">
-							<h1 className="text-center text-4xl font-bold">
+							<h1 className="text-center text-h2">
 								{user.name ?? user.username}
 							</h1>
 							{isSelf ? null : oneOnOneChatId ? (
@@ -121,18 +121,18 @@ export function UserProfileBasicInfo({
 								</ButtonLink>
 							)}
 						</div>
-						<p className="mt-2 text-center text-gray-500">
+						<p className="mt-2 text-center text-night-200">
 							Joined {userJoinedDisplay}
 						</p>
 						{isSelf ? (
 							<div className="mt-10 flex gap-4">
-								<ButtonLink to="/chats" variant="primary" size="medium">
+								<ButtonLink to="/chats" variant="primary" size="md">
 									✉️ My chat
 								</ButtonLink>
 								<ButtonLink
 									to="/settings/profile"
 									variant="secondary"
-									size="medium"
+									size="md"
 								>
 									✏️ Edit profile
 								</ButtonLink>
@@ -149,8 +149,8 @@ export function UserProfileBasicInfo({
 									/>
 								) : null}
 								<div className="min-w-[120px] px-5">
-									<div className="text-3xl font-bold">{num}</div>
-									<span className="text-gray-500">{label}</span>
+									<div className="text-h3">{num}</div>
+									<span className="text-night-200">{label}</span>
 								</div>
 							</React.Fragment>
 						))}
@@ -160,7 +160,7 @@ export function UserProfileBasicInfo({
 			<div className="container mx-auto mt-6">
 				<div className="grid grid-cols-2 gap-6">
 					<div className="rounded-3xl bg-night-500 p-10">
-						<h2 className="font-3xl font-bold">Verified Info</h2>
+						<h2 className="text-h3">Verified Info</h2>
 						<div className="mt-8 flex items-center justify-around text-center">
 							<div className="flex flex-col items-center justify-center">
 								<div className="flex h-8 w-8 items-center justify-center">
@@ -258,8 +258,8 @@ export function Reviews({
 				<div>
 					<div className="flex justify-between">
 						<div className="flex gap-5">
-							<h2 className="text-3xl font-bold">{title}</h2>
-							<StarRatingDisplay rating={rating ?? 0} />
+							<h2 className="text-h3">{title}</h2>
+							<StarRatingDisplay size="sm" rating={rating ?? 0} />
 						</div>
 						<Link to="reviews" className="text-night-200">
 							View all
@@ -292,14 +292,14 @@ export function Reviews({
 										<Link
 											to={`/users/${review.reviewer.user.username}/${reviewerType}`}
 										>
-											<h3 className="text-base font-bold">
+											<h3 className="font-bold">
 												{review.reviewer.user.name ??
 													review.reviewer.user.username}
 											</h3>
 										</Link>
 										<Link
 											to={`/ships/${review.booking.ship.id}`}
-											className="text-sm text-gray-500"
+											className="text-body-xs text-night-200"
 										>
 											{review.booking.ship.name}
 										</Link>
@@ -311,7 +311,7 @@ export function Reviews({
 				</div>
 			) : (
 				<div className="flex flex-col gap-10">
-					<h2 className="text-3xl font-bold">No reviews yet</h2>
+					<h2 className="text-h3">No reviews yet</h2>
 					<div className="flex flex-col gap-3">
 						<span>⭐️ ⭐️ ⭐️ ⭐️ ⭐️</span>
 						<p className="text-night-200">

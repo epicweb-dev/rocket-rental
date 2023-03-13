@@ -49,8 +49,10 @@ export default function LoginPage() {
 		<div className="flex min-h-full flex-col justify-center pt-20 pb-32">
 			<div className="mx-auto w-full max-w-md">
 				<div className="flex flex-col gap-3 text-center">
-					<h1 className="text-6xl font-bold">Welcome back!</h1>
-					<p className="text-xl text-gray-500">Please enter your details.</p>
+					<h1 className="text-h1">Welcome back!</h1>
+					<p className="text-body-md text-night-200">
+						Please enter your details.
+					</p>
 				</div>
 				<Spacer size="xs" />
 				<InlineLogin redirectTo={redirectTo} formError={data.formError} />

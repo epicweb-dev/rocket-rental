@@ -13,7 +13,7 @@ import {
 } from './$shipId_.edit'
 import { type action as newAction, type loader as newLoader } from './new'
 
-export const labelClassName = 'block text-sm font-medium text-gray-700'
+export const labelClassName = 'block text-body-xs font-medium text-gray-700'
 export const inputClassName =
 	'w-full rounded border border-gray-500 px-2 py-1 text-lg'
 export const fieldClassName = 'flex gap-1 flex-col'

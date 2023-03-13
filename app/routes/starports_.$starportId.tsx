@@ -52,7 +52,7 @@ export default function StarportRoute() {
 	return (
 		<div>
 			<img src={getImgSrc(data.starport.imageId)} alt="" />
-			<h1>
+			<h1 className="text-h1">
 				{data.starport.name} ({data.starport.latitude},{' '}
 				{data.starport.longitude})
 			</h1>
@@ -68,7 +68,7 @@ export default function StarportRoute() {
 								className="h-24 w-24 object-cover"
 							/>
 							<div className="flex flex-col gap-2">
-								<div className="text-xl">{ship.name}</div>
+								<div className="text-body-md">{ship.name}</div>
 								<div className="flex gap-2">
 									{ship.host.user.imageId ? (
 										<img
@@ -78,10 +78,10 @@ export default function StarportRoute() {
 										/>
 									) : null}
 									<div className="flex flex-col gap-1">
-										<div className="text-sm font-semibold">
+										<div className="text-body-xs font-semibold">
 											{ship.host.user.name}
 										</div>
-										<div className="text-sm text-gray-500">
+										<div className="text-body-xs text-night-200">
 											{ship.reviews.length > 0
 												? `${arrAvg(
 														ship.reviews.map(r => r.rating),

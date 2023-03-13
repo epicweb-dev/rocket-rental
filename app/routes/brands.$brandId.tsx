@@ -20,7 +20,7 @@ export default function BrandRoute() {
 	const data = useLoaderData<typeof loader>()
 	return (
 		<div>
-			<h1>Ship Brand</h1>
+			<h1 className="text-h1">Ship Brand</h1>
 			<pre>{JSON.stringify(data, null, 2)}</pre>
 			<hr />
 			<Outlet />

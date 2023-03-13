@@ -87,7 +87,7 @@ export default function ShipRoute() {
 	return (
 		<div>
 			<img src={getShipImgSrc(data.ship.imageId)} alt="" />
-			<h1>{data.ship.name}</h1>
+			<h1 className="text-h1">{data.ship.name}</h1>
 			<p>{data.ship.description}</p>
 
 			<div className="flex flex-wrap gap-12">

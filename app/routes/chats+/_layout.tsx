@@ -16,7 +16,7 @@ export default function ChatsRoute() {
 	const data = useLoaderData<typeof loader>()
 	return (
 		<div>
-			<h1>Chats</h1>
+			<h1 className="text-h1">Chats</h1>
 			<details>
 				<summary>Chats</summary>
 				<pre>{JSON.stringify(data, null, 2)}</pre>

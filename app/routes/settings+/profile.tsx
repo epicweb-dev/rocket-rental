@@ -373,7 +373,7 @@ export default function EditUserProfile() {
 								<div className="absolute inset-0 z-20 flex items-center justify-center">
 									<div className="flex min-h-[70px] w-[300px] flex-col items-center drop-shadow-md">
 										<Button
-											size="small"
+											size="sm"
 											variant="secondary"
 											type="submit"
 											form={createHostFormId}
@@ -420,7 +420,7 @@ export default function EditUserProfile() {
 								<div className="absolute inset-0 z-20 flex items-center justify-center">
 									<div className="flex min-h-[70px] w-[300px] flex-col items-center drop-shadow-md">
 										<Button
-											size="small"
+											size="sm"
 											variant="secondary"
 											type="submit"
 											form={createRenterFormId}
@@ -484,7 +484,7 @@ export default function EditUserProfile() {
 					{form.errorUI}
 
 					<div className="mt-3 flex justify-center">
-						<Button type="submit" size="medium-wide" variant="primary">
+						<Button type="submit" size="md-wide" variant="primary">
 							Save changes
 						</Button>
 					</div>

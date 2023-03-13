@@ -20,7 +20,7 @@ export function ErrorList({
 	return (
 		<ul id={id} className="space-y-1">
 			{errorsToRender.map(e => (
-				<li key={e} className="text-[10px] text-[#EF5A5A]">
+				<li key={e} className="text-[10px] text-accent-red">
 					{e}
 				</li>
 			))}
@@ -454,7 +454,7 @@ export function Field({
 				aria-errormessage={errorId}
 				placeholder=" "
 				{...inputProps}
-				className="h-16 w-full rounded-lg border border-night-400 bg-night-700 px-4 pt-4 text-sm caret-white outline-none focus:border-accent-purple disabled:bg-night-400"
+				className="h-16 w-full rounded-lg border border-night-400 bg-night-700 px-4 pt-4 text-body-xs caret-white outline-none focus:border-accent-purple disabled:bg-night-400"
 			/>
 			{/* the label comes after the input so we can use the sibling selector in the CSS to give us animated label control in CSS only */}
 			<label htmlFor={id} {...labelProps} />
@@ -486,7 +486,7 @@ export function TextareaField({
 				aria-errormessage={errorId}
 				placeholder=" "
 				{...textareaProps}
-				className="h-48 w-full rounded-lg border border-night-400 bg-night-700 px-4 pt-8 text-sm caret-white outline-none focus:border-accent-purple disabled:bg-night-400"
+				className="h-48 w-full rounded-lg border border-night-400 bg-night-700 px-4 pt-8 text-body-xs caret-white outline-none focus:border-accent-purple disabled:bg-night-400"
 			/>
 			{/* the label comes after the input so we can use the sibling selector in the CSS to give us animated label control in CSS only */}
 			<label htmlFor={id} {...labelProps} />
@@ -537,7 +537,7 @@ export function CheckboxField({
 				<label
 					htmlFor={id}
 					{...labelProps}
-					className="text-sm text-night-200"
+					className="text-body-xs text-night-200"
 				/>
 			</div>
 			<div className="px-4 pt-1 pb-3">
@@ -547,11 +547,11 @@ export function CheckboxField({
 	)
 }
 
-function getButtonClassName({
+export function getButtonClassName({
 	size,
 	variant,
 }: {
-	size: 'xs' | 'small' | 'medium' | 'medium-wide'
+	size: 'xs' | 'sm' | 'md' | 'md-wide'
 	variant: 'primary' | 'secondary'
 }) {
 	const baseClassName =
@@ -560,17 +560,17 @@ function getButtonClassName({
 		'bg-accent-purple hover:bg-accent-yellow hover:text-night-700 focus:bg-accent-yellow focus:text-night-700 active:bg-accent-yellow-muted'
 	const secondaryClassName =
 		'border-[1.5px] border-night-400 bg-night-700 hover:border-accent-purple focus:border-accent-purple active:border-accent-purple-lighter'
-	const extraSmallClassName = 'py-2 px-3 text-sm'
-	const smallClassName = 'px-10 py-[14px] text-sm'
+	const extraSmallClassName = 'py-2 px-3 text-body-xs'
+	const smallClassName = 'px-10 py-[14px] text-body-xs'
 	const mediumClassName = 'px-14 py-5 text-lg'
 	const mediumWideClassName = 'px-24 py-5 text-lg'
 	const className = clsx(baseClassName, {
 		[primaryClassName]: variant === 'primary',
 		[secondaryClassName]: variant === 'secondary',
 		[extraSmallClassName]: size === 'xs',
-		[smallClassName]: size === 'small',
-		[mediumClassName]: size === 'medium',
-		[mediumWideClassName]: size === 'medium-wide',
+		[smallClassName]: size === 'sm',
+		[mediumClassName]: size === 'md',
+		[mediumWideClassName]: size === 'md-wide',
 	})
 	return className
 }

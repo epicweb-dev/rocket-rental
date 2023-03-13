@@ -431,7 +431,7 @@ export default function ShipsRoute() {
 
 	return (
 		<div className="container m-auto mt-12">
-			<h1>Search</h1>
+			<h1 className="text-h1">Search</h1>
 			<label>
 				<input
 					type="checkbox"

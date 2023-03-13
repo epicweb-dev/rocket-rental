@@ -124,11 +124,11 @@ export default function SignupRoute() {
 
 	return (
 		<div>
-			<h1>Forgot Password</h1>
+			<h1 className="text-h1">Forgot Password</h1>
 			<forgotPassword.Form method="post" {...form.props}>
 				<div>
 					<label
-						className="block text-sm font-medium text-gray-700"
+						className="block text-body-xs font-medium text-gray-700"
 						{...fields.usernameOrEmail.labelProps}
 					>
 						Username or Email
