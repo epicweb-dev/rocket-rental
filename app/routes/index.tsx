@@ -164,7 +164,7 @@ export default function Index() {
 				<BigSpacer />
 				<StarportListSection />
 				<Spacer size="xl" />
-				<div className="overflow-x-scroll py-20">
+				<div className="overflow-hidden py-20">
 					<Marquee />
 				</div>
 				<Spacer size="4xl" />
@@ -339,7 +339,7 @@ function Marquee() {
 	)
 	const ulClassName = 'flex shrink-0 animate-marquee gap-8 pl-8'
 	return (
-		<div className="-mx-2 flex rotate-[-4deg] overflow-x-hidden border-t-2 border-b-2 border-t-pink-500 border-b-primary py-2 text-white">
+		<div className="-mx-2 flex rotate-[-4deg] border-t-2 border-b-2 border-t-pink-500 border-b-primary py-2 text-white">
 			<ul className={ulClassName}>{children}</ul>
 			<ul className={ulClassName} aria-hidden={true}>
 				{children}
