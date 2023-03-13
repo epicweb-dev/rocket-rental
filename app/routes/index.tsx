@@ -165,8 +165,8 @@ export default function Index() {
 				<BigSpacer />
 				<StarportListSection />
 				<Spacer size="xl" />
-				<div className="overflow-x-scroll py-20">
-					<MyMarquee />
+				<div className="overflow-hidden py-20">
+					<Marquee />
 				</div>
 				<Spacer size="4xl" />
 				<div className="container mx-auto">
