@@ -366,6 +366,7 @@ export default function EditUserProfile() {
 									children: 'Host Bio',
 								}}
 								textareaProps={{
+									...fields.hostBio.props,
 									defaultValue: data.user.host?.bio ?? '',
 									disabled: !data.user.host,
 									ref: hostBioTextareaRef,

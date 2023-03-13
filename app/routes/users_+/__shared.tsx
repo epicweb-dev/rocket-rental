@@ -213,11 +213,15 @@ export function UserProfileBasicInfo({
 							</div>
 						</div>
 					</div>
-					<div className="rounded-3xl bg-night-muted p-10">
+					<div className="flex flex-col rounded-3xl bg-night-muted p-10">
 						<h2 className="font-3xl font-bold text-white">About</h2>
-						<p className="mt-6 max-h-56 overflow-y-scroll text-label-light-gray">
-							{bio ?? 'No bio provided'}
-						</p>
+						<div className="mt-6 max-h-56 flex-grow overflow-y-auto text-label-light-gray">
+							{bio
+								? bio
+										.split('\n')
+										.map((line, index) => <p key={index}>{line}</p>)
+								: 'No bio provided'}
+						</div>
 					</div>
 				</div>
 			</div>
