@@ -551,7 +551,7 @@ export function getButtonClassName({
 	size,
 	variant,
 }: {
-	size: 'xs' | 'sm' | 'md' | 'md-wide'
+	size: 'xs' | 'sm' | 'md' | 'md-wide' | 'pill'
 	variant: 'primary' | 'secondary'
 }) {
 	const baseClassName =
@@ -564,6 +564,7 @@ export function getButtonClassName({
 	const smallClassName = 'px-10 py-[14px] text-body-xs'
 	const mediumClassName = 'px-14 py-5 text-lg'
 	const mediumWideClassName = 'px-24 py-5 text-lg'
+	const pillClassName = 'px-12 py-3 leading-3'
 	const className = clsx(baseClassName, {
 		[primaryClassName]: variant === 'primary',
 		[secondaryClassName]: variant === 'secondary',
@@ -571,6 +572,7 @@ export function getButtonClassName({
 		[smallClassName]: size === 'sm',
 		[mediumClassName]: size === 'md',
 		[mediumWideClassName]: size === 'md-wide',
+		[pillClassName]: size === 'pill',
 	})
 	return className
 }

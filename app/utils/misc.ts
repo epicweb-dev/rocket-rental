@@ -27,11 +27,11 @@ export function safeRedirect(
 	return to
 }
 
-function isUser(user: any): user is User {
+function isUser(user: any): user is SerializeFrom<typeof rootLoader>['user'] {
 	return user && typeof user === 'object' && typeof user.id === 'string'
 }
 
-export function useOptionalUser(): User | undefined {
+export function useOptionalUser() {
 	const data = useRouteLoaderData('root') as SerializeFrom<typeof rootLoader>
 	if (!data || !isUser(data.user)) {
 		return undefined
@@ -39,7 +39,7 @@ export function useOptionalUser(): User | undefined {
 	return data.user
 }
 
-export function useUser(): User {
+export function useUser() {
 	const maybeUser = useOptionalUser()
 	if (!maybeUser) {
 		throw new Error(
