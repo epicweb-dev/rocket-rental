@@ -7,7 +7,7 @@ import {
 } from '@remix-run/react'
 import clsx from 'clsx'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
-import type { DataFunctionArgs } from '@remix-run/node'
+import type { DataFunctionArgs, V2_MetaFunction } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server'
@@ -24,7 +24,10 @@ export async function loader({ request, params }: DataFunctionArgs) {
 		throw new Response('not found', { status: 404 })
 	}
 
-	return json({ isSelf: user.id === loggedInUserId })
+	return json({
+		displayName: user.name ?? user.username,
+		isSelf: user.id === loggedInUserId,
+	})
 }
 
 export default function UserRoute() {
@@ -91,4 +94,14 @@ export function ErrorBoundary() {
 			}}
 		/>
 	)
+}
+
+export const meta: V2_MetaFunction<typeof loader> = ({ data }) => {
+	return [
+		{ title: `${data.displayName} | Rocket Rental` },
+		{
+			name: 'description',
+			content: `Hop in a rocket with ${data.displayName} on Rocket Rental`,
+		},
+	]
 }

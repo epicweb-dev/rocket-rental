@@ -1,5 +1,6 @@
 import { DataFunctionArgs, json, redirect } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
+import { V2_MetaFunction } from '@remix-run/server-runtime'
 import invariant from 'tiny-invariant'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { Spacer } from '~/components/spacer'
@@ -73,4 +74,15 @@ export function ErrorBoundary() {
 			}}
 		/>
 	)
+}
+
+export const meta: V2_MetaFunction<typeof loader> = ({ data }) => {
+	const displayName = data.user.name ?? data.user.username
+	return [
+		{ title: `${displayName} | Rocket Rental` },
+		{
+			name: 'description',
+			content: `${displayName} on Rocket Rental is not a host or renter yet.`,
+		},
+	]
 }

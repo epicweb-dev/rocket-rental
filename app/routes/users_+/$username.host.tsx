@@ -1,6 +1,7 @@
 import * as Separator from '@radix-ui/react-separator'
 import { json, type DataFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
+import { V2_MetaFunction } from '@remix-run/server-runtime'
 import invariant from 'tiny-invariant'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { StarRatingDisplay } from '~/components/star-rating-display'
@@ -278,4 +279,18 @@ export function ErrorBoundary() {
 			}}
 		/>
 	)
+}
+
+export const meta: V2_MetaFunction<typeof loader> = ({ data, params }) => {
+	const { username } = params
+	const displayName = data?.user.name ?? username
+	return [
+		{ title: `${displayName} | Rocket Rental Host` },
+		{
+			name: 'description',
+			content: `Take a look at ${displayName}'s ${
+				data?.user.host.ships.length ?? 'great'
+			} rockets on Rocket Rental.`,
+		},
+	]
 }

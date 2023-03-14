@@ -1,5 +1,6 @@
 import { json, type DataFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
+import { V2_MetaFunction } from '@remix-run/server-runtime'
 import invariant from 'tiny-invariant'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { getUserId, requireUserId } from '~/utils/auth.server'
@@ -146,4 +147,18 @@ export function ErrorBoundary() {
 			}}
 		/>
 	)
+}
+
+export const meta: V2_MetaFunction<typeof loader> = ({ data, params }) => {
+	const { username } = params
+	const displayName = data?.user.name ?? username
+	return [
+		{ title: `${displayName} | Rocket Rental Renter` },
+		{
+			name: 'description',
+			content: `${displayName} has flown ${
+				data?.totalBookings ?? 'some'
+			} times in rockets on Rocket Rental.`,
+		},
+	]
 }
