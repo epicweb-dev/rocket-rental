@@ -6,6 +6,7 @@ import { FormStrategy } from 'remix-auth-form'
 import { z } from 'zod'
 import { authenticator } from '~/utils/auth.server'
 import {
+	Button,
 	CheckboxField,
 	Field,
 	getFieldsFromSchema,
@@ -29,10 +30,9 @@ export async function action({ request }: DataFunctionArgs) {
 		preprocessFormData(formData, LoginFormSchema),
 	)
 	if (!result.success) {
-		return json(
-			{ status: 'form-invalid', errors: result.error.flatten() } as const,
-			{ status: 400 },
-		)
+		return json({ status: 'error', errors: result.error.flatten() } as const, {
+			status: 400,
+		})
 	}
 
 	let userId: string | null = null
@@ -44,7 +44,7 @@ export async function action({ request }: DataFunctionArgs) {
 		if (error instanceof AuthorizationError) {
 			return json(
 				{
-					status: 'auth-error',
+					status: 'error',
 					errors: {
 						formErrors: [error.message],
 						fieldErrors: {},
@@ -151,12 +151,20 @@ export function InlineLogin({
 					{form.errorUI}
 
 					<div className="flex items-center justify-between gap-6 pt-3">
-						<button
+						<Button
+							className="w-full"
+							size="md"
+							variant="primary"
+							status={
+								loginFetcher.state === 'submitting'
+									? 'pending'
+									: loginFetcher.data?.status ?? 'idle'
+							}
 							type="submit"
-							className="hover:bg-accent-purple-darker h-16 w-full rounded-full bg-accent-purple py-3.5 px-10 text-lg font-bold"
+							disabled={loginFetcher.state !== 'idle'}
 						>
 							Log in
-						</button>
+						</Button>
 					</div>
 				</loginFetcher.Form>
 				<div className="flex items-center justify-center gap-2 pt-6">

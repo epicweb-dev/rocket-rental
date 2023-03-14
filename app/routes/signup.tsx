@@ -128,7 +128,7 @@ export default function SignupRoute() {
 	})
 
 	return (
-		<div className="container mx-auto mt-20 mb-32 flex flex-col justify-center">
+		<div className="container mx-auto flex flex-col justify-center pt-20 pb-32">
 			{signupFetcher.data?.status === 'success' ? (
 				<div className="text-center">
 					<img src="" alt="" />
@@ -156,6 +156,7 @@ export default function SignupRoute() {
 						/>
 						{form.errorUI}
 						<Button
+							className="w-full"
 							size="md"
 							variant="primary"
 							status={

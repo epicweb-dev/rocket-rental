@@ -7,15 +7,18 @@ import {
 import {
 	Form,
 	useActionData,
+	useFormAction,
 	useLoaderData,
+	useNavigation,
 	useSearchParams,
 } from '@remix-run/react'
 import { z } from 'zod'
 import { Spacer } from '~/components/spacer'
 import { authenticator, createUser } from '~/utils/auth.server'
 import {
-	Field,
+	Button,
 	CheckboxField,
+	Field,
 	getFieldsFromSchema,
 	preprocessFormData,
 	useForm,
@@ -88,10 +91,9 @@ export async function action({ request }: DataFunctionArgs) {
 		preprocessFormData(formData, OnboardingFormSchema),
 	)
 	if (!result.success) {
-		return json(
-			{ status: 'error', errors: result.error.flatten() },
-			{ status: 400 },
-		)
+		return json({ status: 'error', errors: result.error.flatten() } as const, {
+			status: 400,
+		})
 	}
 	const {
 		username,
@@ -130,6 +132,8 @@ export default function OnboardingPage() {
 	const [searchParams] = useSearchParams()
 	const data = useLoaderData<typeof loader>()
 	const actionData = useActionData<typeof action>()
+	const navigation = useNavigation()
+	const formAction = useFormAction()
 	const { form, fields } = useForm({
 		name: 'onboarding',
 		fieldMetadatas: data.fieldMetadatas,
@@ -139,7 +143,7 @@ export default function OnboardingPage() {
 	const redirectTo = searchParams.get('redirectTo') || '/'
 
 	return (
-		<div className="container mx-auto mt-20 mb-32 flex min-h-full flex-col justify-center">
+		<div className="container mx-auto flex min-h-full flex-col justify-center pt-20 pb-32">
 			<div className="mx-auto w-full max-w-lg">
 				<div className="flex flex-col gap-3 text-center">
 					<h1 className="text-h1">Welcome aboard!</h1>
@@ -232,12 +236,22 @@ export default function OnboardingPage() {
 					{form.errorUI}
 
 					<div className="flex items-center justify-between gap-6">
-						<button
+						<Button
+							className="w-full"
+							size="md"
+							variant="primary"
+							status={
+								navigation.state === 'submitting' &&
+								navigation.formAction === formAction &&
+								navigation.formMethod === 'post'
+									? 'pending'
+									: actionData?.status ?? 'idle'
+							}
 							type="submit"
-							className="hover:bg-accent-purple-darker h-16 w-full rounded-full bg-accent-purple py-3.5 px-10 text-lg font-bold"
+							disabled={navigation.state !== 'idle'}
 						>
 							Create an account
-						</button>
+						</Button>
 					</div>
 				</Form>
 			</div>

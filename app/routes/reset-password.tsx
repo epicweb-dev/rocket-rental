@@ -109,7 +109,7 @@ export default function ResetPasswordPage() {
 	})
 
 	return (
-		<div className="container mx-auto mt-20 mb-32 flex flex-col justify-center">
+		<div className="container mx-auto flex flex-col justify-center pt-20 pb-32">
 			<div className="text-center">
 				<h1 className="text-h1">Password Reset</h1>
 				<p className="mt-3 text-body-md text-night-200">
@@ -148,6 +148,7 @@ export default function ResetPasswordPage() {
 
 				{form.errorUI}
 				<Button
+					className="w-full"
 					size="md"
 					variant="primary"
 					status={

@@ -129,7 +129,7 @@ export default function SignupRoute() {
 	})
 
 	return (
-		<div className="container mx-auto mt-20 mb-32">
+		<div className="container mx-auto pt-20 pb-32">
 			<div className="flex flex-col justify-center">
 				{forgotPassword.data?.status === 'success' ? (
 					<div className="text-center">
@@ -165,6 +165,7 @@ export default function SignupRoute() {
 							{form.errorUI}
 							<div className="mt-6">
 								<Button
+									className="w-full"
 									size="md"
 									variant="primary"
 									status={
