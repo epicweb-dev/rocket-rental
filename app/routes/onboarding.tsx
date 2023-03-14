@@ -6,7 +6,6 @@ import {
 } from '@remix-run/node'
 import {
 	Form,
-	Link,
 	useActionData,
 	useLoaderData,
 	useSearchParams,
@@ -140,7 +139,7 @@ export default function OnboardingPage() {
 	const redirectTo = searchParams.get('redirectTo') || '/'
 
 	return (
-		<div className="flex min-h-full flex-col justify-center pt-20 pb-32">
+		<div className="container mx-auto mt-20 mb-32 flex min-h-full flex-col justify-center">
 			<div className="mx-auto w-full max-w-lg">
 				<div className="flex flex-col gap-3 text-center">
 					<h1 className="text-h1">Welcome aboard!</h1>
@@ -149,7 +148,11 @@ export default function OnboardingPage() {
 					</p>
 				</div>
 				<Spacer size="xs" />
-				<Form method="post" className="mx-auto max-w-sm" {...form.props}>
+				<Form
+					method="post"
+					className="mx-auto min-w-[368px] max-w-sm"
+					{...form.props}
+				>
 					<Field
 						labelProps={{ ...fields.username.labelProps, children: 'Username' }}
 						inputProps={{

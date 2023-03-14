@@ -7,13 +7,20 @@ import {
 import {
 	Form,
 	useActionData,
+	useFormAction,
 	useLoaderData,
 	useNavigation,
 } from '@remix-run/react'
 import { z } from 'zod'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { authenticator, resetUserPassword } from '~/utils/auth.server'
-import { getFieldsFromSchema, preprocessFormData, useForm } from '~/utils/forms'
+import {
+	Button,
+	Field,
+	getFieldsFromSchema,
+	preprocessFormData,
+	useForm,
+} from '~/utils/forms'
 import { commitSession, getSession } from '~/utils/session.server'
 import { passwordSchema } from '~/utils/user-validation'
 import { resetPasswordSessionKey } from './forgot-password'
@@ -61,10 +68,9 @@ export async function action({ request }: DataFunctionArgs) {
 		preprocessFormData(formData, ResetPasswordSchema),
 	)
 	if (!result.success) {
-		return json(
-			{ status: 'error', errors: result.error.flatten() },
-			{ status: 400 },
-		)
+		return json({ status: 'error', errors: result.error.flatten() } as const, {
+			status: 400,
+		})
 	}
 
 	const { password } = result.data
@@ -93,6 +99,7 @@ export const meta: V2_MetaFunction = ({ matches }) => {
 export default function ResetPasswordPage() {
 	const data = useLoaderData<typeof loader>()
 	const actionData = useActionData<typeof action>()
+	const formAction = useFormAction()
 	const navigation = useNavigation()
 
 	const { form, fields } = useForm({
@@ -102,59 +109,60 @@ export default function ResetPasswordPage() {
 	})
 
 	return (
-		<div className="flex min-h-full flex-col justify-center">
-			<div className="mx-auto w-full max-w-md px-8">
-				<Form method="post" className="space-y-6" {...form.props}>
-					<div>Resetting password for {data.resetPasswordUsername}</div>
-
-					<div>
-						<label
-							className="block text-body-xs font-medium text-gray-700"
-							{...fields.password.labelProps}
-						>
-							Password
-						</label>
-						<div className="mt-1">
-							<input
-								autoComplete="current-password"
-								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-								{...fields.password.props}
-							/>
-							{fields.password.errorUI}
-						</div>
-					</div>
-
-					<div>
-						<label
-							className="block text-body-xs font-medium text-gray-700"
-							{...fields.confirmPassword.labelProps}
-						>
-							Confirm Password
-						</label>
-						<div className="mt-1">
-							<input
-								autoComplete="current-password"
-								className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-								{...fields.confirmPassword.props}
-							/>
-							{fields.confirmPassword.errorUI}
-						</div>
-					</div>
-
-					{form.errorUI}
-					<div className="flex items-center justify-between gap-6">
-						<button
-							type="submit"
-							className="w-full rounded bg-gray-500  py-2 px-4 hover:bg-gray-600 focus:bg-gray-400"
-							disabled={Boolean(navigation.state === 'submitting')}
-						>
-							{navigation.state === 'submitting'
-								? 'Resetting...'
-								: 'Reset Password'}
-						</button>
-					</div>
-				</Form>
+		<div className="container mx-auto mt-20 mb-32 flex flex-col justify-center">
+			<div className="text-center">
+				<h1 className="text-h1">Password Reset</h1>
+				<p className="mt-3 text-body-md text-night-200">
+					Hi, {data.resetPasswordUsername}. No worries. It happens all the time.
+				</p>
 			</div>
+			<Form
+				method="post"
+				className="mx-auto mt-16 min-w-[368px] max-w-sm"
+				{...form.props}
+			>
+				<Field
+					labelProps={{
+						...fields.password.labelProps,
+						children: 'New Password',
+					}}
+					inputProps={{
+						...fields.password.props,
+						type: 'password',
+						autoComplete: 'new-password',
+					}}
+					errors={fields.password.errors}
+				/>
+				<Field
+					labelProps={{
+						...fields.confirmPassword.labelProps,
+						children: 'Confirm Password',
+					}}
+					inputProps={{
+						...fields.confirmPassword.props,
+						type: 'password',
+						autoComplete: 'new-password',
+					}}
+					errors={fields.confirmPassword.errors}
+				/>
+
+				{form.errorUI}
+				<Button
+					size="md"
+					variant="primary"
+					status={
+						navigation.state === 'submitting' &&
+						navigation.formAction === formAction &&
+						navigation.formMethod === 'post'
+							? 'pending'
+							: actionData?.status ?? 'idle'
+					}
+					type="submit"
+					disabled={navigation.state !== 'idle'}
+				>
+					Recover password
+				</Button>
+			</Form>
 		</div>
 	)
 }

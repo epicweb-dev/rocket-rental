@@ -10,7 +10,13 @@ import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { prisma } from '~/utils/db.server'
 import { sendEmail } from '~/utils/email.server'
 import { decrypt, encrypt } from '~/utils/encryption.server'
-import { getFieldsFromSchema, preprocessFormData, useForm } from '~/utils/forms'
+import {
+	Button,
+	Field,
+	getFieldsFromSchema,
+	preprocessFormData,
+	useForm,
+} from '~/utils/forms'
 import { getDomainUrl } from '~/utils/misc.server'
 import { commitSession, getSession } from '~/utils/session.server'
 import { emailSchema } from '~/utils/user-validation'
@@ -63,7 +69,7 @@ export async function action({ request }: DataFunctionArgs) {
 			{
 				status: 'error',
 				errors: result.error.flatten(),
-			},
+			} as const,
 			{ status: 400 },
 		)
 	}
@@ -94,12 +100,12 @@ export async function action({ request }: DataFunctionArgs) {
 	})
 
 	if (response.ok) {
-		return json({ status: 'success', errors: null })
+		return json({ status: 'success', errors: null } as const)
 	} else {
 		return json({
 			status: 'error',
 			errors: { formErrors: ['Email not sent successfully'], fieldErrors: {} },
-		})
+		} as const)
 	}
 }
 
@@ -122,34 +128,49 @@ export default function SignupRoute() {
 	})
 
 	return (
-		<div>
-			<h1 className="text-h1">Signup</h1>
-			<signupFetcher.Form method="post" {...form.props}>
-				<div>
-					<label
-						className="block text-body-xs font-medium text-gray-700"
-						{...fields.email.labelProps}
-					>
-						Email
-					</label>
-					<div className="mt-1">
-						<input
-							className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-							{...fields.email.props}
-						/>
-						{fields.email.errorUI}
-					</div>
-				</div>
-				{form.errorUI}
-				<div>
-					<button type="submit" disabled={signupFetcher.state !== 'idle'}>
-						{signupFetcher.state === 'idle' ? 'Submit' : 'Submitting...'}
-					</button>
-				</div>
-			</signupFetcher.Form>
+		<div className="container mx-auto mt-20 mb-32 flex flex-col justify-center">
 			{signupFetcher.data?.status === 'success' ? (
-				<div>Great! Check your email for a link to continue.</div>
-			) : null}
+				<div className="text-center">
+					<img src="" alt="" />
+					<h1 className="mt-44 text-h1">Great!</h1>
+					<p className="mt-3 text-body-md text-night-200">
+						Check your email for a link to continue.
+					</p>
+				</div>
+			) : (
+				<>
+					<div className="text-center">
+						<h1 className="text-h1">Let's start your journey!</h1>
+						<p className="mt-3 text-body-md text-night-200">
+							Please enter your email.
+						</p>
+					</div>
+					<signupFetcher.Form
+						method="post"
+						className="mx-auto mt-16 min-w-[368px] max-w-sm"
+						{...form.props}
+					>
+						<Field
+							labelProps={{ ...fields.email.labelProps, children: 'Email' }}
+							inputProps={{ ...fields.email.props, type: 'email' }}
+						/>
+						{form.errorUI}
+						<Button
+							size="md"
+							variant="primary"
+							status={
+								signupFetcher.state === 'submitting'
+									? 'pending'
+									: signupFetcher.data?.status ?? 'idle'
+							}
+							type="submit"
+							disabled={signupFetcher.state !== 'idle'}
+						>
+							Launch
+						</Button>
+					</signupFetcher.Form>
+				</>
+			)}
 		</div>
 	)
 }
