@@ -1,10 +1,4 @@
-import {
-	json,
-	redirect,
-	unstable_createMemoryUploadHandler,
-	unstable_parseMultipartFormData,
-	type DataFunctionArgs,
-} from '@remix-run/node'
+import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
 import {
 	Form,
 	Link,
@@ -17,6 +11,8 @@ import {
 } from '@remix-run/react'
 import { useEffect, useRef } from 'react'
 import { z } from 'zod'
+import * as createHost from '~/routes/resources+/create-host'
+import * as createRenter from '~/routes/resources+/create-renter'
 import {
 	authenticator,
 	getPasswordHash,
@@ -40,8 +36,6 @@ import {
 	passwordSchema,
 	usernameSchema,
 } from '~/utils/user-validation'
-import * as createHost from '~/routes/resources+/create-host'
-import * as createRenter from '~/routes/resources+/create-renter'
 
 const ProfileFormSchema = z
 	.object({
@@ -185,7 +179,6 @@ function usePreviousValue<Value>(value: Value): Value {
 export default function EditUserProfile() {
 	const data = useLoaderData<typeof loader>()
 	const actionData = useActionData<typeof action>()
-	const formRef = useRef<HTMLFormElement>(null)
 	const navigation = useNavigation()
 	const formAction = useFormAction()
 	const createHostFetcher = useFetcher<typeof createHost.action>()
@@ -194,24 +187,10 @@ export default function EditUserProfile() {
 	const hostBioTextareaRef = useRef<HTMLTextAreaElement>(null)
 	const renterBioTextareaRef = useRef<HTMLTextAreaElement>(null)
 
-	const prevNav = usePreviousValue(navigation)
-	const wasSubmitting =
-		prevNav.state === 'submitting' &&
-		prevNav.formAction === formAction &&
-		prevNav.formMethod === 'post'
 	const isSubmitting =
 		navigation.state === 'submitting' &&
 		navigation.formAction === formAction &&
 		navigation.formMethod === 'post'
-
-	const wasSubmittingButIsNoLonger = wasSubmitting && !isSubmitting
-
-	useEffect(() => {
-		if (!formRef.current) return
-		if (!wasSubmittingButIsNoLonger) return
-		if (actionData?.status !== 'success') return
-		formRef.current.reset()
-	}, [actionData?.status, wasSubmittingButIsNoLonger])
 
 	const prevWasHost = usePreviousValue(Boolean(data.user.host))
 	const isNewHost = !prevWasHost && Boolean(data.user.host)
@@ -484,7 +463,12 @@ export default function EditUserProfile() {
 					{form.errorUI}
 
 					<div className="mt-3 flex justify-center">
-						<Button type="submit" size="md-wide" variant="primary">
+						<Button
+							type="submit"
+							size="md-wide"
+							variant="primary"
+							status={isSubmitting ? 'pending' : actionData?.status ?? 'idle'}
+						>
 							Save changes
 						</Button>
 					</div>

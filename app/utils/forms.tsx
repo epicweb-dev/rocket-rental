@@ -5,6 +5,7 @@ import styles from './forms.module.css'
 import * as Checkbox from '@radix-ui/react-checkbox'
 import clsx from 'clsx'
 import { Link } from '@remix-run/react'
+import * as State from '~/components/state-ui'
 
 export type ListOfErrors = Array<string | null | undefined> | null | undefined
 
@@ -580,10 +581,27 @@ export function getButtonClassName({
 export function Button({
 	size,
 	variant,
+	status = 'idle',
 	...props
 }: Omit<React.ComponentPropsWithoutRef<'button'>, 'className'> &
-	Parameters<typeof getButtonClassName>[0]) {
-	return <button {...props} className={getButtonClassName({ size, variant })} />
+	Parameters<typeof getButtonClassName>[0] & {
+		status?: 'pending' | 'success' | 'error' | 'idle'
+	}) {
+	const companion = {
+		pending: <State.Pending />,
+		success: <State.Success />,
+		error: <State.Error />,
+		idle: null,
+	}[status]
+	return (
+		<button
+			{...props}
+			className={clsx(getButtonClassName({ size, variant }), 'flex gap-4')}
+		>
+			<div>{props.children}</div>
+			{companion}
+		</button>
+	)
 }
 
 export function ButtonLink({
