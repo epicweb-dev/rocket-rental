@@ -1,3 +1,4 @@
+import * as Dialog from '@radix-ui/react-dialog'
 import {
 	DataFunctionArgs,
 	json,
@@ -12,24 +13,20 @@ import {
 	useFetcher,
 	useLoaderData,
 	useNavigate,
-	useNavigation,
 } from '@remix-run/react'
-import * as Dialog from '@radix-ui/react-dialog'
+import { useState } from 'react'
 import { z } from 'zod'
-import clsx from 'clsx'
+import * as deleteImageRoute from '~/routes/resources+/delete-image'
 import { authenticator, requireUserId } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'
 import {
 	Button,
-	ErrorList,
 	getFieldsFromSchema,
 	LabelButton,
 	preprocessFormData,
 	useForm,
 } from '~/utils/forms'
 import { getUserImgSrc } from '~/utils/misc'
-import * as deleteImageRoute from '~/routes/resources+/delete-image'
-import { useState } from 'react'
 
 const MAX_SIZE = 1024 * 1024 * 3 // 3MB
 

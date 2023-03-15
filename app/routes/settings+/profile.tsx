@@ -440,6 +440,7 @@ export default function EditUserProfile() {
 									inputProps={{
 										...fields.currentPassword.props,
 										type: 'password',
+										autoComplete: 'current-password',
 									}}
 									errors={fields.currentPassword.errors}
 								/>

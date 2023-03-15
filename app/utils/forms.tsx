@@ -452,6 +452,7 @@ export function Field({
 		<div className={clsx(styles.field, className)}>
 			<input
 				id={id}
+				aria-invalid={errorId ? true : undefined}
 				aria-errormessage={errorId}
 				placeholder=" "
 				{...inputProps}
@@ -478,12 +479,13 @@ export function TextareaField({
 	className?: string
 }) {
 	const fallbackId = useId()
-	const id = textareaProps.id ?? fallbackId
+	const id = textareaProps.id ?? textareaProps.name ?? fallbackId
 	const errorId = errors?.length ? `${id}-error` : undefined
 	return (
 		<div className={clsx(styles.textareaField, className)}>
 			<textarea
 				id={id}
+				aria-invalid={errorId ? true : undefined}
 				aria-errormessage={errorId}
 				placeholder=" "
 				{...textareaProps}
@@ -513,13 +515,14 @@ export function CheckboxField({
 	errors?: ListOfErrors
 }) {
 	const fallbackId = useId()
-	const id = buttonProps.id ?? fallbackId
+	const id = buttonProps.id ?? buttonProps.name ?? fallbackId
 	const errorId = errors?.length ? `${id}-error` : undefined
 	return (
 		<div className={styles.checkboxField}>
 			<div className="flex gap-2">
 				<Checkbox.Root
 					id={id}
+					aria-invalid={errorId ? true : undefined}
 					aria-errormessage={errorId}
 					{...buttonProps}
 					type="button"
