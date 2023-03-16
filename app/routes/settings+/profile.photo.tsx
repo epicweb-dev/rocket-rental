@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import {
-	DataFunctionArgs,
+	type DataFunctionArgs,
 	json,
 	redirect,
 	unstable_createMemoryUploadHandler,
@@ -38,7 +38,7 @@ export async function loader({ request }: DataFunctionArgs) {
 	const userId = await requireUserId(request)
 	const user = await prisma.user.findUnique({
 		where: { id: userId },
-		select: { imageId: true },
+		select: { imageId: true, name: true, username: true },
 	})
 	if (!user) {
 		await authenticator.logout(request, { redirectTo: '/' })
@@ -156,6 +156,7 @@ export default function PhotoChooserModal() {
 						<img
 							src={newImageSrc ?? getUserImgSrc(data.user.imageId)}
 							className="h-64 w-64 rounded-full"
+							alt={data.user.name ?? data.user.username}
 						/>
 						{fields.photoFile.errorUI}
 						<input
