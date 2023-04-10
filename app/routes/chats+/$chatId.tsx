@@ -1,10 +1,5 @@
 import { json, type DataFunctionArgs } from '@remix-run/node'
-import {
-	useCatch,
-	useFetcher,
-	useLoaderData,
-	useParams,
-} from '@remix-run/react'
+import { useFetcher, useLoaderData, useParams } from '@remix-run/react'
 import { useState } from 'react'
 import invariant from 'tiny-invariant'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
