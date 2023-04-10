@@ -104,7 +104,7 @@ export default function ResetPasswordPage() {
 	})
 
 	return (
-		<div className="container mx-auto flex flex-col justify-center pt-20 pb-32">
+		<div className="container mx-auto flex flex-col justify-center pb-32 pt-20">
 			<div className="text-center">
 				<h1 className="text-h1">Password Reset</h1>
 				<p className="mt-3 text-body-md text-night-200">
@@ -156,7 +156,7 @@ export default function ResetPasswordPage() {
 					type="submit"
 					disabled={navigation.state !== 'idle'}
 				>
-					Recover password
+					Reset password
 				</Button>
 			</Form>
 		</div>

@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000
  * See https://playwright.dev/docs/test-configuration.
  */
 const config: PlaywrightTestConfig = {
-	testDir: './tests',
+	testDir: './tests/e2e',
 	/* Maximum time one test can run for. */
 	timeout: 30 * 1000,
 	expect: {

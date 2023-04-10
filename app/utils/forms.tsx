@@ -3,7 +3,6 @@ import { Link } from '@remix-run/react'
 import clsx from 'clsx'
 import React, { useEffect, useId, useRef } from 'react'
 import { z } from 'zod'
-import * as State from '~/components/state-ui'
 import styles from './forms.module.css'
 import { typedBoolean } from './misc'
 
@@ -464,7 +463,7 @@ export function Field({
 			/>
 			{/* the label comes after the input so we can use the sibling selector in the CSS to give us animated label control in CSS only */}
 			<label htmlFor={id} {...labelProps} />
-			<div className="px-4 pt-1 pb-3">
+			<div className="px-4 pb-3 pt-1">
 				{errorId ? <ErrorList id={errorId} errors={errors} /> : null}
 			</div>
 		</div>
@@ -497,7 +496,7 @@ export function TextareaField({
 			/>
 			{/* the label comes after the input so we can use the sibling selector in the CSS to give us animated label control in CSS only */}
 			<label htmlFor={id} {...labelProps} />
-			<div className="px-4 pt-1 pb-3">
+			<div className="px-4 pb-3 pt-1">
 				{errorId ? <ErrorList id={errorId} errors={errors} /> : null}
 			</div>
 		</div>
@@ -548,7 +547,7 @@ export function CheckboxField({
 					className="text-body-xs text-night-200"
 				/>
 			</div>
-			<div className="px-4 pt-1 pb-3">
+			<div className="px-4 pb-3 pt-1">
 				{errorId ? <ErrorList id={errorId} errors={errors} /> : null}
 			</div>
 		</div>
@@ -595,9 +594,9 @@ export function Button({
 		status?: 'pending' | 'success' | 'error' | 'idle'
 	}) {
 	const companion = {
-		pending: <State.Pending />,
-		success: <State.Success />,
-		error: <State.Error />,
+		pending: <span className="inline-block animate-spin">🌀</span>,
+		success: <span>✅</span>,
+		error: <span>❌</span>,
 		idle: null,
 	}[status]
 	return (

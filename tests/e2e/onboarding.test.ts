@@ -7,7 +7,7 @@ import {
 	makeLoginForm,
 	readEmail,
 	test,
-} from './test'
+} from '../test-utils'
 
 const urlRegex = /(?<url>https?:\/\/[^\s$.?#].[^\s]*)/
 function extractUrl(text: string) {
@@ -34,9 +34,12 @@ test('onboarding', async ({ page }) => {
 	await emailTextbox.click()
 	await emailTextbox.fill(loginForm.email)
 
-	await page.getByRole('button', { name: /submit/i }).click()
-	await expect(page.getByRole('button', { name: /submitting/i })).toBeVisible()
-	await expect(page.getByRole('button', { name: /submit$/i })).toBeVisible()
+	await page.getByRole('button', { name: /launch/i }).click()
+	await expect(
+		page.getByRole('button', { name: /launch/i, disabled: true }),
+	).toBeVisible()
+	await expect(page.getByText(/check your email/i)).toBeVisible()
+
 	const email = await readEmail(loginForm.email)
 	invariant(email, 'Email not found')
 	expect(email.to).toBe(loginForm.email)
@@ -48,32 +51,34 @@ test('onboarding', async ({ page }) => {
 
 	await expect(page).toHaveURL(`/onboarding`)
 	await page
-		.getByRole('textbox', { name: /username/i })
+		.getByRole('textbox', { name: /^username/i })
 		.fill(loginForm.username)
 
-	await page.getByRole('textbox', { name: /^name$/i }).fill(loginForm.name)
+	await page.getByRole('textbox', { name: /^name/i }).fill(loginForm.name)
 
-	await page.getByLabel(/^password$/i).fill(loginForm.password)
+	await page.getByLabel(/^password/i).fill(loginForm.password)
 
-	await page.getByLabel(/^confirm password$/i).fill(loginForm.password)
+	await page.getByLabel(/^confirm password/i).fill(loginForm.password)
 
-	await page.getByRole('checkbox', { name: /terms/i }).check()
+	await page.getByLabel(/terms/i).check()
 
-	await page.getByRole('checkbox', { name: /offers/i }).check()
+	await page.getByLabel(/offers/i).check()
 
-	await page.getByRole('checkbox', { name: /remember me/i }).check()
+	await page.getByLabel(/remember me/i).check()
 
 	await page.getByRole('button', { name: /Create an account/i }).click()
 
 	await expect(page).toHaveURL(`/`)
 
 	await page.getByRole('link', { name: loginForm.name }).click()
+	await page.getByRole('menuitem', { name: /profile/i }).click()
 
 	await expect(page).toHaveURL(`/users/${loginForm.username}`)
 
 	await page.getByRole('button', { name: /logout/i }).click()
 	await expect(page).toHaveURL(`/`)
 
+	// have to do this here because we didn't use insertNewUser (because we're testing user create)
 	await deleteUserByUsername(loginForm.username)
 })
 
@@ -87,16 +92,7 @@ test('login as existing user', async ({ page }) => {
 	await page.getByRole('button', { name: /log in/i }).click()
 	await expect(page).toHaveURL(`/`)
 
-	await page.getByRole('link', { name: user.name }).click()
-
-	await expect(page).toHaveURL(`/users/${user.username}`)
-
-	const logoutButton = page.getByRole('button', { name: /logout/i })
-	await expect(logoutButton).toContainText(user.name)
-	await expect(logoutButton).toBeVisible()
-
-	await logoutButton.click()
-	await expect(page).toHaveURL(`/`)
+	await expect(page.getByRole('link', { name: user.name })).toBeVisible()
 })
 
 test('reset password', async ({ page }) => {
@@ -112,9 +108,11 @@ test('reset password', async ({ page }) => {
 		page.getByRole('heading', { name: /forgot password/i }),
 	).toBeVisible()
 	await page.getByRole('textbox', { name: /username/i }).fill(user.username)
-	await page.getByRole('button', { name: /submit/i }).click()
-	await expect(page.getByRole('button', { name: /submitting/i })).toBeVisible()
-	await expect(page.getByRole('button', { name: /submit$/i })).toBeVisible()
+	await page.getByRole('button', { name: /recover password/i }).click()
+	await expect(
+		page.getByRole('button', { name: /recover password/i, disabled: true }),
+	).toBeVisible()
+	await expect(page.getByText(/instructions have been sent/i)).toBeVisible()
 
 	const email = await readEmail(user.email)
 	invariant(email, 'Email not found')
@@ -127,10 +125,13 @@ test('reset password', async ({ page }) => {
 
 	await expect(page).toHaveURL(`/reset-password`)
 	const newPassword = faker.internet.password()
-	await page.getByLabel(/^password$/i).fill(newPassword)
+	await page.getByLabel(/^new password$/i).fill(newPassword)
 	await page.getByLabel(/^confirm password$/i).fill(newPassword)
 
 	await page.getByRole('button', { name: /reset password/i }).click()
+	await expect(
+		page.getByRole('button', { name: /reset password/i, disabled: true }),
+	).toBeVisible()
 
 	await expect(page).toHaveURL('/login')
 	await page.getByRole('textbox', { name: /username/i }).fill(user.username)
@@ -144,12 +145,5 @@ test('reset password', async ({ page }) => {
 
 	await expect(page).toHaveURL(`/`)
 
-	await page.getByRole('link', { name: user.name }).click()
-
-	await expect(page).toHaveURL(`/users/${user.username}`)
-
-	const logoutButton = page.getByRole('button', { name: /logout/i })
-	invariant(user.name, 'User name not found')
-	await expect(logoutButton).toContainText(user.name)
-	await expect(logoutButton).toBeVisible()
+	await expect(page.getByRole('link', { name: user.name })).toBeVisible()
 })

@@ -1,4 +1,4 @@
-import { test, loginPage, expect } from './test'
+import { test, loginPage, expect } from '../test-utils'
 import { faker } from '@faker-js/faker'
 
 test('multi-user chat', async ({ browser, page: page1, baseURL }) => {
