@@ -1,27 +1,41 @@
-import { test, loginPage, expect } from '../test-utils'
+import { test, loginPage, expect, runPrisma } from '../test-utils'
 import { faker } from '@faker-js/faker'
 
-test('multi-user chat', async ({ browser, page: page1, baseURL }) => {
-	const page2 = await (await browser.newContext()).newPage()
+test('multi-user chat', async ({ browser, page: renterPage, baseURL }) => {
+	const hostPage = await (await browser.newContext()).newPage()
 
-	const user1 = await loginPage({ page: page1, baseURL })
-	const user2 = await loginPage({ page: page2, baseURL })
+	const renterUser = await loginPage({ page: renterPage, baseURL })
+	const hostUser = await loginPage({ page: hostPage, baseURL })
+
+	await runPrisma(async prisma => {
+		await prisma.renter.create({
+			data: { userId: renterUser.id },
+		})
+		await prisma.host.create({
+			data: { userId: hostUser.id },
+		})
+	})
 
 	// go to another user's page and start a chat:
-	await page1.goto(`/users/${user2.username}`)
-	await page1.getByRole('button', { name: /chat/i }).click()
-	await expect(page1).toHaveURL(/\/chats\/.+/)
+	await renterPage.goto(`/users/${hostUser.username}`)
+	await renterPage.getByRole('button', { name: /message/i }).click()
+	await expect(renterPage).toHaveURL(/\/chats\/.+/)
 
 	// go to your own page and open an existing chat:
-	await page2.goto(`/users/${user2.username}`)
-	await page2.getByRole('link', { name: new RegExp(user1.username) }).click()
-	await expect(page2).toHaveURL(/\/chats\/.+/)
+	await hostPage.goto(`/users/${hostUser.username}`)
+	await hostPage.getByRole('link', { name: /my chat/i }).click()
+	await hostPage
+		.getByRole('link', {
+			name: new RegExp(renterUser.name ?? renterUser.username, 'i'),
+		})
+		.click()
+	await expect(hostPage).toHaveURL(/\/chats\/.+/)
 
 	// wait for connection to be established
-	await page1.waitForTimeout(200)
+	await renterPage.waitForTimeout(200)
 
 	// type from page 1
-	const page1Textbox = page1.getByRole('textbox', { name: /message/i })
+	const page1Textbox = renterPage.getByRole('textbox', { name: /message/i })
 	const testMessage = faker.lorem.words(2)
 	await page1Textbox.fill(testMessage)
 	await page1Textbox.press('Enter')
@@ -29,6 +43,10 @@ test('multi-user chat', async ({ browser, page: page1, baseURL }) => {
 	await expect(page1Textbox).toBeEmpty()
 
 	// check that both pages receive the message
-	await expect(page1.getByRole('listitem').getByText(testMessage)).toBeVisible()
-	await expect(page2.getByRole('listitem').getByText(testMessage)).toBeVisible()
+	await expect(
+		renterPage.getByRole('listitem').getByText(testMessage),
+	).toBeVisible()
+	await expect(
+		hostPage.getByRole('listitem').getByText(testMessage),
+	).toBeVisible()
 })

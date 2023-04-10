@@ -112,7 +112,7 @@ export async function loginPage({
 }: {
 	page: Page
 	baseURL: string | undefined
-	user?: { id: string; username: string }
+	user?: { id: string; username: string; name?: string | null }
 }) {
 	user = user ?? (await insertNewUser())
 	const session = await getSession()

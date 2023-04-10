@@ -101,13 +101,26 @@ export async function loader({ request, params }: DataFunctionArgs) {
 	const oneOnOneChat = loggedInUserId
 		? await prisma.chat.findFirst({
 				where: {
-					users: {
-						every: {
-							id: { in: [user.id, loggedInUserId] },
+					AND: [
+						// make sure the chat is not empty and has the user in it
+						{
+							users: {
+								some: {
+									id: { in: [user.id] },
+								},
+							},
 						},
-					},
+						// find the one that the logged in user is in
+						{
+							users: {
+								every: {
+									id: { in: [user.id, loggedInUserId] },
+								},
+							},
+						},
+					],
 				},
-				select: { id: true },
+				select: { id: true, users: { select: { id: true } } },
 		  })
 		: null
 

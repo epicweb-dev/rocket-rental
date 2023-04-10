@@ -1,6 +1,6 @@
 import * as Separator from '@radix-ui/react-separator'
 import { redirect } from '@remix-run/node'
-import { Form, Link, useLocation, useNavigation } from '@remix-run/react'
+import { Form, Link, useLocation } from '@remix-run/react'
 import * as React from 'react'
 import { StarRatingDisplay } from '~/components/star-rating-display'
 import { prisma } from '~/utils/db.server'
@@ -286,6 +286,10 @@ export function Reviews({
 										<img
 											className="h-14 w-14 rounded-full"
 											src={getUserImgSrc(review.reviewer.user.imageId)}
+											alt={
+												review.reviewer.user.name ??
+												review.reviewer.user.username
+											}
 										/>
 									</Link>
 									<div className="flex flex-col gap-1">
