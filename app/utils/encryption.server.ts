@@ -2,22 +2,23 @@ import crypto from 'crypto'
 
 const algorithm = 'aes-256-ctr'
 
-const ENCRYPTION_KEY = crypto.scryptSync(
-	process.env.ENCRYPTION_SECRET,
-	'salt',
-	32,
-)
-
 const IV_LENGTH = 16
 
-function encrypt(text: string) {
+export function encrypt(text: string) {
 	const iv = crypto.randomBytes(IV_LENGTH)
+
+	const ENCRYPTION_KEY = crypto.scryptSync(
+		process.env.ENCRYPTION_SECRET,
+		'salt',
+		32,
+	)
+
 	const cipher = crypto.createCipheriv(algorithm, ENCRYPTION_KEY, iv)
 	const encrypted = Buffer.concat([cipher.update(text), cipher.final()])
 	return `${iv.toString('hex')}:${encrypted.toString('hex')}`
 }
 
-function decrypt(text: string) {
+export function decrypt(text: string) {
 	const [ivPart, encryptedPart] = text.split(':')
 	if (!ivPart || !encryptedPart) {
 		throw new Error('Invalid text.')
@@ -25,6 +26,13 @@ function decrypt(text: string) {
 
 	const iv = Buffer.from(ivPart, 'hex')
 	const encryptedText = Buffer.from(encryptedPart, 'hex')
+
+	const ENCRYPTION_KEY = crypto.scryptSync(
+		process.env.ENCRYPTION_SECRET,
+		'salt',
+		32,
+	)
+
 	const decipher = crypto.createDecipheriv(algorithm, ENCRYPTION_KEY, iv)
 	const decrypted = Buffer.concat([
 		decipher.update(encryptedText),
@@ -32,5 +40,3 @@ function decrypt(text: string) {
 	])
 	return decrypted.toString()
 }
-
-export { encrypt, decrypt }
