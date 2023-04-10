@@ -4,7 +4,6 @@ import {
 	deleteUserByUsername,
 	expect,
 	insertNewUser,
-	makeLoginForm,
 	readEmail,
 	test,
 } from '../test-utils'
@@ -16,7 +15,15 @@ function extractUrl(text: string) {
 }
 
 test('onboarding', async ({ page }) => {
-	const loginForm = makeLoginForm()
+	const firstName = faker.name.firstName()
+	const lastName = faker.name.lastName()
+	const username = faker.internet.userName(firstName, lastName).slice(0, 15)
+	const loginForm = {
+		name: `${firstName} ${lastName}`,
+		username,
+		email: `${username}@example.com`,
+		password: faker.internet.password(),
+	}
 
 	await page.goto('/')
 

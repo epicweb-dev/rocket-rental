@@ -1,4 +1,3 @@
-import type * as P from '@prisma/client'
 import { faker } from '@faker-js/faker'
 import bcrypt from 'bcryptjs'
 import { type PrismaClient } from '@prisma/client'
@@ -21,10 +20,7 @@ export async function downloadFile(
 	}
 }
 
-export function createContactInfo(): Omit<
-	P.ContactInfo,
-	'id' | 'userId' | 'createdAt' | 'updatedAt'
-> {
+export function createContactInfo() {
 	return {
 		address: faker.address.streetAddress(),
 		city: faker.address.city(),
@@ -39,7 +35,7 @@ export function createUser({
 	gender = faker.helpers.arrayElement(['female', 'male']) as 'female' | 'male',
 }: {
 	gender?: 'male' | 'female'
-} = {}): Omit<P.User, 'id' | 'createdAt' | 'updatedAt' | 'imageId'> {
+} = {}) {
 	const firstName = faker.name.firstName(gender)
 	const lastName = faker.name.lastName()
 

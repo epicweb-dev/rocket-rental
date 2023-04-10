@@ -1,4 +1,4 @@
-import { test, loginPage, expect, runPrisma } from '../test-utils'
+import { test, loginPage, expect, prisma } from '../test-utils'
 import { faker } from '@faker-js/faker'
 
 test('multi-user chat', async ({ browser, page: renterPage, baseURL }) => {
@@ -7,13 +7,11 @@ test('multi-user chat', async ({ browser, page: renterPage, baseURL }) => {
 	const renterUser = await loginPage({ page: renterPage, baseURL })
 	const hostUser = await loginPage({ page: hostPage, baseURL })
 
-	await runPrisma(async prisma => {
-		await prisma.renter.create({
-			data: { userId: renterUser.id },
-		})
-		await prisma.host.create({
-			data: { userId: hostUser.id },
-		})
+	await prisma.renter.create({
+		data: { userId: renterUser.id },
+	})
+	await prisma.host.create({
+		data: { userId: hostUser.id },
 	})
 
 	// go to another user's page and start a chat:

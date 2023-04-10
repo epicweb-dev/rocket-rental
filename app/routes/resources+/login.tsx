@@ -100,6 +100,7 @@ export function InlineLogin({
 				<loginFetcher.Form
 					method="POST"
 					action="/resources/login"
+					name="login"
 					{...form.props}
 				>
 					<Field
