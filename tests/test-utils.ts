@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 import { parse } from 'cookie'
 import { authenticator } from '~/utils/auth.server'
 import { commitSession, getSession } from '~/utils/session.server'
+import { z } from 'zod'
 import { readFixture } from '../mocks/utils'
 import { createContactInfo, createUser } from '../prisma/seed-utils'
 
@@ -18,19 +19,18 @@ export const dataCleanup = {
 	chats: new Set<string>(),
 }
 
-type Email = {
-	to: string
-	from: string
-	subject: string
-	text: string
-	html: string
-}
+const emailSchema = z.object({
+	to: z.string(),
+	from: z.string(),
+	subject: z.string(),
+	text: z.string(),
+	html: z.string(),
+})
 
 export async function readEmail(recipient: string) {
 	try {
-		// TODO: add validation
-		const email = await readFixture(recipient)
-		return email as Email
+		const email = await readFixture('email', recipient)
+		return emailSchema.parse(email)
 	} catch (error) {
 		console.error(`Error reading email`, error)
 		return null

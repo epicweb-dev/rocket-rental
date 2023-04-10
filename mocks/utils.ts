@@ -1,5 +1,6 @@
 import dns from 'dns'
 import fs from 'fs'
+import fsExtra from 'fs-extra'
 import path from 'path'
 
 let connected: boolean | null = null
@@ -17,18 +18,24 @@ export async function isConnectedToTheInternet() {
 
 const fixturesDirPath = path.join(__dirname, `./fixtures`)
 
-export async function readFixture(name: string) {
+export async function readFixture(subdir: string, name: string) {
 	return JSON.parse(
 		await fs.promises.readFile(
-			path.join(fixturesDirPath, `${name}.json`),
+			path.join(fixturesDirPath, subdir, `${name}.json`),
 			'utf8',
 		),
 	)
 }
 
-export function createFixture(name: string, data: unknown) {
+export async function createFixture(
+	subdir: string,
+	name: string,
+	data: unknown,
+) {
+	const dir = path.join(fixturesDirPath, subdir)
+	await fsExtra.ensureDir(dir)
 	return fs.promises.writeFile(
-		path.join(fixturesDirPath, `./${name}.json`),
+		path.join(dir, `./${name}.json`),
 		JSON.stringify(data, null, 2),
 	)
 }

@@ -1,5 +1,6 @@
 import { rest } from 'msw'
 import { setupServer } from 'msw/node'
+import closeWithGrace from 'close-with-grace'
 import { createFixture } from './utils'
 
 const miscHandlers = [
@@ -11,7 +12,7 @@ const miscHandlers = [
 
 			const { to } = body
 			if (typeof to === 'string') {
-				await createFixture(to, body)
+				await createFixture('email', to, body)
 			}
 			const randomId = '20210321210543.1.E01B8B612C44B41B'
 			const id = `<${randomId}>@${req.params.domain}`
@@ -25,5 +26,6 @@ const server = setupServer(...miscHandlers)
 server.listen({ onUnhandledRequest: 'warn' })
 console.info('🔶 Mock server installed')
 
-process.once('SIGINT', () => server.close())
-process.once('SIGTERM', () => server.close())
+closeWithGrace(() => {
+	server.close()
+})

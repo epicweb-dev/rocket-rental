@@ -13,7 +13,7 @@ node_modules
 /test-results/
 /playwright-report/
 /playwright/.cache/
-/mocks/fixtures/*.json
+/mocks/fixtures/email/*.json
 /coverage
 /prisma/data.db.bkp
 
