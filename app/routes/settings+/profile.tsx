@@ -189,7 +189,7 @@ export default function EditUserProfile() {
 	const isSubmitting =
 		navigation.state === 'submitting' &&
 		navigation.formAction === formAction &&
-		navigation.formMethod === 'post'
+		navigation.formMethod === 'POST'
 
 	const prevWasHost = usePreviousValue(Boolean(data.user.host))
 	const isNewHost = !prevWasHost && Boolean(data.user.host)
@@ -242,7 +242,7 @@ export default function EditUserProfile() {
 						</Link>
 					</div>
 				</div>
-				<Form method="post" {...form.props}>
+				<Form method="POST" {...form.props}>
 					<div className="grid grid-cols-6 gap-x-10">
 						<Field
 							className="col-span-3"
@@ -475,12 +475,12 @@ export default function EditUserProfile() {
 				</Form>
 
 				<createHostFetcher.Form
-					method="post"
+					method="POST"
 					action={createHost.ROUTE_PATH}
 					id={createHostFormId}
 				/>
 				<createRenterFetcher.Form
-					method="post"
+					method="POST"
 					action={createRenter.ROUTE_PATH}
 					id={createRenterFormId}
 				/>

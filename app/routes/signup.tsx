@@ -141,7 +141,7 @@ export default function SignupRoute() {
 						</p>
 					</div>
 					<signupFetcher.Form
-						method="post"
+						method="POST"
 						className="mx-auto mt-16 min-w-[368px] max-w-sm"
 						{...form.props}
 					>

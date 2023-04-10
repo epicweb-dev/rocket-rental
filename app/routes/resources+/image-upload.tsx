@@ -48,7 +48,7 @@ export function ImageUpload() {
 
 	return (
 		<fetcher.Form
-			method="post"
+			method="POST"
 			encType="multipart/form-data"
 			action="/resources/image-upload"
 		>

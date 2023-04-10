@@ -142,7 +142,7 @@ export default function ChatRoute() {
 			</ul>
 			<hr />
 			<messageFetcher.Form
-				method="post"
+				method="POST"
 				onSubmit={event => {
 					const form = event.currentTarget
 					requestAnimationFrame(() => {

@@ -54,7 +54,7 @@ export default function ShipIndexRoute() {
 	return (
 		<div>
 			<p>Book this rocket</p>
-			<Form method="post">
+			<Form method="POST">
 				<Booker
 					shipId={shipId}
 					initialIsAvailable={data.isAvailableInRange}

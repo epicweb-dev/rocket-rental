@@ -19,7 +19,7 @@ export default function Index() {
 				</div>
 				<Spacer size="lg" />
 				<Form
-					method="get"
+					method="GET"
 					action="/search"
 					className="mx-auto flex h-20 w-[80vw] max-w-5xl items-center rounded-full bg-white py-5"
 				>

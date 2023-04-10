@@ -98,7 +98,7 @@ export function InlineLogin({
 		<div>
 			<div className="mx-auto w-full max-w-md px-8">
 				<loginFetcher.Form
-					method="post"
+					method="POST"
 					action="/resources/login"
 					{...form.props}
 				>

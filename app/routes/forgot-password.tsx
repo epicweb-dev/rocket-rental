@@ -143,7 +143,7 @@ export default function SignupRoute() {
 							</p>
 						</div>
 						<forgotPassword.Form
-							method="post"
+							method="POST"
 							{...form.props}
 							className="mx-auto mt-16 min-w-[368px] max-w-sm"
 						>

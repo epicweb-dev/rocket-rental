@@ -278,7 +278,7 @@ export function Reviewer({
 				<h3>Review {reviewee.name ?? type}</h3>
 			</div>
 			<reviewFetcher.Form
-				method="post"
+				method="POST"
 				action="/resources/reviewer"
 				aria-label={FORM_NAME[type]}
 				{...form.props}

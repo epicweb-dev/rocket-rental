@@ -41,7 +41,7 @@ export default function UserRoute() {
 				<div className="container mx-auto flex justify-end">
 					<div className="flex justify-between gap-6">
 						{data.isSelf ? (
-							<Form action="/logout" method="post">
+							<Form action="/logout" method="POST">
 								<Button type="submit" size="pill" variant="secondary">
 									Logout
 								</Button>

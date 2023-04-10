@@ -24,7 +24,7 @@ export async function sendEmail({
 	return fetch(
 		`https://api.mailgun.net/v3/${process.env.MAILGUN_DOMAIN}/messages`,
 		{
-			method: 'post',
+			method: 'POST',
 			body,
 			headers: {
 				Authorization: `Basic ${auth}`,

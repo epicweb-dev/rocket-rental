@@ -62,7 +62,7 @@ export default function UsernameIndex() {
 						✏️ Create your profile
 					</Link>
 					<Spacer size="4xs" />
-					<Form action="/logout" method="post">
+					<Form action="/logout" method="POST">
 						<Button type="submit" size="pill" variant="secondary">
 							Logout
 						</Button>

@@ -446,7 +446,7 @@ export default function ShipsRoute() {
 									lat: geo.lat.toString(),
 									long: geo.long.toString(),
 								},
-								{ method: 'post' },
+								{ method: 'POST' },
 							)
 						})
 					}}

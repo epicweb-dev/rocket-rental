@@ -268,7 +268,7 @@ function UserDropdown() {
 					<DropdownMenu.Item asChild>
 						<Form
 							action="/logout"
-							method="post"
+							method="POST"
 							className="rounded-b-3xl py-5 px-7 outline-none radix-highlighted:bg-night-500"
 							onClick={e => submit(e.currentTarget)}
 						>

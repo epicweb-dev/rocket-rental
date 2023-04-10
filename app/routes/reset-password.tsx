@@ -112,7 +112,7 @@ export default function ResetPasswordPage() {
 				</p>
 			</div>
 			<Form
-				method="post"
+				method="POST"
 				className="mx-auto mt-16 min-w-[368px] max-w-sm"
 				{...form.props}
 			>
@@ -149,7 +149,7 @@ export default function ResetPasswordPage() {
 					status={
 						navigation.state === 'submitting' &&
 						navigation.formAction === formAction &&
-						navigation.formMethod === 'post'
+						navigation.formMethod === 'POST'
 							? 'pending'
 							: actionData?.status ?? 'idle'
 					}

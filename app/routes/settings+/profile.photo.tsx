@@ -147,7 +147,7 @@ export default function PhotoChooserModal() {
 						<h2 className="text-h2">Profile photo</h2>
 					</Dialog.Title>
 					<Form
-						method="post"
+						method="POST"
 						encType="multipart/form-data"
 						className="mt-8 flex flex-col items-center justify-center gap-10"
 						onReset={() => setNewImageSrc(null)}
@@ -219,7 +219,7 @@ export default function PhotoChooserModal() {
 				</Dialog.Content>
 			</Dialog.Portal>
 			<deleteImageFetcher.Form
-				method="post"
+				method="POST"
 				id={deleteProfilePhotoFormId}
 				action={deleteImageRoute.ROUTE_PATH}
 			>

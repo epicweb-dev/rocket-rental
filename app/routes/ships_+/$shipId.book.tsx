@@ -6,7 +6,7 @@ import invariant from 'tiny-invariant'
 import {
 	bookingSessionKey,
 	getIsShipAvailable,
-	validateBookerForm
+	validateBookerForm,
 } from '~/routes/resources+/booker'
 import { InlineLogin } from '~/routes/resources+/login'
 import { requireUserId } from '~/utils/auth.server'
@@ -137,7 +137,7 @@ export default function ShipBookRoute() {
 	return (
 		<div>
 			{user ? (
-				<Form method="post">
+				<Form method="POST">
 					<input type="hidden" name="shipId" value={data.shipId} />
 					<input type="hidden" name="startDate" value={data.startDate} />
 					<input type="hidden" name="endDate" value={data.endDate} />

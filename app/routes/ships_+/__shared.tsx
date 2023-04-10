@@ -48,7 +48,7 @@ export default function ShipEditForm({
 
 	return (
 		<Form
-			method="post"
+			method="POST"
 			className="flex flex-col gap-4"
 			encType="multipart/form-data"
 			{...form.props}

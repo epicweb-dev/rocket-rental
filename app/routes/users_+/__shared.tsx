@@ -96,7 +96,7 @@ export function UserProfileBasicInfo({
 									✉️ Message
 								</ButtonLink>
 							) : userLoggedIn ? (
-								<Form method="post">
+								<Form method="POST">
 									<Button
 										variant="primary"
 										size="xs"

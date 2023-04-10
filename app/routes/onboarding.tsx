@@ -148,7 +148,7 @@ export default function OnboardingPage() {
 				</div>
 				<Spacer size="xs" />
 				<Form
-					method="post"
+					method="POST"
 					className="mx-auto min-w-[368px] max-w-sm"
 					{...form.props}
 				>
@@ -238,7 +238,7 @@ export default function OnboardingPage() {
 							status={
 								navigation.state === 'submitting' &&
 								navigation.formAction === formAction &&
-								navigation.formMethod === 'post'
+								navigation.formMethod === 'POST'
 									? 'pending'
 									: actionData?.status ?? 'idle'
 							}

@@ -139,7 +139,7 @@ export function Booker({
 				endDate: endDateInput.value,
 			},
 			{
-				method: 'post',
+				method: 'POST',
 				action: '/resources/booker',
 			},
 		)
