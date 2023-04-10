@@ -47,8 +47,7 @@ export const links: LinksFunction = () => {
 export const meta: V2_MetaFunction = () => {
 	return [
 		{ title: 'Rocket Rental' },
-		{ charSet: 'utf-8' },
-		{ name: 'viewport', content: 'width=device-width,initial-scale=1' },
+		{ name: 'description', content: 'Find yourself in outer space' },
 	]
 }
 
@@ -78,6 +77,8 @@ export default function App() {
 		<html lang="en" className="dark h-full">
 			<head>
 				<Meta />
+				<meta charSet="utf-8" />
+				<meta name="viewport" content="width=device-width,initial-scale=1" />
 				<Links />
 			</head>
 			<body className="flex h-full flex-col justify-between bg-night-700 text-white">

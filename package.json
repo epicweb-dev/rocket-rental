@@ -10,7 +10,7 @@
     "build:server": "tsx ./other/build-server.ts",
     "dev": "cross-env NODE_ENV=development run-p dev:*",
     "dev:server": "cross-env MOCKS=true tsx watch --clear-screen=false --ignore \"app/**\" --ignore \"build/**\" --ignore \"node_modules/**\" ./index.js",
-    "dev:remix": "remix dev",
+    "dev:remix": "cross-env PORT=\"\" remix dev",
     "format": "prettier --write .",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
     "setup": "prisma generate && prisma migrate deploy && prisma db seed",

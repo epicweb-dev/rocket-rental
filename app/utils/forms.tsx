@@ -57,7 +57,7 @@ export function useForm<Key extends string>({
 			props: {
 				noValidate: hydrated,
 				'aria-invalid': hasFormErrors ? true : undefined,
-				'aria-errormessage': hasFormErrors ? errorElId : undefined,
+				'aria-describedby': hasFormErrors ? errorElId : undefined,
 				tabIndex: hasFormErrors ? -1 : undefined,
 				ref: formRef,
 			},
@@ -87,12 +87,16 @@ export function useFocusInvalid(
 		]
 		if (!allErrors.length) return
 
-		if (formEl.getAttribute('aria-invalid')) {
+		if (formEl.matches('[aria-invalid="true"]')) {
 			formEl.focus()
 		} else {
-			const firstInvalidElement = formEl.querySelector('[aria-invalid]')
-			if (firstInvalidElement instanceof HTMLElement) {
-				firstInvalidElement.focus()
+			for (const formElement of formEl.elements) {
+				if (
+					formElement.matches('[aria-invalid="true"]') &&
+					formElement instanceof HTMLElement
+				) {
+					formElement.focus()
+				}
 			}
 		}
 	}, [formEl, errors])
@@ -423,7 +427,7 @@ export function getFields<Key extends string>(
 				id,
 				name,
 				'aria-invalid': fieldErrors.length ? true : undefined,
-				'aria-errormessage': fieldErrors.length ? errorElId : undefined,
+				'aria-describedby': fieldErrors.length ? errorElId : undefined,
 			},
 			labelProps: { htmlFor: id },
 			errors: fieldErrors,
@@ -453,7 +457,7 @@ export function Field({
 			<input
 				id={id}
 				aria-invalid={errorId ? true : undefined}
-				aria-errormessage={errorId}
+				aria-describedby={errorId}
 				placeholder=" "
 				{...inputProps}
 				className="h-16 w-full rounded-lg border border-night-400 bg-night-700 px-4 pt-4 text-body-xs caret-white outline-none focus:border-accent-purple disabled:bg-night-400"
@@ -486,7 +490,7 @@ export function TextareaField({
 			<textarea
 				id={id}
 				aria-invalid={errorId ? true : undefined}
-				aria-errormessage={errorId}
+				aria-describedby={errorId}
 				placeholder=" "
 				{...textareaProps}
 				className="h-48 w-full rounded-lg border border-night-400 bg-night-700 px-4 pt-8 text-body-xs caret-white outline-none focus:border-accent-purple disabled:bg-night-400"
@@ -523,7 +527,7 @@ export function CheckboxField({
 				<Checkbox.Root
 					id={id}
 					aria-invalid={errorId ? true : undefined}
-					aria-errormessage={errorId}
+					aria-describedby={errorId}
 					{...buttonProps}
 					type="button"
 				>

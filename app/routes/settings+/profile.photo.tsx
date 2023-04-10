@@ -41,8 +41,7 @@ export async function loader({ request }: DataFunctionArgs) {
 		select: { imageId: true, name: true, username: true },
 	})
 	if (!user) {
-		await authenticator.logout(request, { redirectTo: '/' })
-		return redirect('/') // this is just here for types...
+		throw await authenticator.logout(request, { redirectTo: '/' })
 	}
 	return json({ user, fieldMetadatas: getFieldsFromSchema(PhotoFormSchema) })
 }

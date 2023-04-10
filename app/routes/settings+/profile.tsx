@@ -1,4 +1,4 @@
-import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
+import { json, type DataFunctionArgs } from '@remix-run/node'
 import {
 	Form,
 	Link,
@@ -101,8 +101,7 @@ export async function loader({ request }: DataFunctionArgs) {
 		},
 	})
 	if (!user) {
-		await authenticator.logout(request, { redirectTo: '/' })
-		return redirect('/') // this is just here for types...
+		throw await authenticator.logout(request, { redirectTo: '/' })
 	}
 	return json({ user, fieldMetadatas: getFieldsFromSchema(ProfileFormSchema) })
 }
@@ -356,7 +355,7 @@ export default function EditUserProfile() {
 											variant="secondary"
 											type="submit"
 											form={createHostFormId}
-											aria-errormessage={
+											aria-describedby={
 												createHostFetcher.data?.status === 'error'
 													? 'create-host-error'
 													: undefined
@@ -403,7 +402,7 @@ export default function EditUserProfile() {
 											variant="secondary"
 											type="submit"
 											form={createRenterFormId}
-											aria-errormessage={
+											aria-describedby={
 												createRenterFetcher.data?.status === 'error'
 													? 'create-renter-error'
 													: undefined

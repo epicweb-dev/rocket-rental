@@ -30,13 +30,8 @@ export async function loader({ request }: DataFunctionArgs) {
 	)
 }
 
-export const meta: V2_MetaFunction = ({ matches }) => {
-	let rootModule = matches.find(match => match.route.id === 'root')
-
-	return [
-		...(rootModule?.meta ?? [])?.filter(meta => !('title' in meta)),
-		{ title: 'Login to Rocket Rental' },
-	]
+export const meta: V2_MetaFunction = () => {
+	return [{ title: 'Login to Rocket Rental' }]
 }
 
 export default function LoginPage() {

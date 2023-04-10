@@ -1,3 +1,4 @@
+import { json, type DataFunctionArgs } from '@remix-run/node'
 import {
 	Form,
 	NavLink,
@@ -6,12 +7,10 @@ import {
 	useMatches,
 } from '@remix-run/react'
 import clsx from 'clsx'
-import { GeneralErrorBoundary } from '~/components/error-boundary'
-import type { DataFunctionArgs, V2_MetaFunction } from '@remix-run/node'
-import { json } from '@remix-run/node'
 import invariant from 'tiny-invariant'
-import { prisma } from '~/utils/db.server'
+import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { getUserId } from '~/utils/auth.server'
+import { prisma } from '~/utils/db.server'
 import { Button } from '~/utils/forms'
 
 export async function loader({ request, params }: DataFunctionArgs) {
@@ -94,14 +93,4 @@ export function ErrorBoundary() {
 			}}
 		/>
 	)
-}
-
-export const meta: V2_MetaFunction<typeof loader> = ({ data }) => {
-	return [
-		{ title: `${data.displayName} | Rocket Rental` },
-		{
-			name: 'description',
-			content: `Hop in a rocket with ${data.displayName} on Rocket Rental`,
-		},
-	]
 }

@@ -87,13 +87,8 @@ export async function action({ request }: DataFunctionArgs) {
 	})
 }
 
-export const meta: V2_MetaFunction = ({ matches }) => {
-	let rootModule = matches.find(match => match.route.id === 'root')
-
-	return [
-		...(rootModule?.meta ?? [])?.filter(meta => !('title' in meta)),
-		{ title: 'Reset Password | Rocket Rental' },
-	]
+export const meta: V2_MetaFunction = () => {
+	return [{ title: 'Reset Password | Rocket Rental' }]
 }
 
 export default function ResetPasswordPage() {

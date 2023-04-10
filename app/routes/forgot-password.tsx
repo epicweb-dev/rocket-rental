@@ -109,13 +109,8 @@ async function sendPasswordResetEmail({
 	})
 }
 
-export const meta: V2_MetaFunction = ({ matches }) => {
-	let rootModule = matches.find(match => match.route.id === 'root')
-
-	return [
-		...(rootModule?.meta ?? [])?.filter(meta => !('title' in meta)),
-		{ title: 'Password Recovery for Rocket Rental' },
-	]
+export const meta: V2_MetaFunction = () => {
+	return [{ title: 'Password Recovery for Rocket Rental' }]
 }
 
 export default function SignupRoute() {

@@ -4,21 +4,21 @@ import bcrypt from 'bcryptjs'
 import { type PrismaClient } from '@prisma/client'
 
 export async function downloadFile(
-  url: string,
-  retries: number = 0,
+	url: string,
+	retries: number = 0,
 ): Promise<Buffer> {
-  const MAX_RETRIES = 3
-  try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image with status ${response.status}`)
-    }
-    const blob = Buffer.from(await response.arrayBuffer())
-    return blob
-  } catch (e) {
-    if (retries > MAX_RETRIES) throw e
-    return downloadFile(url, retries + 1)
-  }
+	const MAX_RETRIES = 3
+	try {
+		const response = await fetch(url)
+		if (!response.ok) {
+			throw new Error(`Failed to fetch image with status ${response.status}`)
+		}
+		const blob = Buffer.from(await response.arrayBuffer())
+		return blob
+	} catch (e) {
+		if (retries > MAX_RETRIES) throw e
+		return downloadFile(url, retries + 1)
+	}
 }
 
 export function createContactInfo(): Omit<
@@ -101,7 +101,7 @@ export function createStarport() {
 
 export function createPassword(username: string = faker.internet.userName()) {
 	return {
-		hash: bcrypt.hashSync(username.toUpperCase(), 10),
+		hash: bcrypt.hashSync(username, 10),
 	}
 }
 

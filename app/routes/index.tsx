@@ -1,15 +1,10 @@
 import * as Tabs from '@radix-ui/react-tabs'
-import { type V2_MetaFunction } from '@remix-run/node'
 import { Form, Link } from '@remix-run/react'
 import clsx from 'clsx'
 import { useRef, useState } from 'react'
 import { Spacer } from '~/components/spacer'
 import { ButtonLink } from '~/utils/forms'
 import styles from './index.module.css'
-
-export const meta: V2_MetaFunction = ({ matches }) => {
-	return matches.find(match => match.route.id === 'root')?.meta ?? []
-}
 
 export default function Index() {
 	return (
@@ -171,25 +166,25 @@ export default function Index() {
 						<div className="grid grid-cols-2 gap-6">
 							<div className="flex flex-col gap-6">
 								<div className="flex h-[160px] w-[216px] flex-col items-center justify-center gap-1 rounded-3xl bg-night-500">
-									<img className="aspect-square w-16" src="" />
+									<img className="aspect-square w-16" src="" alt="Zheng" />
 									<span className="uppercase">Zheng</span>
 								</div>
 								<div className="flex h-[160px] w-[216px] flex-col items-center justify-center gap-1 rounded-3xl bg-night-500">
-									<img className="aspect-square w-16" src="" />
+									<img className="aspect-square w-16" src="" alt="Oribtalis" />
 									<span className="uppercase">Oribtalis</span>
 								</div>
 								<div className="flex h-[160px] w-[216px] flex-col items-center justify-center gap-1 rounded-3xl bg-night-500">
-									<img className="aspect-square w-16" src="" />
+									<img className="aspect-square w-16" src="" alt="Cosmic" />
 									<span className="uppercase">Cosmic</span>
 								</div>
 							</div>
 							<div className="flex flex-col gap-6 pt-16">
 								<div className="flex h-64 w-64 flex-col items-center justify-center gap-10 rounded-3xl bg-night-500">
-									<img className="aspect-square w-24" src="" />
+									<img className="aspect-square w-24" src="" alt="Asteroid" />
 									<span className="uppercase">Asteroid</span>
 								</div>
 								<div className="flex h-64 w-64 flex-col items-center justify-center gap-10 rounded-3xl bg-night-500">
-									<img className="aspect-square w-24" src="" />
+									<img className="aspect-square w-24" src="" alt="Spaceship" />
 									<span className="uppercase">Spaceship</span>
 								</div>
 							</div>
@@ -437,7 +432,11 @@ function StarportListSection() {
 								width: STARPORT_CARD_WIDTH,
 							}}
 						>
-							<img className="aspect-[35/31] rounded-3xl" src={s.imageSrc} />
+							<img
+								className="aspect-[35/31] rounded-3xl"
+								src={s.imageSrc}
+								alt={s.name}
+							/>
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
 								<h3 className="text-h5 line-clamp-1">{s.name}</h3>
@@ -722,7 +721,11 @@ function RocketModelsSection() {
 							key={ship.name}
 							className="flex max-w-sm flex-col rounded-3xl bg-night-500"
 						>
-							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
+							<img
+								className="aspect-[35/31] rounded-3xl"
+								src={ship.imageSrc}
+								alt={ship.name}
+							/>
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
 								<h3 className="text-h5 line-clamp-1">{ship.name}</h3>
@@ -739,7 +742,11 @@ function RocketModelsSection() {
 							key={ship.name}
 							className="flex max-w-sm flex-col rounded-3xl bg-night-500"
 						>
-							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
+							<img
+								className="aspect-[35/31] rounded-3xl"
+								src={ship.imageSrc}
+								alt={ship.name}
+							/>
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
 								<h3 className="text-h5 line-clamp-1">{ship.name}</h3>
@@ -756,7 +763,11 @@ function RocketModelsSection() {
 							key={ship.name}
 							className="flex max-w-sm flex-col rounded-3xl bg-night-500"
 						>
-							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
+							<img
+								className="aspect-[35/31] rounded-3xl"
+								src={ship.imageSrc}
+								alt={ship.name}
+							/>
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
 								<h3 className="text-h5 line-clamp-1">{ship.name}</h3>
@@ -773,7 +784,11 @@ function RocketModelsSection() {
 							key={ship.name}
 							className="flex max-w-sm flex-col rounded-3xl bg-night-500"
 						>
-							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
+							<img
+								className="aspect-[35/31] rounded-3xl"
+								src={ship.imageSrc}
+								alt={ship.name}
+							/>
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
 								<h3 className="text-h5 line-clamp-1">{ship.name}</h3>
@@ -790,7 +805,11 @@ function RocketModelsSection() {
 							key={ship.name}
 							className="flex max-w-sm flex-col rounded-3xl bg-night-500"
 						>
-							<img className="aspect-[35/31] rounded-3xl" src={ship.imageSrc} />
+							<img
+								className="aspect-[35/31] rounded-3xl"
+								src={ship.imageSrc}
+								alt={ship.name}
+							/>
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
 								<h3 className="text-h5 line-clamp-1">{ship.name}</h3>
@@ -881,7 +900,11 @@ function Testimonials() {
 					>
 						<p className="quote line-clamp-5">{testimonial}</p>
 						<div className="flex gap-4">
-							<img className="h-14 w-14 rounded-full" src={host.imageSrc} />
+							<img
+								className="h-14 w-14 rounded-full"
+								src={host.imageSrc}
+								alt={host.name}
+							/>
 							<div className="flex flex-col gap-1">
 								<h3 className="font-bold">{host.name}</h3>
 								<p className="text-body-xs text-night-200">{host.subtitle}</p>

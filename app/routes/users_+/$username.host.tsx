@@ -1,7 +1,10 @@
 import * as Separator from '@radix-ui/react-separator'
-import { json, type DataFunctionArgs } from '@remix-run/node'
+import {
+	json,
+	type DataFunctionArgs,
+	type V2_MetaFunction,
+} from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
-import { V2_MetaFunction } from '@remix-run/server-runtime'
 import invariant from 'tiny-invariant'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
 import { StarRatingDisplay } from '~/components/star-rating-display'
@@ -187,6 +190,7 @@ export default function HostUser() {
 									<img
 										className="aspect-[35/31] rounded-3xl"
 										src={getShipImgSrc(ship.imageId)}
+										alt={ship.name}
 									/>
 								</Link>
 								<div className="h-10" />
@@ -282,8 +286,7 @@ export function ErrorBoundary() {
 }
 
 export const meta: V2_MetaFunction<typeof loader> = ({ data, params }) => {
-	const { username } = params
-	const displayName = data?.user.name ?? username
+	const displayName = data?.user.name ?? params.username
 	return [
 		{ title: `${displayName} | Rocket Rental Host` },
 		{

@@ -49,8 +49,8 @@
 	@apply border-accent-pink bg-accent-pink;
 }
 
-.field input[aria-errormessage],
-.textareaField textarea[aria-errormessage],
-.checkboxField button[aria-errormessage] {
+.field input[aria-invalid='true'],
+.textareaField textarea[aria-invalid='true'],
+.checkboxField button[aria-invalid='true'] {
 	@apply border-accent-red;
 }
