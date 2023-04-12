@@ -3,7 +3,7 @@
 		"remix.env.d.ts",
 		"**/*.ts",
 		"**/*.tsx",
-		"./test/setup-test-env.ts"
+		"./other/test-setup/setup-test-env.ts"
 	],
 	"compilerOptions": {
 		"lib": ["DOM", "DOM.Iterable", "ES2019"],
@@ -23,7 +23,7 @@
 		"paths": {
 			"~/*": ["./app/*"],
 			"prisma/*": ["./prisma/*"],
-			"test/*": ["./test/*"]
+			"tests/*": ["./tests/*"]
 		},
 		"skipLibCheck": true,
 

@@ -11,7 +11,7 @@ import {
 	lockifyFakerImage,
 	oneDay,
 } from 'prisma/seed-utils'
-import { BASE_URL } from 'test/utils'
+import { BASE_URL } from 'tests/vitest-utils'
 import { test } from 'vitest'
 import { bookingSessionKey } from '~/routes/resources+/booker'
 import { prisma } from '~/utils/db.server'
