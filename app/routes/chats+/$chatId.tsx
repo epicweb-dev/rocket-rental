@@ -1,5 +1,12 @@
 import { json, type DataFunctionArgs } from '@remix-run/node'
-import { useFetcher, useLoaderData, useParams } from '@remix-run/react'
+import {
+	Link,
+	useFetcher,
+	useLoaderData,
+	useNavigation,
+	useParams,
+} from '@remix-run/react'
+import { useSpinDelay } from 'spin-delay'
 import { useState } from 'react'
 import invariant from 'tiny-invariant'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
@@ -7,12 +14,13 @@ import { requireUserId } from '~/utils/auth.server'
 import { chatEmitter, EVENTS } from '~/utils/chat.server'
 import { prisma } from '~/utils/db.server'
 import { useEventSource } from '~/utils/hooks'
-import { getUserImgSrc } from '~/utils/misc'
+import { getUserImgSrc, listify, useUser } from '~/utils/misc'
 import {
 	isNewMessageChange,
 	type Message,
 	type NewMessageChange,
 } from './$chatId.events'
+import clsx from 'clsx'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.chatId, 'Missing chatId')
@@ -21,7 +29,9 @@ export async function loader({ request, params }: DataFunctionArgs) {
 		where: { id: params.chatId, users: { some: { id: userId } } },
 		select: {
 			id: true,
-			users: { select: { id: true, name: true, imageId: true } },
+			users: {
+				select: { id: true, username: true, name: true, imageId: true },
+			},
 			messages: { select: { id: true, senderId: true, content: true } },
 		},
 	})
@@ -76,8 +86,17 @@ export default function ChatRoute() {
 	invariant(chatId, 'Missing chatId')
 
 	const data = useLoaderData<typeof loader>()
+	const user = useUser()
+	const otherUsers = data.chat.users.filter(u => u.id !== user.id)
 	const messageFetcher = useFetcher<typeof action>()
 	const [changes, setChanges] = useState<Array<NewMessageChange>>([])
+
+	const navigation = useNavigation()
+
+	const showSpinner = useSpinDelay(navigation.state === 'loading', {
+		delay: 200,
+		minDuration: 300,
+	})
 
 	useEventSource(`/chats/${chatId}/events`, event => {
 		let change: unknown
@@ -111,50 +130,62 @@ export default function ChatRoute() {
 	}
 
 	return (
-		<div>
-			<h2>Chat</h2>
-			<details>
-				<summary>Chat data</summary>
-				<pre>{JSON.stringify(data, null, 2)}</pre>
-			</details>
-			<hr />
-			<ul className="flex flex-col">
-				{messages.map(message => {
-					const sender = data.chat.users.find(
-						user => user.id === message.senderId,
-					)
-					return (
-						<li key={message.id} className="flex items-center">
-							<img
-								src={getUserImgSrc(sender?.imageId)}
-								alt={sender?.name ?? 'Unknown user'}
-								className="h-8 w-8 rounded-full"
-							/>
-							<div className="ml-2">{message.content}</div>
-						</li>
-					)
-				})}
-			</ul>
-			<hr />
-			<messageFetcher.Form
-				method="POST"
-				onSubmit={event => {
-					const form = event.currentTarget
-					requestAnimationFrame(() => {
-						form.reset()
-					})
-				}}
-			>
-				<input
-					type="text"
-					name="content"
-					placeholder="Type a message..."
-					className="w-full"
-				/>
-				<button name="intent" value="send-message" type="submit">
-					Send
-				</button>
-			</messageFetcher.Form>
+		<div className={clsx('flex flex-col', showSpinner ? 'opacity-50' : '')}>
+			<div className="flex h-20 items-center justify-between border-b-[1.5px] border-b-night-400 px-8">
+				<div className="flex items-center gap-4">
+					<img
+						className="h-12 w-12 rounded-full object-cover"
+						src={getUserImgSrc(otherUsers[0]?.imageId)}
+						alt={
+							otherUsers[0]?.name ?? otherUsers[0]?.username ?? 'Unknown user'
+						}
+					/>
+					<h2 className="text-body-md font-bold">
+						{listify(otherUsers, { stringify: u => u.name ?? u.username })}
+					</h2>
+				</div>
+			</div>
+			<div className="flex flex-1 flex-col justify-between">
+				<ul className="flex flex-1 flex-col gap-4 bg-night-600 px-8">
+					{messages.map(message => {
+						const sender = data.chat.users.find(
+							user => user.id === message.senderId,
+						)
+						return (
+							<li key={message.id} className="flex items-center">
+								<Link to={`/users/${sender?.id}`}>
+									<img
+										src={getUserImgSrc(sender?.imageId)}
+										alt={sender?.name ?? sender?.username ?? 'Unknown user'}
+										className="h-8 w-8 rounded-full object-cover"
+									/>
+								</Link>
+								<div className="ml-2 flex-1">{message.content}</div>
+							</li>
+						)
+					})}
+				</ul>
+				<messageFetcher.Form
+					method="POST"
+					onSubmit={event => {
+						const form = event.currentTarget
+						requestAnimationFrame(() => {
+							form.reset()
+						})
+					}}
+					className="flex gap-3 border-t-[0.3px] border-t-night-400 bg-night-500 px-6 py-3"
+				>
+					<input
+						type="text"
+						name="content"
+						placeholder="Type a message..."
+						className="w-full rounded-full bg-night-600 px-4 py-2"
+					/>
+					<button name="intent" value="send-message" type="submit">
+						<span title="Send">🚀</span>
+					</button>
+				</messageFetcher.Form>
+			</div>
 		</div>
 	)
 }

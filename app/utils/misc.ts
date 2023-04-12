@@ -1,5 +1,6 @@
 import { type SerializeFrom } from '@remix-run/node'
 import { useRouteLoaderData } from '@remix-run/react'
+import * as dateFns from 'date-fns'
 import { type loader as rootLoader } from '~/root'
 
 const DEFAULT_REDIRECT = '/'
@@ -110,4 +111,17 @@ export function listify<ItemType extends { toString(): string }>(
 	const stringified = array.map(item => stringify(item))
 	const formatter = new Intl.ListFormat('en', { style, type })
 	return formatter.format(stringified)
+}
+
+export function formatDate(dateString: string | Date, format = 'PPP') {
+	if (typeof dateString !== 'string') {
+		dateString = dateString.toISOString()
+	}
+	return dateFns.format(parseDate(dateString), format)
+}
+
+export function parseDate(dateString: string) {
+	return dateFns.add(dateFns.parseISO(dateString), {
+		minutes: new Date().getTimezoneOffset(),
+	})
 }
