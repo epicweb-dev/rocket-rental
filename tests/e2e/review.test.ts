@@ -12,7 +12,8 @@ import {
 	oneDay,
 } from 'prisma/seed-utils'
 import invariant from 'tiny-invariant'
-import { dataCleanup, expect, loginPage, prisma, test } from '../test-utils'
+import { dataCleanup, expect, loginPage, test } from '../playwright-utils'
+import { prisma } from '~/utils/db.server'
 
 test('Users can leave reviews and view them when they are all submitted', async ({
 	page: renterPage,

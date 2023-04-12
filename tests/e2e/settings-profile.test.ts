@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { expect, insertNewUser, test } from '../test-utils'
+import { expect, insertNewUser, test } from '../playwright-utils'
 import { createContactInfo, createUser } from '../../prisma/seed-utils'
 import { verifyLogin } from '~/utils/auth.server'
 

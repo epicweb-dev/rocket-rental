@@ -1,14 +1,12 @@
 import { test as base, type Page } from '@playwright/test'
-import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { parse } from 'cookie'
+import { z } from 'zod'
 import { authenticator } from '~/utils/auth.server'
 import { commitSession, getSession } from '~/utils/session.server'
-import { z } from 'zod'
+import { prisma } from '~/utils/db.server'
 import { readFixture } from '../mocks/utils'
 import { createContactInfo, createUser } from '../prisma/seed-utils'
-
-export const prisma = new PrismaClient()
 
 export const dataCleanup = {
 	users: new Set<string>(),

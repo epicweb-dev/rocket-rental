@@ -6,6 +6,7 @@ import matchers, {
 import 'dotenv/config'
 import fs from 'fs'
 import { db } from '~/utils/db.server'
+import { BASE_DATABASE_PATH, DATABASE_PATH } from './paths'
 
 declare global {
 	namespace Vi {
@@ -18,7 +19,7 @@ declare global {
 expect.extend(matchers)
 
 installGlobals()
-fs.copyFileSync('prisma/test/base.db', process.env.DATABASE_PATH)
+fs.copyFileSync(BASE_DATABASE_PATH, DATABASE_PATH)
 
 afterEach(() => {
 	db.exec(`
@@ -32,5 +33,5 @@ afterEach(() => {
 })
 
 afterAll(async () => {
-	await fs.promises.rm(process.env.DATABASE_PATH)
+	await fs.promises.rm(DATABASE_PATH)
 })

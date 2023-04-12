@@ -84,11 +84,11 @@ export default function ChatsRoute() {
 													})}
 												</div>
 												<time className="whitespace-nowrap text-xs text-night-300">
-													{chat.messages[0].formattedDate}
+													{chat.messages[0]?.formattedDate}
 												</time>
 											</div>
 											<div className="line-clamp-1 text-sm text-night-200 group-[.is-active]:text-white">
-												{chat.messages[0].content}
+												{chat.messages[0]?.content}
 											</div>
 										</div>
 									</NavLink>

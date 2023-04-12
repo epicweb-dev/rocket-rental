@@ -1,5 +1,6 @@
 import { spawn } from 'child_process'
-import fs from 'fs/promises'
+import fsExtra from 'fs-extra'
+import { BASE_DATABASE_PATH, BASE_DATABASE_URL } from './paths'
 
 export async function setup() {
 	await ensureDbReady()
@@ -8,16 +9,17 @@ export async function setup() {
 
 async function ensureDbReady() {
 	const command = 'npx prisma migrate reset --force --skip-seed --skip-generate'
-	process.env.DATABASE_PATH = `./prisma/test/base.db`
-	process.env.DATABASE_URL = `file:./test/base.db?connection_limit=1`
 
-	const exists = await fs.access(process.env.DATABASE_PATH).then(
-		() => true,
-		() => false,
-	)
-
-	if (!exists) {
-		const child = spawn(command, { shell: true, stdio: 'inherit' })
+	if (!(await fsExtra.pathExists(BASE_DATABASE_PATH))) {
+		const child = spawn(command, {
+			shell: true,
+			stdio: 'inherit',
+			env: {
+				...process.env,
+				DATABASE_PATH: BASE_DATABASE_PATH,
+				DATABASE_URL: BASE_DATABASE_URL,
+			},
+		})
 		return new Promise((resolve, reject) => {
 			child.on('error', reject)
 			child.on('exit', resolve)
