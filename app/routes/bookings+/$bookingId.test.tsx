@@ -10,7 +10,7 @@ import {
 	lockifyFakerImage,
 	oneDay,
 } from 'prisma/seed-utils'
-import { BASE_URL, getUserCookie } from 'test/utils'
+import { BASE_URL, getUserCookie } from 'tests/vitest-utils'
 import invariant from 'tiny-invariant'
 import { test } from 'vitest'
 import { prisma } from '~/utils/db.server'
