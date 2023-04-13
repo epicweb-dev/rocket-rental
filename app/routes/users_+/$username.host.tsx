@@ -1,18 +1,17 @@
-import * as Separator from '@radix-ui/react-separator'
 import {
 	json,
 	type DataFunctionArgs,
 	type V2_MetaFunction,
 } from '@remix-run/node'
-import { Link, useLoaderData } from '@remix-run/react'
+import { useLoaderData } from '@remix-run/react'
 import invariant from 'tiny-invariant'
 import { GeneralErrorBoundary } from '~/components/error-boundary'
-import { StarRatingDisplay } from '~/components/star-rating-display'
+import { ShipCard } from '~/components/ship-card'
 import { getUserId, requireUserId } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'
 import { ButtonLink } from '~/utils/forms'
-import { getShipImgSrc, useOptionalUser } from '~/utils/misc'
-import { createChat, Reviews, UserProfileBasicInfo } from './__shared'
+import { useOptionalUser } from '~/utils/misc'
+import { Reviews, UserProfileBasicInfo, createChat } from './__shared'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	const loggedInUserId = await getUserId(request)
@@ -192,65 +191,18 @@ export default function HostUser() {
 						? `${data.user.name ?? data.user.username}'s rockets`
 						: 'No rockets yet'}
 				</h2>
-				<div className="mt-10 flex flex-wrap justify-center gap-6">
+				<ul className="mt-10 flex flex-wrap justify-center gap-6">
 					{data.user.host.ships.length ? (
 						data.user.host.ships.slice(0, 9).map(ship => (
-							<div
-								key={ship.name}
-								className="flex max-w-sm flex-col rounded-3xl bg-night-500"
-							>
-								<Link to={`/ships/${ship.id}`}>
-									<img
-										className="aspect-[35/31] rounded-3xl"
-										src={getShipImgSrc(ship.imageId)}
-										alt={ship.name}
-									/>
-								</Link>
-								<div className="h-10" />
-								<div className="px-6 pb-8">
-									<div className="flex flex-col gap-2">
-										<div className="flex items-center gap-2">
-											<Link
-												to={`/search?${new URLSearchParams({
-													brandId: ship.model.brand.id,
-												})}`}
-											>
-												<p className="font-bold">{ship.model.brand.name}</p>
-											</Link>
-											<Separator.Root
-												orientation="vertical"
-												className="h-[16px] w-[1.5px] bg-night-400"
-											/>
-											<Link
-												to={`/search?${new URLSearchParams({
-													modelId: ship.model.id,
-												})}`}
-											>
-												<p className="text-night-200">{ship.model.name}</p>
-											</Link>
-										</div>
-										<Link to={`/ships/${ship.id}`}>
-											<h3 className="text-h4">{ship.name}</h3>
-										</Link>
-									</div>
-									<div className="mt-8 flex justify-between">
-										<div className="flex items-baseline gap-1">
-											<span className="text-h5">
-												{ship.dailyChargeFormatted}
-											</span>
-											<span className="text-night-200">day</span>
-										</div>
-										{ship.reviews.length ? (
-											<Link to={`/ships/${ship.id}/reviews`}>
-												<StarRatingDisplay
-													size="sm"
-													rating={ship.averageRating}
-												/>
-											</Link>
-										) : null}
-									</div>
-								</div>
-							</div>
+							<li key={ship.id}>
+								<ShipCard
+									ship={ship}
+									model={ship.model}
+									brand={ship.model.brand}
+									dailyChargeFormatted={ship.dailyChargeFormatted}
+									avgRating={ship.averageRating}
+								/>
+							</li>
 						))
 					) : (
 						<div className="text-center text-night-200">
@@ -259,7 +211,7 @@ export default function HostUser() {
 							} hasn't added any rockets yet.`}
 						</div>
 					)}
-				</div>
+				</ul>
 				{data.user.host.ships.length > 9 ? (
 					<div className="mt-20 text-center">
 						<ButtonLink

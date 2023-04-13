@@ -16,6 +16,7 @@ export type SearchComboboxProps<Item> = {
 	renderItemInList: (item: Item) => React.ReactNode
 	resourceUrl: string
 	additionalSearchParams?: Record<string, string | Array<string>> | null
+	placeholder?: string
 }
 
 export const SearchParamsSchema = z.object({
@@ -33,6 +34,7 @@ export function SearchCombobox<Item>({
 	renderItemInList,
 	resourceUrl,
 	additionalSearchParams,
+	placeholder,
 }: SearchComboboxProps<Item>) {
 	const fetcher = useFetcher()
 	const id = useId()
@@ -62,50 +64,59 @@ export function SearchCombobox<Item>({
 	useEffect(() => {
 		loadRef.current = fetcher.load
 	})
-	useEffect(() => loadRef.current(fetchUrl), [fetchUrl])
+
+	useEffect(() => {
+		loadRef.current(fetchUrl)
+	}, [fetchUrl])
 
 	const busy = fetcher.state !== 'idle'
+
 	const showSpinner = useSpinDelay(busy, {
 		delay: 150,
 		minDuration: 300,
 	})
 	const displayMenu = cb.isOpen && items.length > 0
 
+	const menuClassName =
+		'absolute z-10 mt-4 min-w-[448px] max-h-[336px] bg-white text-night-400 shadow-lg rounded-3xl w-full overflow-scroll divide-solid divide-night-100 divide-y'
+
 	return (
 		<div className="relative">
-			<div className="flex flex-wrap items-center gap-1">
-				<label {...cb.getLabelProps()}>{label}</label>
-			</div>
-			<div className="relative">
+			<div className="group relative">
+				<label
+					htmlFor={id}
+					className="absolute left-8 top-5 text-xs text-white group-focus-within:text-black"
+				>
+					{label}
+				</label>
 				<input
-					{...cb.getInputProps({
-						className: clsx('text-lg w-full border border-gray-500 px-2 py-1', {
-							'rounded-t rounded-b-0': displayMenu,
-							rounded: !displayMenu,
-						}),
-					})}
+					className="h-[88px] w-full rounded-full bg-night-500 pl-8 pr-5 pt-8 text-body-xs caret-black outline-none placeholder:text-night-300 focus:border-accent-purple focus:bg-white focus:text-night-500 focus:placeholder:text-night-500"
+					{...cb.getInputProps({ id, placeholder })}
 				/>
-				<Spinner showSpinner={showSpinner} />
+				<div className="absolute right-4 top-[44px]">
+					<Spinner showSpinner={showSpinner} />
+				</div>
+				{/* TODO: display errors */}
 			</div>
 			<ul
 				{...cb.getMenuProps({
-					className: clsx(
-						'absolute z-10 bg-white shadow-lg rounded-b w-full border border-t-0 border-gray-500 max-h-[180px] overflow-scroll',
-						{ hidden: !displayMenu },
-					),
+					className: clsx(menuClassName, { hidden: !displayMenu }),
 				})}
 			>
 				{displayMenu
 					? items.map((item, index) => (
 							<li
-								className={clsx(
-									'flex cursor-pointer items-center gap-2 py-1 px-2',
-									{ 'bg-green-200': cb.highlightedIndex === index },
-								)}
+								className="mx-6 cursor-pointer py-2"
 								key={itemToKey(item)}
 								{...cb.getItemProps({ item: item, index })}
 							>
-								{renderItemInList(item)}
+								<div
+									className={`flex w-full items-center gap-2 rounded-full px-2 py-2 ${
+										cb.highlightedIndex === index ? 'bg-night-100' : ''
+									}`}
+								>
+									{renderItemInList(item)}
+								</div>
 							</li>
 					  ))
 					: null}

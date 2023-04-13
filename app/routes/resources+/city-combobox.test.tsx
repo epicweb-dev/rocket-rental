@@ -95,10 +95,8 @@ VALUES (@id, @name, @country, @latitude, @longitude, datetime('now'), datetime('
 
 	const options = await screen.findAllByRole('option')
 	expect(options).toHaveLength(2)
-	expect(options.map(o => o.textContent)).toEqual([
-		'London, UK (142.67mi)',
-		'Salt Lake City, US (7785.72mi)',
-	])
+	expect(options[0]).toHaveAccessibleName('London, UK 142.67mi')
+	expect(options[1]).toHaveAccessibleName('Salt Lake City, US 7785.72mi')
 
 	await userEvent.click(await screen.findByRole('option', { name: /Salt/ }))
 	expect(combobox).toHaveValue('Salt Lake City, US')
@@ -112,5 +110,5 @@ VALUES (@id, @name, @country, @latitude, @longitude, datetime('now'), datetime('
 
 	const options2 = await screen.findAllByRole('option')
 	expect(options2).toHaveLength(1)
-	expect(options2.map(o => o.textContent)).toEqual(['London, UK (7625.61mi)'])
+	expect(options2[0]).toHaveAccessibleName('London, UK 7625.61mi')
 })

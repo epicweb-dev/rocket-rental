@@ -2,7 +2,7 @@ import { type SearchComboboxProps } from './search-combobox'
 
 export type BaseOptions<Item> = Pick<
 	SearchComboboxProps<Item>,
-	'selectedItem' | 'exclude' | 'onChange'
+	'selectedItem' | 'exclude' | 'onChange' | 'placeholder'
 >
 
 export {

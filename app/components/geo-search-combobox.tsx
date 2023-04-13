@@ -9,7 +9,7 @@ export type GeoItem = {
 
 export type BaseOptions = Pick<
 	SearchComboboxProps<GeoItem>,
-	'selectedItem' | 'exclude' | 'onChange'
+	'selectedItem' | 'exclude' | 'onChange' | 'placeholder'
 > & {
 	geolocation: { lat: number; long: number } | null
 }
@@ -42,10 +42,14 @@ export function GeoSearchCombobox({
 					: null
 			}
 			renderItemInList={item => (
-				<>
-					{item.displayName}{' '}
-					{item.distance ? `(${item.distance.toFixed(2)}mi)` : null}
-				</>
+				<div className="flex items-center gap-4">
+					{item.displayName}
+					{item.distance ? (
+						<span className="rounded-full bg-accent-yellow px-4 py-2 text-xs text-night-700">
+							{item.distance.toFixed(2)}mi
+						</span>
+					) : null}
+				</div>
 			)}
 		/>
 	)

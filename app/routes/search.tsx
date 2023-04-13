@@ -1,3 +1,4 @@
+import * as Popover from '@radix-ui/react-popover'
 import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
 import {
 	Form,
@@ -8,15 +9,16 @@ import {
 } from '@remix-run/react'
 import { useCallback, useEffect, useState } from 'react'
 import { z } from 'zod'
+import { ShipCard } from '~/components/ship-card'
 import { BrandCombobox } from '~/routes/resources+/brand-combobox'
 import { CityCombobox } from '~/routes/resources+/city-combobox'
 import { HostCombobox } from '~/routes/resources+/host-combobox'
 import { ModelCombobox } from '~/routes/resources+/model-combobox'
 import { StarportCombobox } from '~/routes/resources+/starport-combobox'
 import { db, interpolateArray, prisma } from '~/utils/db.server'
-import { preprocessSearchParams } from '~/utils/forms'
+import { CheckboxField, preprocessSearchParams } from '~/utils/forms'
 import { getClosestStarports, getDistanceCalculation } from '~/utils/geo.server'
-import { getImgSrc, typedBoolean } from '~/utils/misc'
+import { getImgSrc, getUserImgSrc, typedBoolean } from '~/utils/misc'
 import { addParamToSet, unappend } from '~/utils/search-params'
 
 const MAX_RESULTS = 50
@@ -81,7 +83,7 @@ export async function loader({ request }: DataFunctionArgs) {
 		where: {
 			id: { in: [...new Set(ships.map(ship => ship.modelId)), ...modelId] },
 		},
-		select: { id: true, name: true, imageId: true },
+		select: { id: true, name: true, imageId: true, brandId: true },
 	})
 	const brands = await prisma.shipBrand.findMany({
 		where: {
@@ -95,7 +97,9 @@ export async function loader({ request }: DataFunctionArgs) {
 		where: {
 			userId: { in: [...new Set(ships.map(ship => ship.hostId)), ...hostId] },
 		},
-		select: { user: { select: { id: true, name: true, imageId: true } } },
+		select: {
+			user: { select: { id: true, username: true, name: true, imageId: true } },
+		},
 	})
 	const starports = await prisma.starport.findMany({
 		where: {
@@ -103,7 +107,7 @@ export async function loader({ request }: DataFunctionArgs) {
 				in: [...new Set(ships.map(ship => ship.starportId)), ...starportId],
 			},
 		},
-		select: { id: true, name: true },
+		select: { id: true, name: true, imageId: true },
 	})
 
 	return json({ ships, brands, models, hosts, starports, cities })
@@ -431,13 +435,13 @@ export default function ShipsRoute() {
 
 	return (
 		<div className="container m-auto mt-12">
-			<h1 className="text-h1">Search</h1>
-			<label>
-				<input
-					type="checkbox"
-					checked={geolocationEnabled}
-					onChange={e => {
-						toggleGeolocation(e.currentTarget.checked).then(geo => {
+			<h1 className="text-h1">Rockets</h1>
+			<CheckboxField
+				labelProps={{ children: 'Enable Geolocation' }}
+				buttonProps={{
+					checked: geolocationEnabled,
+					onCheckedChange: checkedState => {
+						toggleGeolocation(checkedState === true).then(geo => {
 							if (geo.state !== 'resolved') return
 
 							submit(
@@ -449,385 +453,388 @@ export default function ShipsRoute() {
 								{ method: 'POST' },
 							)
 						})
-					}}
-				/>{' '}
-				Enable Geolocation
-			</label>
-			<StarportCombobox
-				selectedItem={null}
-				exclude={searchParams.getAll('starportId')}
-				geolocation={
-					geolocationEnabled && geolocation.state === 'resolved'
-						? geolocation
-						: null
-				}
-				onChange={selectedStarport => {
-					if (selectedStarport) {
-						const newSP = addParamToSet(
-							new URLSearchParams(searchParams),
-							'starportId',
-							selectedStarport.id,
-						)
-						setSearchParams(newSP)
-					}
+					},
 				}}
 			/>
-			<ul>
-				{searchParams
-					.getAll('starportId')
-					.map(id => {
-						const starport = data.starports.find(s => id === s.id)
-						if (!starport) {
-							console.warn(`Starport ${id} not found`)
-							return null
-						}
-						return starport
-					})
-					.filter(typedBoolean)
-					.map(starport => {
-						const newSP = unappend(
-							new URLSearchParams(searchParams),
-							'starportId',
-							starport.id,
-						)
-
-						return (
-							<li key={starport.id}>
-								<Link to={`/search?${newSP}`}>{starport.name} ❌</Link>
-							</li>
-						)
-					})}
-			</ul>
-			<CityCombobox
-				selectedItem={null}
-				exclude={searchParams.getAll('cityId')}
-				geolocation={
-					geolocationEnabled && geolocation.state === 'resolved'
-						? geolocation
-						: null
-				}
-				onChange={selectedCity => {
-					if (selectedCity) {
-						const newSP = addParamToSet(
-							new URLSearchParams(searchParams),
-							'cityId',
-							selectedCity.id,
-						)
-						setSearchParams(newSP)
-					}
-				}}
-			/>
-			<ul>
-				{searchParams
-					.getAll('cityId')
-					.map(id => {
-						const city = data.cities.find(c => id === c.id)
-						if (!city) {
-							console.warn(`City ${id} not found`)
-							return null
-						}
-						return city
-					})
-					.filter(typedBoolean)
-					.map(city => {
-						const newSP = unappend(
-							new URLSearchParams(searchParams),
-							'cityId',
-							city.id,
-						)
-
-						return (
-							<li key={city.id}>
-								<Link to={`/search?${newSP}`}>
-									{city.name} ({city.country}) ❌
-								</Link>
-							</li>
-						)
-					})}
-			</ul>
-			<BrandCombobox
-				selectedItem={null}
-				exclude={searchParams.getAll('brandId')}
-				onChange={selectedBrand => {
-					if (selectedBrand) {
-						const newSP = addParamToSet(
-							new URLSearchParams(searchParams),
-							'brandId',
-							selectedBrand.id,
-						)
-						setSearchParams(newSP)
-					}
-				}}
-			/>
-			<ul>
-				{searchParams
-					.getAll('brandId')
-					.map(id => {
-						const brand = data.brands.find(b => id === b.id)
-						if (!brand) {
-							console.warn(`Brand ${id} not found`)
-							return null
-						}
-						return brand
-					})
-					.filter(typedBoolean)
-					.map(brand => {
-						const newSP = unappend(
-							new URLSearchParams(searchParams),
-							'brandId',
-							brand.id,
-						)
-
-						return (
-							<li key={brand.id}>
-								<div className="flex items-center gap-2">
-									<Link to={`/${brand.id}`} className="flex items-center gap-2">
-										{brand.imageId ? (
-											<img
-												src={getImgSrc(brand.imageId)}
-												alt={brand.name ?? 'Unnamed host'}
-												className="h-8 w-8 rounded-full"
-											/>
-										) : null}
-										{brand.name}
-									</Link>
-									<Link to={`/search?${newSP}`}>❌</Link>
-								</div>
-							</li>
-						)
-					})}
-			</ul>
-			<ModelCombobox
-				selectedItem={null}
-				exclude={searchParams.getAll('modelId')}
-				onChange={selectedModel => {
-					if (selectedModel) {
-						const newSP = addParamToSet(
-							new URLSearchParams(searchParams),
-							'modelId',
-							selectedModel.id,
-						)
-						setSearchParams(newSP)
-					}
-				}}
-			/>
-			<ul>
-				{searchParams
-					.getAll('modelId')
-					.map(id => {
-						const model = data.models.find(b => id === b.id)
-						if (!model) {
-							console.warn(`Model ${id} not found`)
-							return null
-						}
-						return model
-					})
-					.filter(typedBoolean)
-					.map(model => {
-						const newSP = unappend(
-							new URLSearchParams(searchParams),
-							'modelId',
-							model.id,
-						)
-
-						return (
-							<li key={model.id}>
-								<div className="flex items-center gap-2">
-									<Link to={`/${model.id}`} className="flex items-center gap-2">
-										{model.imageId ? (
-											<img
-												src={getImgSrc(model.imageId)}
-												alt={model.name ?? 'Unnamed host'}
-												className="h-8 w-8 rounded-full"
-											/>
-										) : null}
-										{model.name}
-									</Link>
-									<Link to={`/search?${newSP}`}>❌</Link>
-								</div>
-							</li>
-						)
-					})}
-			</ul>
-			<HostCombobox
-				selectedItem={null}
-				exclude={searchParams.getAll('hostId')}
-				onChange={selectedHost => {
-					if (selectedHost) {
-						const newSP = addParamToSet(
-							new URLSearchParams(searchParams),
-							'hostId',
-							selectedHost.user.id,
-						)
-						setSearchParams(newSP)
-					}
-				}}
-			/>
-			<ul>
-				{searchParams
-					.getAll('hostId')
-					.map(id => {
-						const host = data.hosts.find(c => id === c.user.id)
-						if (!host) {
-							console.warn(`Host ${id} not found`)
-							return null
-						}
-						return host
-					})
-					.filter(typedBoolean)
-					.map(host => {
-						const newSP = unappend(
-							new URLSearchParams(searchParams),
-							'hostId',
-							host.user.id,
-						)
-
-						return (
-							<li key={host.user.id}>
-								<div className="flex items-center gap-2">
-									<Link
-										to={`/${host.user.id}`}
-										className="flex items-center gap-2"
-									>
-										{host.user.imageId ? (
-											<img
-												src={getImgSrc(host.user.imageId)}
-												alt={host.user.name ?? 'Unnamed host'}
-												className="h-8 w-8 rounded-full"
-											/>
-										) : null}
-										{host.user.name}
-									</Link>
-									<Link to={`/search?${newSP}`}>❌</Link>
-								</div>
-							</li>
-						)
-					})}
-			</ul>
-			<Form
-				onChange={event => {
-					const newSP = new URLSearchParams(searchParams)
-					const { target } = event
-					if (target instanceof HTMLInputElement) {
-						newSP.set(target.name, target.value)
-						setSearchParams(newSP)
-					} else {
-						console.warn('Unexpected change event from target', target)
-					}
-				}}
-			>
-				<div className="flex flex-wrap gap-6">
-					<label>
-						<span>Trip Start Date</span>
-						<input
-							type="date"
-							name="availabilityStartDate"
-							defaultValue={searchParams.get('availabilityStartDate') ?? ''}
+			<div className="mx-auto flex items-center justify-center gap-4">
+				<div className="flex flex-1 items-center justify-center rounded-full bg-night-500">
+					<div className="flex-1">
+						<StarportCombobox
+							selectedItem={null}
+							placeholder="Choose a starport"
+							exclude={searchParams.getAll('starportId')}
+							geolocation={
+								geolocationEnabled && geolocation.state === 'resolved'
+									? geolocation
+									: null
+							}
+							onChange={selectedStarport => {
+								if (selectedStarport) {
+									const newSP = addParamToSet(
+										new URLSearchParams(searchParams),
+										'starportId',
+										selectedStarport.id,
+									)
+									setSearchParams(newSP)
+								}
+							}}
 						/>
-					</label>
-					<label>
-						<span>Trip End Date</span>
-						<input
-							type="date"
-							name="availabilityEndDate"
-							defaultValue={searchParams.get('availabilityEndDate') ?? ''}
+					</div>
+					<div className="flex-1">
+						<CityCombobox
+							selectedItem={null}
+							placeholder="Choose a city"
+							exclude={searchParams.getAll('cityId')}
+							geolocation={
+								geolocationEnabled && geolocation.state === 'resolved'
+									? geolocation
+									: null
+							}
+							onChange={selectedCity => {
+								if (selectedCity) {
+									const newSP = addParamToSet(
+										new URLSearchParams(searchParams),
+										'cityId',
+										selectedCity.id,
+									)
+									setSearchParams(newSP)
+								}
+							}}
 						/>
-					</label>
-					<label>
-						Capacity Min:{' '}
-						<input
-							name="capacityMin"
-							type="number"
-							min="1"
-							max="15"
-							className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-							defaultValue={searchParams.get('capacityMin') ?? ''}
+					</div>
+					<div className="flex-1">
+						<BrandCombobox
+							selectedItem={null}
+							placeholder="Choose a brand"
+							exclude={searchParams.getAll('brandId')}
+							onChange={selectedBrand => {
+								if (selectedBrand) {
+									const newSP = addParamToSet(
+										new URLSearchParams(searchParams),
+										'brandId',
+										selectedBrand.id,
+									)
+									setSearchParams(newSP)
+								}
+							}}
 						/>
-					</label>
-					<label>
-						Capacity Max:{' '}
-						<input
-							name="capacityMax"
-							type="number"
-							min="1"
-							max="15"
-							className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-							defaultValue={searchParams.get('capacityMax') ?? ''}
+					</div>
+					<div className="flex-1">
+						<ModelCombobox
+							selectedItem={null}
+							placeholder="Choose a model"
+							exclude={searchParams.getAll('modelId')}
+							onChange={selectedModel => {
+								if (selectedModel) {
+									const newSP = addParamToSet(
+										new URLSearchParams(searchParams),
+										'modelId',
+										selectedModel.id,
+									)
+									setSearchParams(newSP)
+								}
+							}}
 						/>
-					</label>
-					<label>
-						Daily Charge Min:{' '}
-						<input
-							name="dailyChargeMin"
-							type="number"
-							min="1"
-							max="1000"
-							className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-							defaultValue={searchParams.get('dailyChargeMin') ?? ''}
+					</div>
+					<div className="flex-1">
+						<HostCombobox
+							selectedItem={null}
+							placeholder="Choose a host"
+							exclude={searchParams.getAll('hostId')}
+							onChange={selectedHost => {
+								if (selectedHost) {
+									const newSP = addParamToSet(
+										new URLSearchParams(searchParams),
+										'hostId',
+										selectedHost.user.id,
+									)
+									setSearchParams(newSP)
+								}
+							}}
 						/>
-					</label>
-					<label>
-						Daily Charge Max:{' '}
-						<input
-							name="dailyChargeMax"
-							type="number"
-							min="1"
-							max="1000"
-							className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-							defaultValue={searchParams.get('dailyChargeMax') ?? ''}
-						/>
-					</label>
-					<label>
-						Minimum Ship Rating:{' '}
-						<input
-							name="shipRatingMin"
-							type="number"
-							min="0"
-							max="5"
-							className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-							defaultValue={searchParams.get('shipRatingMin') ?? ''}
-						/>
-					</label>
-					<label>
-						Minimum Host Rating:{' '}
-						<input
-							name="hostRatingMin"
-							type="number"
-							min="0"
-							max="5"
-							className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
-							defaultValue={searchParams.get('hostRatingMin') ?? ''}
-						/>
-					</label>
-					<button type="submit">Submit</button>
+					</div>
 				</div>
-			</Form>
+
+				<Form
+					method="GET"
+					onChange={event => {
+						const newSP = new URLSearchParams(searchParams)
+						const { target } = event
+						if (target instanceof HTMLInputElement) {
+							newSP.set(target.name, target.value)
+							setSearchParams(newSP)
+						} else {
+							console.warn('Unexpected change event from target', target)
+						}
+					}}
+				>
+					<Popover.Root>
+						<Popover.Trigger>
+							<span className="flex h-[88px] w-[88px] items-center justify-center rounded-full bg-accent-purple">
+								🌪
+							</span>
+						</Popover.Trigger>
+						<Popover.Anchor />
+						<Popover.Portal>
+							<Popover.Content className="rounded-3xl bg-night-500 p-6">
+								<Popover.Close>❌</Popover.Close>
+								<div className="grid grid-cols-2 gap-6">
+									<div className="col-span-2 rounded-2xl bg-night-600 p-6">
+										<label>
+											<span>Trip Start Date</span>
+											<input
+												type="date"
+												name="availabilityStartDate"
+												defaultValue={
+													searchParams.get('availabilityStartDate') ?? ''
+												}
+											/>
+										</label>
+										<label>
+											<span>Trip End Date</span>
+											<input
+												type="date"
+												name="availabilityEndDate"
+												defaultValue={
+													searchParams.get('availabilityEndDate') ?? ''
+												}
+											/>
+										</label>
+									</div>
+									<div className="rounded-2xl bg-night-600 p-6">
+										<label>
+											Capacity Min:{' '}
+											<input
+												name="capacityMin"
+												type="number"
+												min="1"
+												max="15"
+												className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+												defaultValue={searchParams.get('capacityMin') ?? ''}
+											/>
+										</label>
+									</div>
+									<div className="rounded-2xl bg-night-600 p-6">
+										<label>
+											Capacity Max:{' '}
+											<input
+												name="capacityMax"
+												type="number"
+												min="1"
+												max="15"
+												className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+												defaultValue={searchParams.get('capacityMax') ?? ''}
+											/>
+										</label>
+									</div>
+									<div className="rounded-2xl bg-night-600 p-6">
+										<label>
+											Daily Charge Min:{' '}
+											<input
+												name="dailyChargeMin"
+												type="number"
+												min="1"
+												max="1000"
+												className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+												defaultValue={searchParams.get('dailyChargeMin') ?? ''}
+											/>
+										</label>
+									</div>
+									<div className="rounded-2xl bg-night-600 p-6">
+										<label>
+											Daily Charge Max:{' '}
+											<input
+												name="dailyChargeMax"
+												type="number"
+												min="1"
+												max="1000"
+												className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+												defaultValue={searchParams.get('dailyChargeMax') ?? ''}
+											/>
+										</label>
+									</div>
+									<div className="rounded-2xl bg-night-600 p-6">
+										<label>
+											Minimum Ship Rating:{' '}
+											<input
+												name="shipRatingMin"
+												type="number"
+												min="0"
+												max="5"
+												className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+												defaultValue={searchParams.get('shipRatingMin') ?? ''}
+											/>
+										</label>
+									</div>
+									<div className="rounded-2xl bg-night-600 p-6">
+										<label>
+											Minimum Host Rating:{' '}
+											<input
+												name="hostRatingMin"
+												type="number"
+												min="0"
+												max="5"
+												className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+												defaultValue={searchParams.get('hostRatingMin') ?? ''}
+											/>
+										</label>
+									</div>
+								</div>
+							</Popover.Content>
+						</Popover.Portal>
+					</Popover.Root>
+				</Form>
+			</div>
+			<div className="mb-8 mt-16">
+				<FilterItems />
+			</div>
+
 			{data.ships.length ? (
-				<>
-					<ul>
-						{data.ships.map(ship => (
-							<li key={ship.id} className="p-6">
-								<a
-									href={`/ships/${ship.id}`}
-									className="flex gap-4 bg-slate-400"
-								>
-									<img
-										src={getImgSrc(ship.imageId)}
-										alt=""
-										className="inline aspect-square w-16 rounded-sm"
-									/>
-									<span>
-										{ship.name} (
-										{data.starports.find(s => s.id === ship.starportId)?.name})
-									</span>
-								</a>
+				<ul className="flex flex-wrap items-center justify-center gap-6">
+					{data.ships.map(ship => {
+						const model = data.models.find(m => m.id === ship.modelId) ?? {
+							id: 'unknown',
+							name: 'Unknown',
+							brandId: 'unknown',
+						}
+						const brand = data.brands.find(b => b.id === model?.brandId) ?? {
+							id: 'unknown',
+							name: 'Unknown',
+						}
+						return (
+							<li key={ship.id}>
+								<ShipCard
+									ship={ship}
+									avgRating={ship.shipAvgRating}
+									brand={brand}
+									model={model}
+									dailyChargeFormatted={ship.dailyCharge.toLocaleString(
+										'en-US',
+										{ style: 'currency', currency: 'USD' },
+									)}
+								/>
 							</li>
-						))}
-					</ul>
-				</>
+						)
+					})}
+				</ul>
 			) : (
 				<p>No ships found</p>
 			)}
 		</div>
+	)
+}
+
+function FilterItems() {
+	const data = useLoaderData<typeof loader>()
+	const [searchParams] = useSearchParams()
+	const starports = searchParams.getAll('starportId')
+	const cities = searchParams.getAll('cityId')
+	const brands = searchParams.getAll('brandId')
+	const models = searchParams.getAll('modelId')
+	const hosts = searchParams.getAll('hostId')
+	type FilterItem = { removePath: string; displayName: string } & (
+		| { imageUrl: string; detailPath: string; altText: string }
+		| { imageUrl?: never; detailPath?: never; altText?: never }
+	)
+	function makeRemovePath(key: string, value: string) {
+		return `/search?${unappend(new URLSearchParams(searchParams), key, value)}`
+	}
+	const items: Array<FilterItem> = [
+		...starports.map(id => {
+			const starport = data.starports.find(s => id === s.id)
+			if (!starport) {
+				console.warn(`Starport ${id} not found`)
+				return null
+			}
+			return {
+				removePath: makeRemovePath('starportId', starport.id),
+				displayName: starport.name,
+				imageUrl: getImgSrc(starport.imageId),
+				detailPath: `/starports/${starport.id}`,
+				altText: starport.name,
+			}
+		}),
+		...cities.map(id => {
+			const city = data.cities.find(c => id === c.id)
+			if (!city) {
+				console.warn(`City ${id} not found`)
+				return null
+			}
+			return {
+				removePath: makeRemovePath('cityId', city.id),
+				displayName: city.name,
+			}
+		}),
+		...brands.map(id => {
+			const brand = data.brands.find(b => id === b.id)
+			if (!brand) {
+				console.warn(`Brand ${id} not found`)
+				return null
+			}
+			return {
+				removePath: makeRemovePath('brandId', brand.id),
+				displayName: brand.name,
+				imageUrl: getImgSrc(brand.imageId),
+				detailPath: `/brands/${brand.id}`,
+				altText: brand.name,
+			}
+		}),
+		...models.map(id => {
+			const model = data.models.find(m => id === m.id)
+			if (!model) {
+				console.warn(`Model ${id} not found`)
+				return null
+			}
+			return {
+				removePath: makeRemovePath('modelId', model.id),
+				displayName: model.name,
+				imageUrl: getImgSrc(model.imageId),
+				detailPath: `/models/${model.id}`,
+				altText: model.name,
+			}
+		}),
+		...hosts.map(id => {
+			const host = data.hosts.find(h => id === h.user.id)
+			if (!host) {
+				console.warn(`Host ${id} not found`)
+				return null
+			}
+			return {
+				removePath: makeRemovePath('hostId', host.user.id),
+				displayName: host.user.name ?? host.user.username,
+				imageUrl: getUserImgSrc(host.user.imageId),
+				detailPath: `/${host.user.id}`,
+				altText: host.user.name,
+			}
+		}),
+	].filter(typedBoolean)
+
+	return (
+		<ul className="flex gap-2">
+			{items.map(item => {
+				return (
+					<li
+						key={item.removePath}
+						className="flex items-center gap-2 rounded-full border border-night-400 px-4 py-3"
+					>
+						{item.detailPath ? (
+							<Link to={item.detailPath} className="flex items-center gap-2">
+								{item.imageUrl ? (
+									<img
+										src={item.imageUrl}
+										alt={item.altText}
+										className="h-8 w-8 rounded-full"
+									/>
+								) : null}
+								{item.displayName}
+							</Link>
+						) : (
+							<span>{item.displayName}</span>
+						)}
+						<Link to={item.removePath}>❌</Link>
+					</li>
+				)
+			})}
+		</ul>
 	)
 }
