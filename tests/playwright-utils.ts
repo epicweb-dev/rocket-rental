@@ -1,10 +1,9 @@
 import { test as base, type Page } from '@playwright/test'
-import bcrypt from 'bcryptjs'
 import { parse } from 'cookie'
 import { z } from 'zod'
-import { authenticator } from '~/utils/auth.server'
-import { commitSession, getSession } from '~/utils/session.server'
+import { authenticator, getPasswordHash } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'
+import { commitSession, getSession } from '~/utils/session.server'
 import { readFixture } from '../mocks/utils'
 import { createContactInfo, createUser } from '../prisma/seed-utils'
 
@@ -35,6 +34,10 @@ export async function readEmail(recipient: string) {
 	}
 }
 
+export function deleteUserByUsername(username: string) {
+	return prisma.user.delete({ where: { username } })
+}
+
 export async function insertNewUser({ password }: { password?: string } = {}) {
 	const userData = createUser()
 	const user = await prisma.user.create({
@@ -45,10 +48,7 @@ export async function insertNewUser({ password }: { password?: string } = {}) {
 			},
 			password: {
 				create: {
-					hash: bcrypt.hashSync(
-						password || userData.username.toUpperCase(),
-						10,
-					),
+					hash: await getPasswordHash(password || userData.username),
 				},
 			},
 		},
@@ -56,10 +56,6 @@ export async function insertNewUser({ password }: { password?: string } = {}) {
 	})
 	dataCleanup.users.add(user.id)
 	return user
-}
-
-export function deleteUserByUsername(username: string) {
-	return prisma.user.delete({ where: { username } })
 }
 
 export const test = base.extend<{
@@ -72,6 +68,8 @@ export const test = base.extend<{
 		{ auto: true },
 	],
 })
+
+export const { expect } = test
 
 export async function loginPage({
 	page,
@@ -110,8 +108,6 @@ export async function loginPage({
 	])
 	return user
 }
-
-export const { expect } = test
 
 test.afterEach(async () => {
 	type Delegate = {
