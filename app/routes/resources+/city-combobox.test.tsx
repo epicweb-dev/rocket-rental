@@ -7,9 +7,7 @@ import { test } from 'vitest'
 import { db } from '~/utils/db.server'
 import { CityCombobox, loader } from './city-combobox'
 
-test('renders', async () => {
-	const handleChange = vi.fn()
-
+test('allows you to search for cities in the database', async () => {
 	const insert = db.prepare(/*sql*/ `
 INSERT INTO city (id, name, country, latitude, longitude, updatedAt, createdAt)
 VALUES (@id, @name, @country, @latitude, @longitude, datetime('now'), datetime('now'))
@@ -19,27 +17,33 @@ VALUES (@id, @name, @country, @latitude, @longitude, datetime('now'), datetime('
 		for (const city of cities) insert.run(city)
 	})
 
-	insertCities([
-		{
-			id: '123',
-			name: 'Salt Lake City',
-			country: 'US',
-			latitude: -111.9905245,
-			longitude: 40.7765868,
-		},
-		{
-			id: '456',
-			name: 'London',
-			country: 'UK',
-			latitude: -0.3886621,
-			longitude: 51.5282914,
-		},
-	] satisfies Array<Omit<City, 'createdAt' | 'updatedAt'>>)
+	const slc = {
+		id: '123',
+		name: 'Salt Lake City',
+		country: 'US',
+		displayName: 'Salt Lake City, US',
+		latitude: -111.9905245,
+		longitude: 40.7765868,
+	} as const
+	const london = {
+		id: '456',
+		name: 'London',
+		country: 'UK',
+		displayName: 'London, UK',
+		latitude: -0.3886621,
+		longitude: 51.5282914,
+	} as const
+
+	insertCities([slc, london] satisfies Array<
+		Omit<City, 'createdAt' | 'updatedAt'>
+	>)
 
 	type Geo = { lat: number; long: number } | null
 	type Exclude = Array<string>
 	let setGeolocation: (geo: Geo) => void = () => {}
 	let setExclude: (exclude: Exclude) => void = () => {}
+
+	const handleChange = vi.fn()
 
 	function App() {
 		const gState = React.useState<Geo>(null)
@@ -65,50 +69,70 @@ VALUES (@id, @name, @country, @latitude, @longitude, datetime('now'), datetime('
 		{
 			id: 'resources-city-combobox',
 			path: '/resources/city-combobox',
-			loader: async args => {
-				const response = await loader(args as any)
-				const json = await response.json()
-				return json
-			},
+			// @ts-expect-error - this is a bug in the types that will be fixed soon.
+			loader,
 		},
 	])
 
 	render(<RemixStub />)
 
-	// wait for the accessibility status node to show up
-	await screen.findByRole('status')
-
 	const combobox = screen.getByRole('combobox', { name: /City/ })
-	await userEvent.type(combobox, 'S')
 
-	await userEvent.click(await screen.findByRole('option', { name: /Salt/ }))
-	expect(combobox).toHaveValue('Salt Lake City, US')
+	// find and select a single result without geolocation
+	await userEvent.type(combobox, 'S')
+	let options = await screen.findAllByRole('option')
+	expect(options).toHaveLength(1)
+	expect(options[0]).toHaveAccessibleName(slc.displayName)
+	await userEvent.click(options[0])
+	expect(combobox).toHaveValue(slc.displayName)
+	expect(handleChange).toHaveBeenCalledOnce()
+	expect(handleChange).toHaveBeenCalledWith({
+		displayName: slc.displayName,
+		id: slc.id,
+		distance: null,
+	})
+
 	await userEvent.clear(combobox)
+	handleChange.mockClear()
+
+	// search for a city that doesn't exist
 	await userEvent.type(combobox, 'NO_MATCH')
 	expect(screen.queryByRole('option')).not.toBeInTheDocument()
 	expect(combobox).toHaveValue('NO_MATCH')
+
 	await userEvent.clear(combobox)
+	// set geolocation data
+	act(() => setGeolocation({ lat: slc.latitude - 1, long: slc.longitude + 1 }))
 
-	act(() => setGeolocation({ lat: 1, long: 50 }))
-
+	// search for multiple options
 	await userEvent.type(combobox, 'L')
-
-	const options = await screen.findAllByRole('option')
+	options = await screen.findAllByRole('option')
 	expect(options).toHaveLength(2)
-	expect(options[0]).toHaveAccessibleName('London, UK 142.67mi')
-	expect(options[1]).toHaveAccessibleName('Salt Lake City, US 7785.72mi')
+	// the first option should be the closest city
+	expect(options[0]).toHaveAccessibleName(`${slc.displayName} 73.97mi`)
+	expect(options[1]).toHaveAccessibleName(`${london.displayName} 7755.50mi`)
 
-	await userEvent.click(await screen.findByRole('option', { name: /Salt/ }))
-	expect(combobox).toHaveValue('Salt Lake City, US')
+	await userEvent.click(options[1])
+	expect(combobox).toHaveValue(london.displayName)
+	expect(handleChange).toHaveBeenCalledOnce()
+	expect(handleChange).toHaveBeenCalledWith({
+		displayName: london.displayName,
+		id: london.id,
+		distance: 7755.5,
+	})
+
 	await userEvent.clear(combobox)
 
+	// exclude a city
 	act(() => {
-		setExclude(['123'])
-		setGeolocation({ lat: -111, long: 60 })
+		setExclude([london.id])
+		setGeolocation({ lat: london.latitude + 1, long: london.longitude - 1 })
 	})
+
+	// search for something that matches both cities
 	await userEvent.type(combobox, 'L')
 
-	const options2 = await screen.findAllByRole('option')
-	expect(options2).toHaveLength(1)
-	expect(options2[0]).toHaveAccessibleName('London, UK 7625.61mi')
+	options = await screen.findAllByRole('option')
+	expect(options).toHaveLength(1)
+	expect(options[0]).toHaveAccessibleName(`${slc.displayName} 7756.49mi`)
 })

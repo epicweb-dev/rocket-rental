@@ -7,6 +7,7 @@ import 'dotenv/config'
 import fs from 'fs'
 import { db } from '~/utils/db.server'
 import { BASE_DATABASE_PATH, DATABASE_PATH } from './paths'
+import { deleteAllData } from './utils'
 
 declare global {
 	namespace Vi {
@@ -22,14 +23,7 @@ installGlobals()
 fs.copyFileSync(BASE_DATABASE_PATH, DATABASE_PATH)
 
 afterEach(() => {
-	db.exec(`
-		DELETE FROM user;
-		DELETE FROM ship;
-		DELETE FROM shipBrand;
-		DELETE FROM starport;
-		DELETE FROM booking;
-		DELETE FROM chat;
-	`)
+	deleteAllData(db)
 })
 
 afterAll(async () => {

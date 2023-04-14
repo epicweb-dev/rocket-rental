@@ -107,7 +107,7 @@ function getClosestWithQuery({
 		SELECT
 			id,
 			${displayNameSelect} AS displayName,
-			COALESCE(${distanceCalculation}, 0) AS distance
+			ROUND(COALESCE(${distanceCalculation}, 0), 2) AS distance
 		FROM ${table}
 		${wheres ? `WHERE ${wheres}` : ''}
 		ORDER BY distance ASC
