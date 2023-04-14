@@ -15,7 +15,7 @@ export type SearchComboboxProps<Item> = {
 	label: string
 	renderItemInList: (item: Item) => React.ReactNode
 	resourceUrl: string
-	additionalSearchParams?: Record<string, string> | null
+	additionalSearchParams?: Record<string, string | Array<string>> | null
 	placeholder?: string
 }
 
@@ -55,7 +55,9 @@ export function SearchCombobox<Item>({
 		searchParams.append('exclude', ex)
 	}
 	for (const [key, value] of Object.entries(additionalSearchParams ?? {})) {
-		searchParams.append(key, value)
+		for (const v of Array.isArray(value) ? value : [value]) {
+			searchParams.append(key, v)
+		}
 	}
 	const fetchUrl = `${resourceUrl}?${searchParams}`
 	const loadRef = useRef(fetcher.load)
