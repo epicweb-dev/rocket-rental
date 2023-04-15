@@ -1,6 +1,6 @@
 import { db, interpolateArray } from '~/utils/db.server'
-import { z } from 'zod'
-import { typedBoolean } from './misc'
+import {z} from 'zod'
+import {typedBoolean} from './misc'
 
 const GeoResults = z.array(
 	z.object({
@@ -13,6 +13,9 @@ const GeoResults = z.array(
 /**
  * Make 100% certain that this function is never called with user input as it
  * is used to generate a part of a SQL query.
+ *
+ * formula source:
+ * https://www.themathdoctors.org/distances-on-earth-2-the-haversine-formula/
  *
  * IDEA: Maybe figure out how to sanitize the inputs?
  * @returns
@@ -33,7 +36,8 @@ acos(
 	* cos((${from.long} - ${to.long}) * PI()/180)
 )
 * 180/PI() * 60
--- convert from nautical miles to miles
+-- Earth radius: 3958.76 miles
+-- And one minute of arc is: 2π * 3958.76 miles / 60 / 360 = 1.1515
 * 1.1515
 	`.trim()
 }
