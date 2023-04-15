@@ -9,7 +9,7 @@ const miscHandlers = [
 		'https://api.mailgun.net/v3/:domain/messages',
 		async (req, res, ctx) => {
 			requiredHeader(req.headers, 'Authorization')
-			const rawBody = Object.fromEntries(new URLSearchParams(await req.text()))
+			const bodyRaw = Object.fromEntries(new URLSearchParams(await req.text()))
 			const body = z
 				.object({
 					to: z.string(),
@@ -18,7 +18,7 @@ const miscHandlers = [
 					text: z.string(),
 					html: z.string(),
 				})
-				.parse(rawBody)
+				.parse(bodyRaw)
 			console.info('🔶 mocked email contents:', body)
 
 			await createFixture('email', body.to, body)
