@@ -102,10 +102,16 @@ export async function action({ request }: DataFunctionArgs) {
 	if (response.ok) {
 		return json({ status: 'success', errors: null } as const)
 	} else {
-		return json({
-			status: 'error',
-			errors: { formErrors: ['Email not sent successfully'], fieldErrors: {} },
-		} as const)
+		return json(
+			{
+				status: 'error',
+				errors: {
+					formErrors: ['Email not sent successfully'],
+					fieldErrors: {},
+				},
+			} as const,
+			{ status: 500 },
+		)
 	}
 }
 
@@ -123,7 +129,7 @@ export default function SignupRoute() {
 	})
 
 	return (
-		<div className="container mx-auto flex flex-col justify-center pt-20 pb-32">
+		<div className="container mx-auto flex flex-col justify-center pb-32 pt-20">
 			{signupFetcher.data?.status === 'success' ? (
 				<div className="text-center">
 					<img src="" alt="" />
