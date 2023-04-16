@@ -18,7 +18,7 @@ test('onboarding', async ({ page }) => {
 	const firstName = faker.name.firstName()
 	const lastName = faker.name.lastName()
 	const username = faker.internet.userName(firstName, lastName).slice(0, 15)
-	const loginForm = {
+	const onboardingData = {
 		name: `${firstName} ${lastName}`,
 		username,
 		email: `${username}@example.com`,
@@ -39,7 +39,7 @@ test('onboarding', async ({ page }) => {
 
 	const emailTextbox = page.getByRole('textbox', { name: /email/i })
 	await emailTextbox.click()
-	await emailTextbox.fill(loginForm.email)
+	await emailTextbox.fill(onboardingData.email)
 
 	await page.getByRole('button', { name: /launch/i }).click()
 	await expect(
@@ -47,9 +47,9 @@ test('onboarding', async ({ page }) => {
 	).toBeVisible()
 	await expect(page.getByText(/check your email/i)).toBeVisible()
 
-	const email = await readEmail(loginForm.email)
+	const email = await readEmail(onboardingData.email)
 	invariant(email, 'Email not found')
-	expect(email.to).toBe(loginForm.email)
+	expect(email.to).toBe(onboardingData.email)
 	expect(email.from).toBe('hello@rocketrental.space')
 	expect(email.subject).toMatch(/welcome/i)
 	const onboardingUrl = extractUrl(email.text)
@@ -59,13 +59,13 @@ test('onboarding', async ({ page }) => {
 	await expect(page).toHaveURL(`/onboarding`)
 	await page
 		.getByRole('textbox', { name: /^username/i })
-		.fill(loginForm.username)
+		.fill(onboardingData.username)
 
-	await page.getByRole('textbox', { name: /^name/i }).fill(loginForm.name)
+	await page.getByRole('textbox', { name: /^name/i }).fill(onboardingData.name)
 
-	await page.getByLabel(/^password/i).fill(loginForm.password)
+	await page.getByLabel(/^password/i).fill(onboardingData.password)
 
-	await page.getByLabel(/^confirm password/i).fill(loginForm.password)
+	await page.getByLabel(/^confirm password/i).fill(onboardingData.password)
 
 	await page.getByLabel(/terms/i).check()
 
@@ -77,16 +77,16 @@ test('onboarding', async ({ page }) => {
 
 	await expect(page).toHaveURL(`/`)
 
-	await page.getByRole('link', { name: loginForm.name }).click()
+	await page.getByRole('link', { name: onboardingData.name }).click()
 	await page.getByRole('menuitem', { name: /profile/i }).click()
 
-	await expect(page).toHaveURL(`/users/${loginForm.username}`)
+	await expect(page).toHaveURL(`/users/${onboardingData.username}`)
 
 	await page.getByRole('button', { name: /logout/i }).click()
 	await expect(page).toHaveURL(`/`)
 
 	// have to do this here because we didn't use insertNewUser (because we're testing user create)
-	await deleteUserByUsername(loginForm.username)
+	await deleteUserByUsername(onboardingData.username)
 })
 
 test('login as existing user', async ({ page }) => {
