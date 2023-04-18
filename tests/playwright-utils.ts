@@ -1,10 +1,8 @@
 import { test as base, type Page } from '@playwright/test'
 import { parse } from 'cookie'
-import { z } from 'zod'
 import { authenticator, getPasswordHash } from '~/utils/auth.server'
 import { prisma } from '~/utils/db.server'
 import { commitSession, getSession } from '~/utils/session.server'
-import { readFixture } from '../mocks/utils'
 import { createContactInfo, createUser } from '../prisma/seed-utils'
 
 export const dataCleanup = {
@@ -16,23 +14,7 @@ export const dataCleanup = {
 	chats: new Set<string>(),
 }
 
-const emailSchema = z.object({
-	to: z.string(),
-	from: z.string(),
-	subject: z.string(),
-	text: z.string(),
-	html: z.string(),
-})
-
-export async function readEmail(recipient: string) {
-	try {
-		const email = await readFixture('email', recipient)
-		return emailSchema.parse(email)
-	} catch (error) {
-		console.error(`Error reading email`, error)
-		return null
-	}
-}
+export { readEmail } from '../mocks/utils'
 
 export function deleteUserByUsername(username: string) {
 	return prisma.user.delete({ where: { username } })

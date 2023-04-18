@@ -12,7 +12,7 @@ afterEach(() => {
 	process.env.ENCRYPTION_SECRET = originalEncryptionSecret
 })
 
-test('should encrypt and decrypt text correctly', () => {
+test('encrypts and decrypts text correctly', () => {
 	const originalText = 'Hello, World!'
 	const encryptedText = encrypt(originalText)
 	const decryptedText = decrypt(encryptedText)
@@ -20,13 +20,13 @@ test('should encrypt and decrypt text correctly', () => {
 	expect(decryptedText).toBe(originalText)
 })
 
-test('should throw an error when trying to decrypt invalid text', () => {
+test('throws an error when trying to decrypt invalid text', () => {
 	const invalidText = faker.lorem.words(3)
 
 	expect(() => decrypt(invalidText)).toThrowError('Invalid text.')
 })
 
-test('should produce different encrypted text for the same input', () => {
+test('produces different encrypted text for the same input', () => {
 	const originalText = 'Hello, World!'
 	const encryptedText1 = encrypt(originalText)
 	const encryptedText2 = encrypt(originalText)
