@@ -87,11 +87,11 @@ ${lanUrl ? `${chalk.bold('On Your Network:')}  ${chalk.cyan(lanUrl)}` : ''}
 ${chalk.bold('Press Ctrl+C to stop')}
 	`.trim(),
 		)
-	})
 
-	if (process.env.NODE_ENV === 'development') {
-		broadcastDevReady(require(BUILD_DIR))
-	}
+		if (process.env.NODE_ENV === 'development') {
+			broadcastDevReady(require(BUILD_DIR))
+		}
+	})
 
 	closeWithGrace(async () => {
 		await new Promise((resolve, reject) => {
