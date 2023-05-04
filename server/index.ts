@@ -3,8 +3,10 @@ import express from 'express'
 import compression from 'compression'
 import morgan from 'morgan'
 import address from 'address'
+import chokidar from 'chokidar'
 import closeWithGrace from 'close-with-grace'
 import { createRequestHandler } from '@remix-run/express'
+import { broadcastDevReady } from '@remix-run/node'
 
 const BUILD_DIR = path.join(process.cwd(), 'build')
 
@@ -28,14 +30,13 @@ async function start() {
 	// more aggressive with this caching.
 	app.use(express.static('public', { maxAge: '1h' }))
 
+	morgan.token('url', (req, res) => decodeURIComponent(req.url ?? ''))
 	app.use(morgan('tiny'))
 
 	app.all(
 		'*',
 		process.env.NODE_ENV === 'development'
 			? (req, res, next) => {
-					purgeRequireCache()
-
 					return createRequestHandler({
 						build: require(BUILD_DIR),
 						mode: process.env.NODE_ENV,
@@ -88,6 +89,10 @@ ${chalk.bold('Press Ctrl+C to stop')}
 		)
 	})
 
+	if (process.env.NODE_ENV === 'development') {
+		broadcastDevReady(require(BUILD_DIR))
+	}
+
 	closeWithGrace(async () => {
 		await new Promise((resolve, reject) => {
 			server.close(e => (e ? reject(e) : resolve('ok')))
@@ -108,4 +113,15 @@ function purgeRequireCache() {
 			delete require.cache[key]
 		}
 	}
+}
+
+if (process.env.NODE_ENV === 'development') {
+	const watcher = chokidar.watch(BUILD_DIR, {
+		ignored: ['**/**.map'],
+	})
+	watcher.on('all', () => {
+		purgeRequireCache()
+		const build = require(BUILD_DIR)
+		broadcastDevReady(build)
+	})
 }

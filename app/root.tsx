@@ -31,7 +31,7 @@ import { getEnv } from './utils/env.server'
 import { ButtonLink } from './utils/forms'
 import { getUserImgSrc, typedBoolean, useUser } from './utils/misc'
 import { generateStarsSvg } from './utils/starfield.server'
-import { links as vendorLinks } from './utils/vendor.css'
+import { links as vendorLinks } from './utils/vendor-css'
 
 export const links: LinksFunction = () => {
 	return [
