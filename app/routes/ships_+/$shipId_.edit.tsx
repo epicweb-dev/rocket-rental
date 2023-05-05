@@ -7,16 +7,16 @@ import {
 } from '@remix-run/node'
 import { useActionData, useLoaderData } from '@remix-run/react'
 import invariant from 'tiny-invariant'
-import { prisma } from '~/utils/db.server'
-import { getFieldsFromSchema, preprocessFormData } from '~/utils/forms'
-import ShipEditForm from './__shared'
+import { prisma } from '~/utils/db.server.ts'
+import { getFieldsFromSchema, preprocessFormData } from '~/utils/forms.tsx'
+import ShipEditForm from './__shared.tsx'
 import {
 	insertImage,
 	LooseShipFormSchema,
 	MAX_SIZE,
 	requireHost,
 	validateContentLength,
-} from './__shared.server'
+} from './__shared.server.tsx'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.shipId, 'Missing shipId')
@@ -136,4 +136,4 @@ export default function ShipEditRoute() {
 	)
 }
 
-export { ErrorBoundary } from './__shared'
+export { ErrorBoundary } from './__shared.tsx'

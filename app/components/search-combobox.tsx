@@ -1,10 +1,10 @@
 import { useFetcher } from '@remix-run/react'
-import clsx from 'clsx'
+import { clsx } from 'clsx'
 import { useCombobox } from 'downshift'
 import { useEffect, useId, useRef } from 'react'
 import { useSpinDelay } from 'spin-delay'
 import { z } from 'zod'
-import { Spinner } from './spinner'
+import { Spinner } from './spinner.tsx'
 
 export type SearchComboboxProps<Item> = {
 	selectedItem?: Item | null | undefined

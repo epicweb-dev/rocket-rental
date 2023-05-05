@@ -1,7 +1,7 @@
 import { type SerializeFrom } from '@remix-run/node'
 import { useRouteLoaderData } from '@remix-run/react'
 import * as dateFns from 'date-fns'
-import { type loader as rootLoader } from '~/root'
+import { type loader as rootLoader } from '~/root.tsx'
 
 const DEFAULT_REDIRECT = '/'
 

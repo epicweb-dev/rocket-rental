@@ -7,8 +7,8 @@ import {
 	bookingSessionKey,
 	getIsShipAvailable,
 	validateBookerForm,
-} from '~/routes/resources+/booker'
-import { commitSession, getSession } from '~/utils/session.server'
+} from '~/routes/resources+/booker.tsx'
+import { commitSession, getSession } from '~/utils/session.server.ts'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.shipId, 'Missing shipId')

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { SearchCombobox, type SearchComboboxProps } from './search-combobox'
+import { SearchCombobox, type SearchComboboxProps } from './search-combobox.tsx'
 
 export type GeoItem = {
 	id: string

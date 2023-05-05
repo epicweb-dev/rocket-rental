@@ -1,11 +1,11 @@
-import * as Separator from '@radix-ui/react-separator'
+import Separator from '@radix-ui/react-separator/dist/index.js'
 import { redirect } from '@remix-run/node'
 import { Form, Link, useLocation } from '@remix-run/react'
 import * as React from 'react'
-import { StarRatingDisplay } from '~/components/star-rating-display'
-import { prisma } from '~/utils/db.server'
-import { Button, ButtonLink } from '~/utils/forms'
-import { getUserImgSrc } from '~/utils/misc'
+import { StarRatingDisplay } from '~/components/star-rating-display.tsx'
+import { prisma } from '~/utils/db.server.ts'
+import { Button, ButtonLink } from '~/utils/forms.tsx'
+import { getUserImgSrc } from '~/utils/misc.ts'
 
 export async function createChat({
 	loggedInUserId,

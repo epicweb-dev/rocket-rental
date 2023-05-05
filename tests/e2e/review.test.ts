@@ -10,10 +10,10 @@ import {
 	insertImage,
 	lockifyFakerImage,
 	oneDay,
-} from 'prisma/seed-utils'
+} from 'prisma/seed-utils.ts'
 import invariant from 'tiny-invariant'
-import { dataCleanup, expect, loginPage, test } from '../playwright-utils'
-import { prisma } from '~/utils/db.server'
+import { dataCleanup, expect, loginPage, test } from '../playwright-utils.ts'
+import { prisma } from '~/utils/db.server.ts'
 
 test('Users can leave reviews and view them when they are all submitted', async ({
 	page: renterPage,

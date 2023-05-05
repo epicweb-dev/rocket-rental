@@ -10,13 +10,13 @@ import {
 	insertImage,
 	lockifyFakerImage,
 	oneDay,
-} from 'prisma/seed-utils'
-import { BASE_URL } from 'tests/vitest-utils'
+} from 'prisma/seed-utils.ts'
+import { BASE_URL } from 'tests/vitest-utils.ts'
 import { test } from 'vitest'
-import { bookingSessionKey } from '~/routes/resources+/booker'
-import { prisma } from '~/utils/db.server'
-import { commitSession, getSession } from '~/utils/session.server'
-import { loader } from './$shipId.book'
+import { bookingSessionKey } from '~/routes/resources+/booker.tsx'
+import { prisma } from '~/utils/db.server.ts'
+import { commitSession, getSession } from '~/utils/session.server.ts'
+import { loader } from './$shipId.book.tsx'
 
 test('requires authenticated user', async () => {
 	const params = { shipId: '123' }

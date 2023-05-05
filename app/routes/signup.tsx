@@ -6,20 +6,20 @@ import {
 } from '@remix-run/node'
 import { useFetcher, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
-import { GeneralErrorBoundary } from '~/components/error-boundary'
-import { prisma } from '~/utils/db.server'
-import { sendEmail } from '~/utils/email.server'
-import { decrypt, encrypt } from '~/utils/encryption.server'
+import { GeneralErrorBoundary } from '~/components/error-boundary.tsx'
+import { prisma } from '~/utils/db.server.ts'
+import { sendEmail } from '~/utils/email.server.ts'
+import { decrypt, encrypt } from '~/utils/encryption.server.ts'
 import {
 	Button,
 	Field,
 	getFieldsFromSchema,
 	preprocessFormData,
 	useForm,
-} from '~/utils/forms'
-import { getDomainUrl } from '~/utils/misc.server'
-import { commitSession, getSession } from '~/utils/session.server'
-import { emailSchema } from '~/utils/user-validation'
+} from '~/utils/forms.tsx'
+import { getDomainUrl } from '~/utils/misc.server.ts'
+import { commitSession, getSession } from '~/utils/session.server.ts'
+import { emailSchema } from '~/utils/user-validation.ts'
 
 export const onboardingEmailSessionKey = 'onboardingToken'
 const onboardingTokenQueryParam = 'token'

@@ -1,4 +1,5 @@
 import path from 'path'
+import { pathToFileURL } from 'url'
 import express from 'express'
 import compression from 'compression'
 import morgan from 'morgan'
@@ -8,7 +9,10 @@ import closeWithGrace from 'close-with-grace'
 import { createRequestHandler } from '@remix-run/express'
 import { broadcastDevReady } from '@remix-run/node'
 
-const BUILD_DIR = path.join(process.cwd(), 'build')
+const pathParts = [process.cwd(), 'build']
+if (process.env.NODE_ENV === 'production') pathParts.push('index.js')
+const BUILD_DIR = path.join(...pathParts)
+const BUILD_DIR_FILE_URL = pathToFileURL(BUILD_DIR).href
 
 async function start() {
 	const { default: getPort, portNumbers } = await import('get-port')
@@ -36,14 +40,14 @@ async function start() {
 	app.all(
 		'*',
 		process.env.NODE_ENV === 'development'
-			? (req, res, next) => {
+			? async (req, res, next) => {
 					return createRequestHandler({
-						build: require(BUILD_DIR),
+						build: await import(BUILD_DIR_FILE_URL),
 						mode: process.env.NODE_ENV,
 					})(req, res, next)
 			  }
 			: createRequestHandler({
-					build: require(BUILD_DIR),
+					build: await import(BUILD_DIR_FILE_URL),
 					mode: process.env.NODE_ENV,
 			  }),
 	)
@@ -53,7 +57,7 @@ async function start() {
 		port: portNumbers(desiredPort, desiredPort + 100),
 	})
 
-	const server = app.listen(portToUse, () => {
+	const server = app.listen(portToUse, async () => {
 		const addy = server.address()
 		const portUsed =
 			desiredPort === portToUse
@@ -89,7 +93,7 @@ ${chalk.bold('Press Ctrl+C to stop')}
 		)
 
 		if (process.env.NODE_ENV === 'development') {
-			broadcastDevReady(require(BUILD_DIR))
+			broadcastDevReady(await import(BUILD_DIR_FILE_URL))
 		}
 	})
 
@@ -119,9 +123,9 @@ if (process.env.NODE_ENV === 'development') {
 	const watcher = chokidar.watch(BUILD_DIR, {
 		ignored: ['**/**.map'],
 	})
-	watcher.on('all', () => {
+	watcher.on('all', async (...args) => {
 		purgeRequireCache()
-		const build = require(BUILD_DIR)
+		const build = await import(BUILD_DIR_FILE_URL)
 		broadcastDevReady(build)
 	})
 }

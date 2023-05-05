@@ -7,10 +7,10 @@ import { z } from 'zod'
 import {
 	BasicSearchCombobox,
 	type BaseOptions,
-} from '~/components/basic-search-combobox'
-import { prisma } from '~/utils/db.server'
-import { preprocessSearchParams } from '~/utils/forms'
-import { getImgSrc, typedBoolean } from '~/utils/misc'
+} from '~/components/basic-search-combobox.tsx'
+import { prisma } from '~/utils/db.server.ts'
+import { preprocessSearchParams } from '~/utils/forms.tsx'
+import { getImgSrc, typedBoolean } from '~/utils/misc.ts'
 
 export const SearchParamsSchema = z.object({
 	query: z.string().default(''),

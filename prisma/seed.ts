@@ -15,9 +15,9 @@ import {
 	insertImage,
 	lockifyFakerImage,
 	oneDay,
-} from './seed-utils'
+} from './seed-utils.ts'
 import allTheCities from 'all-the-cities'
-import { typedBoolean } from '~/utils/misc'
+import { typedBoolean } from '~/utils/misc.ts'
 
 const prisma = new PrismaClient()
 

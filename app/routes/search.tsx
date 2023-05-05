@@ -1,4 +1,4 @@
-import * as Popover from '@radix-ui/react-popover'
+import Popover from '@radix-ui/react-popover/dist/index.js'
 import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
 import {
 	Form,
@@ -9,17 +9,20 @@ import {
 } from '@remix-run/react'
 import { useCallback, useEffect, useState } from 'react'
 import { z } from 'zod'
-import { ShipCard } from '~/components/ship-card'
-import { BrandCombobox } from '~/routes/resources+/brand-combobox'
-import { CityCombobox } from '~/routes/resources+/city-combobox'
-import { HostCombobox } from '~/routes/resources+/host-combobox'
-import { ModelCombobox } from '~/routes/resources+/model-combobox'
-import { StarportCombobox } from '~/routes/resources+/starport-combobox'
-import { db, interpolateArray, prisma } from '~/utils/db.server'
-import { CheckboxField, preprocessSearchParams } from '~/utils/forms'
-import { getClosestStarports, getDistanceCalculation } from '~/utils/geo.server'
-import { getImgSrc, getUserImgSrc, typedBoolean } from '~/utils/misc'
-import { addParamToSet, unappend } from '~/utils/search-params'
+import { ShipCard } from '~/components/ship-card.tsx'
+import { BrandCombobox } from '~/routes/resources+/brand-combobox.tsx'
+import { CityCombobox } from '~/routes/resources+/city-combobox.tsx'
+import { HostCombobox } from '~/routes/resources+/host-combobox.tsx'
+import { ModelCombobox } from '~/routes/resources+/model-combobox.tsx'
+import { StarportCombobox } from '~/routes/resources+/starport-combobox.tsx'
+import { db, interpolateArray, prisma } from '~/utils/db.server.ts'
+import { CheckboxField, preprocessSearchParams } from '~/utils/forms.tsx'
+import {
+	getClosestStarports,
+	getDistanceCalculation,
+} from '~/utils/geo.server.ts'
+import { getImgSrc, getUserImgSrc, typedBoolean } from '~/utils/misc.ts'
+import { addParamToSet, unappend } from '~/utils/search-params.ts'
 
 const MAX_RESULTS = 50
 

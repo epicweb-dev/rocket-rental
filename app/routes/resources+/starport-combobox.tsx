@@ -4,10 +4,10 @@ import {
 	SearchParamsSchema,
 	type BaseOptions,
 	type GeoItem,
-} from '~/components/geo-search-combobox'
-import { prisma } from '~/utils/db.server'
-import { preprocessSearchParams } from '~/utils/forms'
-import { getClosestStarports } from '~/utils/geo.server'
+} from '~/components/geo-search-combobox.tsx'
+import { prisma } from '~/utils/db.server.ts'
+import { preprocessSearchParams } from '~/utils/forms.tsx'
+import { getClosestStarports } from '~/utils/geo.server.ts'
 
 export async function loader({ request }: DataFunctionArgs) {
 	const data = preprocessSearchParams(request, SearchParamsSchema)

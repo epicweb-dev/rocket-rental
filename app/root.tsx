@@ -1,5 +1,5 @@
-import * as Checkbox from '@radix-ui/react-checkbox'
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import Checkbox from '@radix-ui/react-checkbox/dist/index.js'
+import DropdownMenu from '@radix-ui/react-dropdown-menu/dist/index.js'
 import { cssBundleHref } from '@remix-run/css-bundle'
 import {
 	json,
@@ -20,18 +20,18 @@ import {
 	useLoaderData,
 	useSubmit,
 } from '@remix-run/react'
-import clsx from 'clsx'
+import { clsx } from 'clsx'
 import { useId, useState } from 'react'
 import rootStylesheetUrl from './root.css'
 import appStylesheetUrl from './styles/app.css'
 import tailwindStylesheetUrl from './styles/tailwind.css'
-import { authenticator } from './utils/auth.server'
-import { prisma } from './utils/db.server'
-import { getEnv } from './utils/env.server'
-import { ButtonLink } from './utils/forms'
-import { getUserImgSrc, typedBoolean, useUser } from './utils/misc'
-import { generateStarsSvg } from './utils/starfield.server'
-import { links as vendorLinks } from './utils/vendor-css'
+import { authenticator } from './utils/auth.server.ts'
+import { prisma } from './utils/db.server.ts'
+import { getEnv } from './utils/env.server.ts'
+import { ButtonLink } from './utils/forms.tsx'
+import { getUserImgSrc, typedBoolean, useUser } from './utils/misc.ts'
+import { generateStarsSvg } from './utils/starfield.server.ts'
+import { links as vendorLinks } from './utils/vendor-css.ts'
 
 export const links: LinksFunction = () => {
 	return [

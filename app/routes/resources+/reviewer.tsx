@@ -1,10 +1,14 @@
 import { json, type DataFunctionArgs } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
 import { z } from 'zod'
-import { requireUserId } from '~/utils/auth.server'
-import { prisma } from '~/utils/db.server'
-import { preprocessFormData, useForm, type FieldMetadatas } from '~/utils/forms'
-import { getUserImgSrc } from '~/utils/misc'
+import { requireUserId } from '~/utils/auth.server.ts'
+import { prisma } from '~/utils/db.server.ts'
+import {
+	preprocessFormData,
+	useForm,
+	type FieldMetadatas,
+} from '~/utils/forms.tsx'
+import { getUserImgSrc } from '~/utils/misc.ts'
 
 export function calculateReviewTimeExperied(bookingEndDate: Date) {
 	return bookingEndDate.getTime() + 1000 * 60 * 60 * 24 * 14 < Date.now()

@@ -5,7 +5,7 @@ if (process.env.MOCKS === 'true') {
 }
 
 if (process.env.NODE_ENV === 'production') {
-	require('./server-build')
+	import('./server-build/index.js')
 } else {
 	require('./server')
 }
