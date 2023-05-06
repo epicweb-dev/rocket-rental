@@ -8,6 +8,7 @@ import fs from 'fs'
 import { db } from '~/utils/db.server'
 import { BASE_DATABASE_PATH, DATABASE_PATH } from './paths'
 import { deleteAllData } from './utils'
+import '../../mocks'
 
 declare global {
 	namespace Vi {

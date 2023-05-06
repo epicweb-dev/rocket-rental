@@ -5,6 +5,7 @@ import { FormStrategy } from 'remix-auth-form'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server'
 import { sessionStorage } from './session.server'
+import { typedBoolean } from './misc'
 
 export type { User }
 
@@ -33,12 +34,21 @@ authenticator.use(
 	FormStrategy.name,
 )
 
-export async function requireUserId(request: Request) {
+export async function requireUserId(
+	request: Request,
+	{ redirectTo }: { redirectTo?: string | null } = {},
+) {
 	const requestUrl = new URL(request.url)
-	const loginParams = new URLSearchParams([
-		['redirectTo', `${requestUrl.pathname}${requestUrl.search}`],
-	])
-	const failureRedirect = `/login?${loginParams}`
+	redirectTo =
+		redirectTo === null
+			? null
+			: redirectTo ?? `${requestUrl.pathname}${requestUrl.search}`
+	const loginParams = redirectTo
+		? new URLSearchParams([['redirectTo', redirectTo]])
+		: null
+	const failureRedirect = ['/login', loginParams?.toString()]
+		.filter(typedBoolean)
+		.join('?')
 	const userId = await authenticator.isAuthenticated(request, {
 		failureRedirect,
 	})

@@ -3,7 +3,7 @@ import { setupServer } from 'msw/node'
 import closeWithGrace from 'close-with-grace'
 import { requiredHeader, writeEmail } from './utils'
 
-const server = setupServer(
+export const server = setupServer(
 	rest.post(
 		'https://api.mailgun.net/v3/:domain/messages',
 		async (req, res, ctx) => {
@@ -21,7 +21,10 @@ const server = setupServer(
 )
 
 server.listen({ onUnhandledRequest: 'warn' })
-console.info('🔶 Mock server installed')
+if (process.env.NODE_ENV !== 'test') {
+	// this is nice to see in the console during dev, but annoying during tests
+	console.info('🔶 Mock server installed')
+}
 
 closeWithGrace(() => {
 	server.close()
