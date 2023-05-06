@@ -93,7 +93,7 @@ ${chalk.bold('Press Ctrl+C to stop')}
 		)
 
 		if (process.env.NODE_ENV === 'development') {
-			broadcastDevReady(await import(BUILD_DIR_FILE_URL))
+			notifyRemixDevReady()
 		}
 	})
 
@@ -106,26 +106,17 @@ ${chalk.bold('Press Ctrl+C to stop')}
 
 start()
 
-function purgeRequireCache() {
-	// purge require cache on requests for "server side HMR" this won't let
-	// you have in-memory objects between requests in development,
-	// alternatively you can set up nodemon/pm2-dev to restart the server on
-	// file changes, but then you'll have to reconnect to databases/etc on each
-	// change. We prefer the DX of this, so we've included it for you by default
-	for (const key in require.cache) {
-		if (key.startsWith(BUILD_DIR)) {
-			delete require.cache[key]
-		}
-	}
+async function notifyRemixDevReady() {
+	const build = await import(
+		`${BUILD_DIR_FILE_URL}/index.js?update=${Date.now()}`
+	)
+	broadcastDevReady(build)
 }
 
 if (process.env.NODE_ENV === 'development') {
-	const watcher = chokidar.watch(BUILD_DIR, {
+	// avoid watching the folder itself, just watch its content
+	const watcher = chokidar.watch(`${BUILD_DIR.replace(/\\/g, '/')}/**.*`, {
 		ignored: ['**/**.map'],
 	})
-	watcher.on('all', async (...args) => {
-		purgeRequireCache()
-		const build = await import(BUILD_DIR_FILE_URL)
-		broadcastDevReady(build)
-	})
+	watcher.on('all', notifyRemixDevReady)
 }
