@@ -3,12 +3,12 @@ import { commitSession, getSession } from '~/utils/session.server'
 
 export const BASE_URL = 'https://rocketrental.space'
 
-export async function getUserCookie(
+export async function getUserSetCookieHeader(
 	user: { id: string },
 	existingCookie?: string,
 ) {
 	const session = await getSession(existingCookie)
 	session.set(authenticator.sessionKey, user.id)
-	const cookie = await commitSession(session)
-	return cookie
+	const setCookieHeader = await commitSession(session)
+	return setCookieHeader
 }

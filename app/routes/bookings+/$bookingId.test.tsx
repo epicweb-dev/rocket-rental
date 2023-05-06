@@ -10,7 +10,7 @@ import {
 	lockifyFakerImage,
 	oneDay,
 } from 'prisma/seed-utils'
-import { BASE_URL, getUserCookie } from 'tests/vitest-utils'
+import { BASE_URL, getUserSetCookieHeader } from 'tests/vitest-utils'
 import invariant from 'tiny-invariant'
 import { test } from 'vitest'
 import { prisma } from '~/utils/db.server'
@@ -28,7 +28,7 @@ test('requires authenticated user', async () => {
 })
 
 test('returns 404 for booking that does not exist', async () => {
-	const cookie = await getUserCookie(
+	const cookie = await getUserSetCookieHeader(
 		await prisma.user.create({ data: createUser() }),
 	)
 	const params = { bookingId: 'does-not-exist' }
@@ -45,7 +45,7 @@ test('returns 404 for booking that does not exist', async () => {
 
 test('returns 404 for a booking that does not involve the user', async () => {
 	const { params } = await setupBooking()
-	const cookie = await getUserCookie(
+	const cookie = await getUserSetCookieHeader(
 		await prisma.user.create({ data: createUser() }),
 	)
 	const request = new Request(`${BASE_URL}/bookings/${params.bookingId}`, {
@@ -134,7 +134,7 @@ async function setupBooking({
 			},
 		},
 	})
-	const cookie = await getUserCookie(user)
+	const cookie = await getUserSetCookieHeader(user)
 	const shipData = createShip()
 	const shipModelImageId = await insertImage(
 		prisma,

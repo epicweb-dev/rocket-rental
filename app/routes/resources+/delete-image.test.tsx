@@ -1,13 +1,18 @@
+/**
+ * @vitest-environment node
+ */
+import { faker } from '@faker-js/faker'
 import fs from 'fs'
 import { createPassword, createUser } from 'prisma/seed-utils'
-import { BASE_URL, getUserCookie } from 'tests/vitest-utils'
+import { BASE_URL, getUserSetCookieHeader } from 'tests/vitest-utils'
 import invariant from 'tiny-invariant'
 import { expect, test } from 'vitest'
 import { prisma } from '~/utils/db.server'
-import { action } from './delete-image'
-import { faker } from '@faker-js/faker'
+import { ROUTE_PATH, action } from './delete-image'
 
-test('allows users to delete their own images', async () => {
+const RESOURCE_URL = `${BASE_URL}${ROUTE_PATH}`
+
+async function setupUser() {
 	const userData = createUser()
 	const user = await prisma.user.create({
 		data: {
@@ -31,14 +36,22 @@ test('allows users to delete their own images', async () => {
 		select: { id: true, imageId: true },
 	})
 	invariant(user.imageId, 'User should have an image')
-	const cookie = await getUserCookie(user)
+	return {
+		user: { ...user, imageId: user.imageId },
+		cookie: await getUserSetCookieHeader(user),
+	}
+}
+
+test('allows users to delete their own images', async () => {
+	const { user, cookie } = await setupUser()
 	const form = new FormData()
 	form.set('imageId', user.imageId)
-	const request = new Request(`${BASE_URL}/resources/delete-image`, {
+	const request = new Request(RESOURCE_URL, {
 		method: 'POST',
 		headers: { cookie },
 		body: form,
 	})
+
 	const response = await action({ request, params: {}, context: {} })
 	expect(await response.json()).toEqual({ status: 'success' })
 	const deletedImage = await prisma.image.findUnique({
@@ -51,7 +64,7 @@ test('allows users to delete their own images', async () => {
 test('requires auth', async () => {
 	const form = new FormData()
 	form.set('imageId', faker.datatype.uuid())
-	const request = new Request(`${BASE_URL}/resources/delete-image`, {
+	const request = new Request(RESOURCE_URL, {
 		method: 'POST',
 		body: form,
 	})
@@ -65,33 +78,10 @@ test('requires auth', async () => {
 })
 
 test('validates the form', async () => {
-	const userData = createUser()
-	const user = await prisma.user.create({
-		data: {
-			...userData,
-			password: {
-				create: createPassword(userData.username),
-			},
-			image: {
-				create: {
-					contentType: 'image/jpeg',
-					file: {
-						create: {
-							blob: await fs.promises.readFile(
-								'./tests/fixtures/test-profile.jpg',
-							),
-						},
-					},
-				},
-			},
-		},
-		select: { id: true, imageId: true },
-	})
-	invariant(user.imageId, 'User should have an image')
-	const cookie = await getUserCookie(user)
+	const { user, cookie } = await setupUser()
 	const form = new FormData()
 	form.set('somethingElse', user.imageId)
-	const request = new Request(`${BASE_URL}/resources/delete-image`, {
+	const request = new Request(RESOURCE_URL, {
 		method: 'POST',
 		headers: { cookie },
 		body: form,
@@ -110,33 +100,10 @@ test('validates the form', async () => {
 })
 
 test('cannot delete an image that does not exist', async () => {
-	const userData = createUser()
-	const user = await prisma.user.create({
-		data: {
-			...userData,
-			password: {
-				create: createPassword(userData.username),
-			},
-			image: {
-				create: {
-					contentType: 'image/jpeg',
-					file: {
-						create: {
-							blob: await fs.promises.readFile(
-								'./tests/fixtures/test-profile.jpg',
-							),
-						},
-					},
-				},
-			},
-		},
-		select: { id: true, imageId: true },
-	})
-	invariant(user.imageId, 'User should have an image')
-	const cookie = await getUserCookie(user)
+	const { cookie } = await setupUser()
 	const form = new FormData()
 	form.set('imageId', faker.datatype.uuid())
-	const request = new Request(`${BASE_URL}/resources/delete-image`, {
+	const request = new Request(RESOURCE_URL, {
 		method: 'POST',
 		headers: { cookie },
 		body: form,
