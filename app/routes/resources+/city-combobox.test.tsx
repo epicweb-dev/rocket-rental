@@ -1,7 +1,7 @@
 import { type City } from '@prisma/client'
 import { unstable_createRemixStub as createRemixStub } from '@remix-run/testing'
 import { act, render, screen } from '@testing-library/react'
-import { userEvent } from './user-event.cjs'
+import { userEvent } from '~/utils/user-event.cjs'
 import * as React from 'react'
 import { test } from 'vitest'
 import { db } from '~/utils/db.server.ts'

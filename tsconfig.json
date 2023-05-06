@@ -11,7 +11,7 @@
 		"isolatedModules": true,
 		"esModuleInterop": true,
 		"jsx": "react-jsx",
-		"module": "ES2022",
+		"module": "nodenext",
 		"moduleResolution": "nodenext",
 		"resolveJsonModule": true,
 		"target": "ES2022",
