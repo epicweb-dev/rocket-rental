@@ -69,6 +69,7 @@ VALUES (@id, @name, @country, @latitude, @longitude, datetime('now'), datetime('
 		{
 			id: 'resources-city-combobox',
 			path: '/resources/city-combobox',
+			// @ts-expect-error this will be fixed in a future version
 			loader,
 		},
 	])
