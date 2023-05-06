@@ -391,8 +391,6 @@ async function seed() {
 	)
 	console.timeEnd('💬 Created chats...')
 
-	const kodyUser = createUser()
-
 	await prisma.user.create({
 		data: {
 			email: 'kody@kcd.dev',

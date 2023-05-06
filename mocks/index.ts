@@ -5,8 +5,8 @@ import { requiredHeader, writeEmail } from './utils.ts'
 
 const remix = process.env.REMIX_DEV_HTTP_ORIGIN as string
 
-const server = setupServer(
-	rest.post(`${remix}/ping`, (req, res, ctx) => {
+export const server = setupServer(
+	rest.post(`${remix}/ping`, req => {
 		return req.passthrough()
 	}),
 	rest.post(
@@ -26,7 +26,10 @@ const server = setupServer(
 )
 
 server.listen({ onUnhandledRequest: 'warn' })
-console.info('🔶 Mock server installed')
+if (process.env.NODE_ENV !== 'test') {
+	// this is nice to see in the console during dev, but annoying during tests
+	console.info('🔶 Mock server installed')
+}
 
 closeWithGrace(() => {
 	server.close()
