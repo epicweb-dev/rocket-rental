@@ -1,18 +1,18 @@
 import { json, type DataFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import invariant from 'tiny-invariant'
-import { GeneralErrorBoundary } from '~/components/error-boundary'
+import { GeneralErrorBoundary } from '~/components/error-boundary.tsx'
 import {
 	calculateCanReview,
 	calculateReviewTimeExperied,
 	ReviewCard,
 	Reviewer,
 	ReviewFormSchema,
-} from '~/routes/resources+/reviewer'
-import { requireUserId } from '~/utils/auth.server'
-import { prisma } from '~/utils/db.server'
-import { getFieldsFromSchema } from '~/utils/forms'
-import { useUser } from '~/utils/misc'
+} from '~/routes/resources+/reviewer.tsx'
+import { requireUserId } from '~/utils/auth.server.ts'
+import { prisma } from '~/utils/db.server.ts'
+import { getFieldsFromSchema } from '~/utils/forms.tsx'
+import { useUser } from '~/utils/misc.ts'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.bookingId, 'Missing bookingId')

@@ -7,12 +7,12 @@ import {
 	bookingSessionKey,
 	getIsShipAvailable,
 	validateBookerForm,
-} from '~/routes/resources+/booker'
-import { InlineLogin } from '~/routes/resources+/login'
-import { requireUserId } from '~/utils/auth.server'
-import { prisma } from '~/utils/db.server'
-import { useOptionalUser } from '~/utils/misc'
-import { commitSession, getSession } from '~/utils/session.server'
+} from '~/routes/resources+/booker.tsx'
+import { InlineLogin } from '~/routes/resources+/login.tsx'
+import { requireUserId } from '~/utils/auth.server.ts'
+import { prisma } from '~/utils/db.server.ts'
+import { useOptionalUser } from '~/utils/misc.ts'
+import { commitSession, getSession } from '~/utils/session.server.ts'
 
 function createFormDataFromEntries(
 	entries: Array<[string, FormDataEntryValue]>,

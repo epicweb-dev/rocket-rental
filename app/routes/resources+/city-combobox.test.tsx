@@ -1,11 +1,11 @@
 import { type City } from '@prisma/client'
 import { unstable_createRemixStub as createRemixStub } from '@remix-run/testing'
 import { act, render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { userEvent } from '~/utils/user-event.cjs'
 import * as React from 'react'
 import { test } from 'vitest'
-import { db } from '~/utils/db.server'
-import { CityCombobox, loader } from './city-combobox'
+import { db } from '~/utils/db.server.ts'
+import { CityCombobox, loader } from './city-combobox.tsx'
 
 test('allows you to search for cities in the database', async () => {
 	const insert = db.prepare(/*sql*/ `
@@ -69,7 +69,6 @@ VALUES (@id, @name, @country, @latitude, @longitude, datetime('now'), datetime('
 		{
 			id: 'resources-city-combobox',
 			path: '/resources/city-combobox',
-			// @ts-expect-error this will be fixed in a future version
 			loader,
 		},
 	])

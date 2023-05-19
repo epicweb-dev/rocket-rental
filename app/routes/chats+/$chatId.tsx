@@ -9,18 +9,18 @@ import {
 import { useSpinDelay } from 'spin-delay'
 import { useState } from 'react'
 import invariant from 'tiny-invariant'
-import { GeneralErrorBoundary } from '~/components/error-boundary'
-import { requireUserId } from '~/utils/auth.server'
-import { chatEmitter, EVENTS } from '~/utils/chat.server'
-import { prisma } from '~/utils/db.server'
-import { useEventSource } from '~/utils/hooks'
-import { getUserImgSrc, listify, useUser } from '~/utils/misc'
+import { GeneralErrorBoundary } from '~/components/error-boundary.tsx'
+import { requireUserId } from '~/utils/auth.server.ts'
+import { chatEmitter, EVENTS } from '~/utils/chat.server.ts'
+import { prisma } from '~/utils/db.server.ts'
+import { useEventSource } from '~/utils/hooks.ts'
+import { getUserImgSrc, listify, useUser } from '~/utils/misc.ts'
 import {
 	isNewMessageChange,
 	type Message,
 	type NewMessageChange,
-} from './$chatId.events'
-import clsx from 'clsx'
+} from './$chatId.events.ts'
+import { clsx } from 'clsx'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	invariant(params.chatId, 'Missing chatId')

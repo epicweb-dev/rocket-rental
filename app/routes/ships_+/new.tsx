@@ -6,16 +6,16 @@ import {
 	type DataFunctionArgs,
 } from '@remix-run/node'
 import { useActionData, useLoaderData } from '@remix-run/react'
-import { prisma } from '~/utils/db.server'
-import { getFieldsFromSchema, preprocessFormData } from '~/utils/forms'
-import ShipEditForm from './__shared'
+import { prisma } from '~/utils/db.server.ts'
+import { getFieldsFromSchema, preprocessFormData } from '~/utils/forms.tsx'
+import ShipEditForm from './__shared.tsx'
 import {
 	insertImage,
 	MAX_SIZE,
 	requireHost,
 	ShipFormSchema,
 	validateContentLength,
-} from './__shared.server'
+} from './__shared.server.tsx'
 
 export async function loader({ request }: DataFunctionArgs) {
 	await requireHost(request)
@@ -77,4 +77,4 @@ export default function NewShipRoute() {
 	)
 }
 
-export { ErrorBoundary } from './__shared'
+export { ErrorBoundary } from './__shared.tsx'

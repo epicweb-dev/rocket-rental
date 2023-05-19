@@ -1,6 +1,6 @@
-import { db, interpolateArray } from '~/utils/db.server'
+import { db, interpolateArray } from '~/utils/db.server.ts'
 import { z } from 'zod'
-import { typedBoolean } from './misc'
+import { typedBoolean } from './misc.ts'
 
 const GeoResults = z.array(
 	z.object({

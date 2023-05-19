@@ -13,8 +13,8 @@ import {
 	useSearchParams,
 } from '@remix-run/react'
 import { z } from 'zod'
-import { Spacer } from '~/components/spacer'
-import { authenticator, createUser } from '~/utils/auth.server'
+import { Spacer } from '~/components/spacer.tsx'
+import { authenticator, createUser } from '~/utils/auth.server.ts'
 import {
 	Button,
 	CheckboxField,
@@ -22,15 +22,15 @@ import {
 	getFieldsFromSchema,
 	preprocessFormData,
 	useForm,
-} from '~/utils/forms'
-import { safeRedirect } from '~/utils/misc'
-import { commitSession, getSession } from '~/utils/session.server'
+} from '~/utils/forms.tsx'
+import { safeRedirect } from '~/utils/misc.ts'
+import { commitSession, getSession } from '~/utils/session.server.ts'
 import {
 	nameSchema,
 	passwordSchema,
 	usernameSchema,
-} from '~/utils/user-validation'
-import { onboardingEmailSessionKey } from './signup'
+} from '~/utils/user-validation.ts'
+import { onboardingEmailSessionKey } from './signup.tsx'
 
 const OnboardingFormSchema = z
 	.object({
@@ -138,7 +138,7 @@ export default function OnboardingPage() {
 	const redirectTo = searchParams.get('redirectTo') || '/'
 
 	return (
-		<div className="container mx-auto flex min-h-full flex-col justify-center pt-20 pb-32">
+		<div className="container mx-auto flex min-h-full flex-col justify-center pb-32 pt-20">
 			<div className="mx-auto w-full max-w-lg">
 				<div className="flex flex-col gap-3 text-center">
 					<h1 className="text-h1">Welcome aboard!</h1>

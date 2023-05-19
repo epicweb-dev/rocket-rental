@@ -1,9 +1,14 @@
 import { rest } from 'msw'
 import { setupServer } from 'msw/node'
 import closeWithGrace from 'close-with-grace'
-import { requiredHeader, writeEmail } from './utils'
+import { requiredHeader, writeEmail } from './utils.ts'
+
+const remix = process.env.REMIX_DEV_HTTP_ORIGIN as string
 
 export const server = setupServer(
+	rest.post(`${remix}/ping`, req => {
+		return req.passthrough()
+	}),
 	rest.post(
 		'https://api.mailgun.net/v3/:domain/messages',
 		async (req, res, ctx) => {

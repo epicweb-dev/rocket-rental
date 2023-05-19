@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 import { faker } from '@faker-js/faker'
-import { encrypt, decrypt } from './encryption.server'
+import { encrypt, decrypt } from './encryption.server.ts'
 
 let originalEncryptionSecret: string
 

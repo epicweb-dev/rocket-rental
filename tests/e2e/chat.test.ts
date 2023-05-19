@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
-import { prisma } from '~/utils/db.server'
-import { test, loginPage, expect } from '../playwright-utils'
+import { prisma } from '~/utils/db.server.ts'
+import { test, loginPage, expect } from '../playwright-utils.ts'
 
 test('multi-user chat', async ({ browser, page: renterPage, baseURL }) => {
 	const hostPage = await (await browser.newContext()).newPage()

@@ -2,7 +2,7 @@ import { test } from 'vitest'
 import { faker } from '@faker-js/faker'
 import { render, screen } from '@testing-library/react'
 import { unstable_createRemixStub as createRemixStub } from '@remix-run/testing'
-import { UserProfileBasicInfo } from './__shared'
+import { UserProfileBasicInfo } from './__shared.tsx'
 import invariant from 'tiny-invariant'
 
 function setup(

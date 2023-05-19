@@ -7,10 +7,10 @@ import {
 	BasicSearchCombobox,
 	SearchParamsSchema,
 	type BaseOptions,
-} from '~/components/basic-search-combobox'
-import { prisma } from '~/utils/db.server'
-import { preprocessSearchParams } from '~/utils/forms'
-import { getImgSrc } from '~/utils/misc'
+} from '~/components/basic-search-combobox.tsx'
+import { prisma } from '~/utils/db.server.ts'
+import { preprocessSearchParams } from '~/utils/forms.tsx'
+import { getImgSrc } from '~/utils/misc.ts'
 
 export async function loader({ request }: DataFunctionArgs) {
 	const data = preprocessSearchParams(request, SearchParamsSchema)

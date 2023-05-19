@@ -1,9 +1,9 @@
 import { json, type DataFunctionArgs } from '@remix-run/node'
 import { Link, Outlet, useLoaderData } from '@remix-run/react'
 import invariant from 'tiny-invariant'
-import { GeneralErrorBoundary } from '~/components/error-boundary'
-import { prisma } from '~/utils/db.server'
-import { getImgSrc, getShipImgSrc, getUserImgSrc } from '~/utils/misc'
+import { GeneralErrorBoundary } from '~/components/error-boundary.tsx'
+import { prisma } from '~/utils/db.server.ts'
+import { getImgSrc, getShipImgSrc, getUserImgSrc } from '~/utils/misc.ts'
 
 export async function loader({ params }: DataFunctionArgs) {
 	invariant(params.shipId, 'Missing shipId')

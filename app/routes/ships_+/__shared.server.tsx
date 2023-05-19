@@ -1,8 +1,8 @@
 import { type Prisma, type PrismaClient } from '@prisma/client'
 import { json } from '@remix-run/node'
 import { z } from 'zod'
-import { requireUserId } from '~/utils/auth.server'
-import { prisma } from '~/utils/db.server'
+import { requireUserId } from '~/utils/auth.server.ts'
+import { prisma } from '~/utils/db.server.ts'
 
 export const ShipFormSchema = z.object({
 	name: z.string().min(2).max(60),

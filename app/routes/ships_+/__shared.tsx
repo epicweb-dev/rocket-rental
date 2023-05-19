@@ -1,17 +1,17 @@
 import { type SerializeFrom } from '@remix-run/node'
 import { Form, Link } from '@remix-run/react'
 import { useState } from 'react'
-import { GeneralErrorBoundary } from '~/components/error-boundary'
-import { BrandCombobox } from '~/routes/resources+/brand-combobox'
-import { ModelCombobox } from '~/routes/resources+/model-combobox'
-import { StarportCombobox } from '~/routes/resources+/starport-combobox'
-import { useForm } from '~/utils/forms'
-import { getShipImgSrc } from '~/utils/misc'
+import { GeneralErrorBoundary } from '~/components/error-boundary.tsx'
+import { BrandCombobox } from '~/routes/resources+/brand-combobox.tsx'
+import { ModelCombobox } from '~/routes/resources+/model-combobox.tsx'
+import { StarportCombobox } from '~/routes/resources+/starport-combobox.tsx'
+import { useForm } from '~/utils/forms.tsx'
+import { getShipImgSrc } from '~/utils/misc.ts'
 import {
 	type action as editAction,
 	type loader as editLoader,
-} from './$shipId_.edit'
-import { type action as newAction, type loader as newLoader } from './new'
+} from './$shipId_.edit.tsx'
+import { type action as newAction, type loader as newLoader } from './new.tsx'
 
 export const labelClassName = 'block text-body-xs font-medium text-gray-700'
 export const inputClassName =

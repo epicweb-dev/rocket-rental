@@ -1,9 +1,9 @@
-import * as Tabs from '@radix-ui/react-tabs'
+import Tabs from '@radix-ui/react-tabs/dist/index.js'
 import { Form, Link } from '@remix-run/react'
-import clsx from 'clsx'
+import { clsx } from 'clsx'
 import { useRef, useState } from 'react'
-import { Spacer } from '~/components/spacer'
-import { ButtonLink } from '~/utils/forms'
+import { Spacer } from '~/components/spacer.tsx'
+import { ButtonLink } from '~/utils/forms.tsx'
 import styles from './index.module.css'
 
 export default function Index() {
@@ -268,7 +268,7 @@ export default function Index() {
 						<div className="rounded-3xl">
 							<img src="" alt="Beautiful close-up on a star" />
 						</div>
-						<div className="rounded-3xl bg-white py-12 px-14">
+						<div className="rounded-3xl bg-white px-14 py-12">
 							<h3 className="text-h2 text-night-500">
 								Buy reliable space travel insurance!
 							</h3>
@@ -279,7 +279,7 @@ export default function Index() {
 							</p>
 							<Link
 								to="/insurance"
-								className="hover:bg-accent-purple-darker mt-14 inline-block rounded-full bg-accent-purple py-5 px-14 text-lg font-bold"
+								className="hover:bg-accent-purple-darker mt-14 inline-block rounded-full bg-accent-purple px-14 py-5 text-lg font-bold"
 							>
 								Learn more
 							</Link>
@@ -328,7 +328,7 @@ function Marquee() {
 	)
 	const ulClassName = 'flex shrink-0 animate-marquee gap-8 pl-8'
 	return (
-		<div className="-mx-2 flex rotate-[-4deg] border-t-2 border-b-2 border-t-pink-500 border-b-accent-purple py-2">
+		<div className="-mx-2 flex rotate-[-4deg] border-b-2 border-t-2 border-b-accent-purple border-t-pink-500 py-2">
 			<ul className={ulClassName}>{children}</ul>
 			<ul className={ulClassName} aria-hidden={true}>
 				{children}
@@ -439,8 +439,8 @@ function StarportListSection() {
 							/>
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
-								<h3 className="text-h5 line-clamp-1">{s.name}</h3>
-								<p className="text-night-200 line-clamp-2">{s.description}</p>
+								<h3 className="line-clamp-1 text-h5">{s.name}</h3>
+								<p className="line-clamp-2 text-night-200">{s.description}</p>
 							</div>
 						</div>
 					))}
@@ -728,8 +728,8 @@ function RocketModelsSection() {
 							/>
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
-								<h3 className="text-h5 line-clamp-1">{ship.name}</h3>
-								<p className="text-night-200 line-clamp-2">
+								<h3 className="line-clamp-1 text-h5">{ship.name}</h3>
+								<p className="line-clamp-2 text-night-200">
 									{ship.description}
 								</p>
 							</div>
@@ -749,8 +749,8 @@ function RocketModelsSection() {
 							/>
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
-								<h3 className="text-h5 line-clamp-1">{ship.name}</h3>
-								<p className="text-night-200 line-clamp-2">
+								<h3 className="line-clamp-1 text-h5">{ship.name}</h3>
+								<p className="line-clamp-2 text-night-200">
 									{ship.description}
 								</p>
 							</div>
@@ -770,8 +770,8 @@ function RocketModelsSection() {
 							/>
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
-								<h3 className="text-h5 line-clamp-1">{ship.name}</h3>
-								<p className="text-night-200 line-clamp-2">
+								<h3 className="line-clamp-1 text-h5">{ship.name}</h3>
+								<p className="line-clamp-2 text-night-200">
 									{ship.description}
 								</p>
 							</div>
@@ -791,8 +791,8 @@ function RocketModelsSection() {
 							/>
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
-								<h3 className="text-h5 line-clamp-1">{ship.name}</h3>
-								<p className="text-night-200 line-clamp-2">
+								<h3 className="line-clamp-1 text-h5">{ship.name}</h3>
+								<p className="line-clamp-2 text-night-200">
 									{ship.description}
 								</p>
 							</div>
@@ -812,8 +812,8 @@ function RocketModelsSection() {
 							/>
 							<div className="h-10" />
 							<div className="flex flex-col gap-2 px-6 pb-8">
-								<h3 className="text-h5 line-clamp-1">{ship.name}</h3>
-								<p className="text-night-200 line-clamp-2">
+								<h3 className="line-clamp-1 text-h5">{ship.name}</h3>
+								<p className="line-clamp-2 text-night-200">
 									{ship.description}
 								</p>
 							</div>

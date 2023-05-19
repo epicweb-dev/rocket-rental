@@ -9,12 +9,12 @@ import {
 	insertImage,
 	lockifyFakerImage,
 	oneDay,
-} from 'prisma/seed-utils'
-import { BASE_URL, getUserSetCookieHeader } from 'tests/vitest-utils'
+} from 'prisma/seed-utils.ts'
+import { BASE_URL, getUserSetCookieHeader } from 'tests/vitest-utils.ts'
 import invariant from 'tiny-invariant'
 import { test } from 'vitest'
-import { prisma } from '~/utils/db.server'
-import { loader } from './$bookingId'
+import { prisma } from '~/utils/db.server.ts'
+import { loader } from './$bookingId.tsx'
 
 test('requires authenticated user', async () => {
 	const params = { bookingId: '123' }

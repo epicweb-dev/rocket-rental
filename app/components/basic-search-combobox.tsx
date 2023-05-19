@@ -1,4 +1,4 @@
-import { type SearchComboboxProps } from './search-combobox'
+import { type SearchComboboxProps } from './search-combobox.tsx'
 
 export type BaseOptions<Item> = Pick<
 	SearchComboboxProps<Item>,
@@ -8,4 +8,4 @@ export type BaseOptions<Item> = Pick<
 export {
 	SearchParamsSchema,
 	SearchCombobox as BasicSearchCombobox,
-} from './search-combobox'
+} from './search-combobox.tsx'

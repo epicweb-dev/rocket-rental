@@ -11,15 +11,15 @@ import {
 } from '@remix-run/react'
 import { useEffect, useRef } from 'react'
 import { z } from 'zod'
-import * as createHost from '~/routes/resources+/create-host'
-import * as createRenter from '~/routes/resources+/create-renter'
+import * as createHost from '~/routes/resources+/create-host.tsx'
+import * as createRenter from '~/routes/resources+/create-renter.tsx'
 import {
 	authenticator,
 	getPasswordHash,
 	requireUserId,
 	verifyLogin,
-} from '~/utils/auth.server'
-import { prisma } from '~/utils/db.server'
+} from '~/utils/auth.server.ts'
+import { prisma } from '~/utils/db.server.ts'
 import {
 	Button,
 	ErrorList,
@@ -28,14 +28,14 @@ import {
 	preprocessFormData,
 	TextareaField,
 	useForm,
-} from '~/utils/forms'
-import { getUserImgSrc } from '~/utils/misc'
+} from '~/utils/forms.tsx'
+import { getUserImgSrc } from '~/utils/misc.ts'
 import {
 	emailSchema,
 	nameSchema,
 	passwordSchema,
 	usernameSchema,
-} from '~/utils/user-validation'
+} from '~/utils/user-validation.ts'
 
 const ProfileFormSchema = z
 	.object({

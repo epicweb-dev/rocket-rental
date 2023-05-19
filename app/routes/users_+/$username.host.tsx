@@ -5,13 +5,13 @@ import {
 } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import invariant from 'tiny-invariant'
-import { GeneralErrorBoundary } from '~/components/error-boundary'
-import { ShipCard } from '~/components/ship-card'
-import { getUserId, requireUserId } from '~/utils/auth.server'
-import { prisma } from '~/utils/db.server'
-import { ButtonLink } from '~/utils/forms'
-import { useOptionalUser } from '~/utils/misc'
-import { Reviews, UserProfileBasicInfo, createChat } from './__shared'
+import { GeneralErrorBoundary } from '~/components/error-boundary.tsx'
+import { ShipCard } from '~/components/ship-card.tsx'
+import { getUserId, requireUserId } from '~/utils/auth.server.ts'
+import { prisma } from '~/utils/db.server.ts'
+import { ButtonLink } from '~/utils/forms.tsx'
+import { useOptionalUser } from '~/utils/misc.ts'
+import { Reviews, UserProfileBasicInfo, createChat } from './__shared.tsx'
 
 export async function loader({ request, params }: DataFunctionArgs) {
 	const loggedInUserId = await getUserId(request)

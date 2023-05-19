@@ -1,7 +1,7 @@
 import { json, type DataFunctionArgs } from '@remix-run/node'
 import { Link, Outlet, useLoaderData } from '@remix-run/react'
-import { requireUserId } from '~/utils/auth.server'
-import { prisma } from '~/utils/db.server'
+import { requireUserId } from '~/utils/auth.server.ts'
+import { prisma } from '~/utils/db.server.ts'
 
 export async function loader({ request }: DataFunctionArgs) {
 	const userId = await requireUserId(request)

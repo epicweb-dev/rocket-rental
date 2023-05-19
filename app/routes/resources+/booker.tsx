@@ -2,8 +2,8 @@ import { json, type DataFunctionArgs } from '@remix-run/node'
 import { useFetcher } from '@remix-run/react'
 import * as df from 'date-fns'
 import invariant from 'tiny-invariant'
-import { prisma } from '~/utils/db.server'
-import { commitSession, getSession } from '~/utils/session.server'
+import { prisma } from '~/utils/db.server.ts'
+import { commitSession, getSession } from '~/utils/session.server.ts'
 
 export const bookingSessionKey = 'bookingRange'
 
