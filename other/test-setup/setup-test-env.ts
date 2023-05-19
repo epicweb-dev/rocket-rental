@@ -3,7 +3,7 @@ import { installGlobals } from '@remix-run/node'
 import { matchers, type TestingLibraryMatchers } from './matchers.cjs'
 import 'dotenv/config'
 import fs from 'fs'
-import { db } from '~/utils/db.server.ts'
+import { db, prisma } from '~/utils/db.server.ts'
 import { BASE_DATABASE_PATH, DATABASE_PATH } from './paths.ts'
 import { deleteAllData } from './utils.ts'
 import '../../mocks/index.ts'
@@ -26,5 +26,7 @@ afterEach(() => {
 })
 
 afterAll(async () => {
+	db.close()
+	await prisma.$disconnect()
 	await fs.promises.rm(DATABASE_PATH)
 })
