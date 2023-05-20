@@ -2,9 +2,12 @@
  * @vitest-environment node
  */
 import { faker } from '@faker-js/faker'
-import fs from 'fs'
 import { createPassword, createUser } from 'prisma/seed-utils.ts'
-import { BASE_URL, getUserSetCookieHeader } from 'tests/vitest-utils.ts'
+import {
+	BASE_URL,
+	createImageFromFile,
+	getUserSetCookieHeader,
+} from 'tests/vitest-utils.ts'
 import invariant from 'tiny-invariant'
 import { expect, test } from 'vitest'
 import { prisma } from '~/utils/db.server.ts'
@@ -21,16 +24,7 @@ async function setupUser() {
 				create: createPassword(userData.username),
 			},
 			image: {
-				create: {
-					contentType: 'image/jpeg',
-					file: {
-						create: {
-							blob: await fs.promises.readFile(
-								'./tests/fixtures/test-profile.jpg',
-							),
-						},
-					},
-				},
+				create: await createImageFromFile('test-profile.jpg'),
 			},
 		},
 		select: { id: true, imageId: true },
