@@ -7,7 +7,7 @@ import {
 	createUser,
 	getImagePath,
 	oneDay,
-} from 'prisma/seed-utils.ts'
+} from 'tests/db-utils.ts'
 import {
 	BASE_URL,
 	getUserSetCookieHeader,

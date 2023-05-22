@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 import { faker } from '@faker-js/faker'
-import { createPassword, createUser, getImagePath } from 'prisma/seed-utils.ts'
+import { createPassword, createUser, getImagePath } from 'tests/db-utils.ts'
 import {
 	BASE_URL,
 	createImageFromFile,

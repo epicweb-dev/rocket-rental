@@ -43,9 +43,9 @@ test('multi-user chat', async ({ browser, page: renterPage, baseURL }) => {
 
 	// check that both pages receive the message
 	await expect(
-		renterPage.getByRole('listitem').getByText(testMessage),
+		renterPage.getByRole('log').getByRole('listitem').getByText(testMessage),
 	).toBeVisible()
 	await expect(
-		hostPage.getByRole('listitem').getByText(testMessage),
+		hostPage.getByRole('log').getByRole('listitem').getByText(testMessage),
 	).toBeVisible()
 })

@@ -140,12 +140,16 @@ export default function ChatRoute() {
 							otherUsers[0]?.name ?? otherUsers[0]?.username ?? 'Unknown user'
 						}
 					/>
-					<h2 className="text-body-md font-bold">
+					<h2 className="text-body-md font-bold" id="chat-title">
 						{listify(otherUsers, { stringify: u => u.name ?? u.username })}
 					</h2>
 				</div>
 			</div>
-			<div className="flex flex-1 flex-col justify-between">
+			<div
+				className="flex flex-1 flex-col justify-between"
+				role="log"
+				aria-labelledby="chat-title"
+			>
 				<ul className="flex flex-1 flex-col gap-4 bg-night-600 px-8">
 					{messages.map(message => {
 						const sender = data.chat.users.find(

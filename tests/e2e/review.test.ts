@@ -10,7 +10,7 @@ import {
 	getImagePath,
 	insertImage,
 	oneDay,
-} from 'prisma/seed-utils.ts'
+} from 'tests/db-utils.ts'
 import invariant from 'tiny-invariant'
 import { prisma } from '~/utils/db.server.ts'
 import { dataCleanup, expect, loginPage, test } from '../playwright-utils.ts'

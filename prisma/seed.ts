@@ -1,8 +1,9 @@
+import { faker } from '@faker-js/faker'
+import type * as P from '@prisma/client'
+import allTheCities from 'all-the-cities'
+import bcrypt from 'bcryptjs'
 import fs from 'fs'
 import path from 'path'
-import type * as P from '@prisma/client'
-import bcrypt from 'bcryptjs'
-import { faker } from '@faker-js/faker'
 import {
 	createBooking,
 	createBrand,
@@ -16,8 +17,7 @@ import {
 	getImagePath,
 	insertImage,
 	oneDay,
-} from './seed-utils.ts'
-import allTheCities from 'all-the-cities'
+} from 'tests/db-utils.ts'
 import { prisma } from '~/utils/db.server.ts'
 import { typedBoolean } from '~/utils/misc.ts'
 

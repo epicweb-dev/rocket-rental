@@ -17,4 +17,4 @@ export {
 	insertImage,
 	createImageFromFile,
 	fixturesDirPath,
-} from 'prisma/seed-utils.ts'
+} from 'tests/db-utils.ts'
