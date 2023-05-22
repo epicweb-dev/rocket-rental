@@ -1,24 +1,12 @@
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import { faker } from '@faker-js/faker'
 import bcrypt from 'bcryptjs'
-import { type PrismaClient } from '@prisma/client'
+import { prisma } from '~/utils/db.server.ts'
 
-export async function downloadFile(
-	url: string,
-	retries: number = 0,
-): Promise<Buffer> {
-	const MAX_RETRIES = 3
-	try {
-		const response = await fetch(url)
-		if (!response.ok) {
-			throw new Error(`Failed to fetch image with status ${response.status}`)
-		}
-		const blob = Buffer.from(await response.arrayBuffer())
-		return blob
-	} catch (e) {
-		if (retries > MAX_RETRIES) throw e
-		return downloadFile(url, retries + 1)
-	}
-}
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+export const fixturesDirPath = path.join(__dirname, `../tests/fixtures`)
 
 export function createContactInfo() {
 	return {
@@ -31,12 +19,8 @@ export function createContactInfo() {
 	}
 }
 
-export function createUser({
-	gender = faker.helpers.arrayElement(['female', 'male']) as 'female' | 'male',
-}: {
-	gender?: 'male' | 'female'
-} = {}) {
-	const firstName = faker.name.firstName(gender)
+export function createUser() {
+	const firstName = faker.name.firstName()
 	const lastName = faker.name.lastName()
 
 	const username = faker.helpers.unique(faker.internet.userName, [
@@ -68,9 +52,6 @@ export function createDateRange({
 		endDate: faker.date.between(endStartRange, endEndRange),
 	}
 }
-
-export const lockifyFakerImage = (imageUrl: string) =>
-	imageUrl.replace(/\?(\d+)/, '?lock=$1')
 
 export function createBrand() {
 	return {
@@ -139,17 +120,30 @@ export function createBooking({
 	}
 }
 
-export async function insertImage(prisma: PrismaClient, imageUrl: string) {
+export async function insertImage(imagePath: string) {
 	const image = await prisma.image.create({
-		data: {
-			contentType: 'image/jpeg',
-			file: {
-				create: {
-					blob: await downloadFile(lockifyFakerImage(imageUrl)),
-				},
-			},
-		},
+		data: await createImageFromFile(imagePath),
 		select: { fileId: true },
 	})
 	return image.fileId
+}
+
+export async function createImageFromFile(imagePath: string) {
+	const extension = path.extname(imagePath)
+	return {
+		contentType: `image/${extension.slice(1)}`,
+		file: {
+			create: {
+				blob: await fs.promises.readFile(imagePath),
+			},
+		},
+	}
+}
+
+export function getImagePath(
+	type: 'user' | 'ship-brand' | 'ship-model' | 'ship' | 'starport',
+	number: number = faker.datatype.number({ min: 1, max: 10 }),
+) {
+	const imageIndex = number % 10
+	return path.join(fixturesDirPath, 'images', type, `${imageIndex}.png`)
 }

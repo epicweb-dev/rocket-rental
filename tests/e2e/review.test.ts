@@ -7,13 +7,13 @@ import {
 	createShipModel,
 	createStarport,
 	createUser,
+	getImagePath,
 	insertImage,
-	lockifyFakerImage,
 	oneDay,
 } from 'prisma/seed-utils.ts'
 import invariant from 'tiny-invariant'
-import { dataCleanup, expect, loginPage, test } from '../playwright-utils.ts'
 import { prisma } from '~/utils/db.server.ts'
+import { dataCleanup, expect, loginPage, test } from '../playwright-utils.ts'
 
 test('Users can leave reviews and view them when they are all submitted', async ({
 	page: renterPage,
@@ -29,18 +29,9 @@ test('Users can leave reviews and view them when they are all submitted', async 
 		},
 	})
 	const shipData = createShip()
-	const shipModelImageId = await insertImage(
-		prisma,
-		lockifyFakerImage(faker.image.transport(512, 512, true)),
-	)
-	const brandImageId = await insertImage(
-		prisma,
-		lockifyFakerImage(faker.image.nature(512, 512, true)),
-	)
-	const starportImageId = await insertImage(
-		prisma,
-		lockifyFakerImage(faker.image.business(512, 512, true)),
-	)
+	const shipModelImageId = await insertImage(getImagePath('ship-model'))
+	const brandImageId = await insertImage(getImagePath('ship-brand'))
+	const starportImageId = await insertImage(getImagePath('starport'))
 	const shipBrand = await prisma.shipBrand.create({
 		data: {
 			...createBrand(),

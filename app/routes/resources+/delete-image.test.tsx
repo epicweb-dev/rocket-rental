@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 import { faker } from '@faker-js/faker'
-import { createPassword, createUser } from 'prisma/seed-utils.ts'
+import { createPassword, createUser, getImagePath } from 'prisma/seed-utils.ts'
 import {
 	BASE_URL,
 	createImageFromFile,
@@ -24,7 +24,7 @@ async function setupUser() {
 				create: createPassword(userData.username),
 			},
 			image: {
-				create: await createImageFromFile('test-profile.jpg'),
+				create: await createImageFromFile(getImagePath('user')),
 			},
 		},
 		select: { id: true, imageId: true },

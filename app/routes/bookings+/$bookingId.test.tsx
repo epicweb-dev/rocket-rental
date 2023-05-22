@@ -5,6 +5,7 @@ import {
 	createShipModel,
 	createStarport,
 	createUser,
+	getImagePath,
 	oneDay,
 } from 'prisma/seed-utils.ts'
 import {
@@ -137,9 +138,9 @@ async function setupBooking({
 	})
 	const cookie = await getUserSetCookieHeader(user)
 	const shipData = createShip()
-	const shipModelImageId = await insertImage(prisma, 'transport.jpg')
-	const brandImageId = await insertImage(prisma, 'nature.jpg')
-	const starportImageId = await insertImage(prisma, 'business.jpg')
+	const shipModelImageId = await insertImage(getImagePath('ship-model'))
+	const brandImageId = await insertImage(getImagePath('ship-brand'))
+	const starportImageId = await insertImage(getImagePath('starport'))
 	const shipBrand = await prisma.shipBrand.create({
 		data: {
 			...createBrand(),

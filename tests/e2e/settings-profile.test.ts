@@ -124,7 +124,7 @@ test('Users can update their profile photo', async ({ login, page }) => {
 	await page
 		.getByRole('dialog', { name: /profile photo/i })
 		.getByLabel(/change/i)
-		.setInputFiles('./tests/fixtures/test-profile.jpg')
+		.setInputFiles('./tests/fixtures/images/test-profile.jpg')
 
 	await page
 		.getByRole('dialog', { name: /profile photo/i })

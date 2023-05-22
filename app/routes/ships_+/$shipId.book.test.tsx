@@ -5,6 +5,7 @@ import {
 	createShipModel,
 	createStarport,
 	createUser,
+	getImagePath,
 	oneDay,
 } from 'prisma/seed-utils.ts'
 import {
@@ -30,8 +31,8 @@ test('requires authenticated user', async () => {
 })
 
 test('returns booking data from the session', async () => {
-	const brandImageId = await insertImage(prisma, 'nature.jpg')
-	const starportImageId = await insertImage(prisma, 'nightlife.jpg')
+	const brandImageId = await insertImage(getImagePath('ship-brand'))
+	const starportImageId = await insertImage(getImagePath('starport'))
 	const ship = await prisma.ship.create({
 		data: {
 			...createShip(),
@@ -39,7 +40,7 @@ test('returns booking data from the session', async () => {
 				create: {
 					...createShipModel(),
 					image: {
-						create: await createImageFromFile('business.jpg'),
+						create: await createImageFromFile(getImagePath('ship-model')),
 					},
 					brand: {
 						create: { ...createBrand(), imageId: brandImageId },
