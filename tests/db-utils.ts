@@ -144,6 +144,7 @@ export function getImagePath(
 	type: 'user' | 'ship-brand' | 'ship-model' | 'ship' | 'starport',
 	number: number = faker.datatype.number({ min: 1, max: 10 }),
 ) {
+	const ext = type === 'ship' ? 'jpg' : 'png'
 	const imageIndex = number % 10
-	return path.join(fixturesDirPath, 'images', type, `${imageIndex}.png`)
+	return path.join(fixturesDirPath, 'images', type, `${imageIndex}.${ext}`)
 }
