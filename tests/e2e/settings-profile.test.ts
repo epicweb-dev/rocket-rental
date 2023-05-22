@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { expect, insertNewUser, test } from '../playwright-utils.ts'
-import { createContactInfo, createUser } from '../../prisma/seed-utils.ts'
+import { createContactInfo, createUser } from '../../tests/db-utils.ts'
 import { verifyLogin } from '~/utils/auth.server.ts'
 
 test('Users can update their basic info', async ({ login, page }) => {
@@ -124,7 +124,7 @@ test('Users can update their profile photo', async ({ login, page }) => {
 	await page
 		.getByRole('dialog', { name: /profile photo/i })
 		.getByLabel(/change/i)
-		.setInputFiles('./tests/fixtures/test-profile.jpg')
+		.setInputFiles('./tests/fixtures/images/test-profile.jpg')
 
 	await page
 		.getByRole('dialog', { name: /profile photo/i })

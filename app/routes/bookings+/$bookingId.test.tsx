@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker'
 import {
 	createBooking,
 	createBrand,
@@ -6,11 +5,14 @@ import {
 	createShipModel,
 	createStarport,
 	createUser,
-	insertImage,
-	lockifyFakerImage,
+	getImagePath,
 	oneDay,
-} from 'prisma/seed-utils.ts'
-import { BASE_URL, getUserSetCookieHeader } from 'tests/vitest-utils.ts'
+} from 'tests/db-utils.ts'
+import {
+	BASE_URL,
+	getUserSetCookieHeader,
+	insertImage,
+} from 'tests/vitest-utils.ts'
 import invariant from 'tiny-invariant'
 import { test } from 'vitest'
 import { prisma } from '~/utils/db.server.ts'
@@ -136,18 +138,9 @@ async function setupBooking({
 	})
 	const cookie = await getUserSetCookieHeader(user)
 	const shipData = createShip()
-	const shipModelImageId = await insertImage(
-		prisma,
-		lockifyFakerImage(faker.image.transport(512, 512, true)),
-	)
-	const brandImageId = await insertImage(
-		prisma,
-		lockifyFakerImage(faker.image.nature(512, 512, true)),
-	)
-	const starportImageId = await insertImage(
-		prisma,
-		lockifyFakerImage(faker.image.business(512, 512, true)),
-	)
+	const shipModelImageId = await insertImage(getImagePath('ship-model'))
+	const brandImageId = await insertImage(getImagePath('ship-brand'))
+	const starportImageId = await insertImage(getImagePath('starport'))
 	const shipBrand = await prisma.shipBrand.create({
 		data: {
 			...createBrand(),

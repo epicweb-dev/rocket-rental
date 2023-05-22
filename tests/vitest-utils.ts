@@ -12,3 +12,9 @@ export async function getUserSetCookieHeader(
 	const setCookieHeader = await commitSession(session)
 	return setCookieHeader
 }
+
+export {
+	insertImage,
+	createImageFromFile,
+	fixturesDirPath,
+} from 'tests/db-utils.ts'

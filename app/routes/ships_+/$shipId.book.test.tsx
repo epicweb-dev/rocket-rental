@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker'
 import { differenceInDays } from 'date-fns'
 import {
 	createBrand,
@@ -6,12 +5,14 @@ import {
 	createShipModel,
 	createStarport,
 	createUser,
-	downloadFile,
-	insertImage,
-	lockifyFakerImage,
+	getImagePath,
 	oneDay,
-} from 'prisma/seed-utils.ts'
-import { BASE_URL } from 'tests/vitest-utils.ts'
+} from 'tests/db-utils.ts'
+import {
+	BASE_URL,
+	createImageFromFile,
+	insertImage,
+} from 'tests/vitest-utils.ts'
 import { test } from 'vitest'
 import { bookingSessionKey } from '~/routes/resources+/booker.tsx'
 import { prisma } from '~/utils/db.server.ts'
@@ -30,14 +31,8 @@ test('requires authenticated user', async () => {
 })
 
 test('returns booking data from the session', async () => {
-	const brandImageId = await insertImage(
-		prisma,
-		lockifyFakerImage(faker.image.nature(512, 512, true)),
-	)
-	const starportImageId = await insertImage(
-		prisma,
-		lockifyFakerImage(faker.image.nightlife(512, 512, true)),
-	)
+	const brandImageId = await insertImage(getImagePath('ship-brand'))
+	const starportImageId = await insertImage(getImagePath('starport'))
 	const ship = await prisma.ship.create({
 		data: {
 			...createShip(),
@@ -45,16 +40,7 @@ test('returns booking data from the session', async () => {
 				create: {
 					...createShipModel(),
 					image: {
-						create: {
-							contentType: 'image/jpeg',
-							file: {
-								create: {
-									blob: await downloadFile(
-										lockifyFakerImage(faker.image.business(512, 512, true)),
-									),
-								},
-							},
-						},
+						create: await createImageFromFile(getImagePath('ship-model')),
 					},
 					brand: {
 						create: { ...createBrand(), imageId: brandImageId },

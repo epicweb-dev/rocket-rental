@@ -1,7 +1,9 @@
-import type * as P from '@prisma/client'
-import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
 import { faker } from '@faker-js/faker'
+import type * as P from '@prisma/client'
+import allTheCities from 'all-the-cities'
+import bcrypt from 'bcryptjs'
+import fs from 'fs'
+import path from 'path'
 import {
 	createBooking,
 	createBrand,
@@ -11,15 +13,13 @@ import {
 	createShipModel,
 	createStarport,
 	createUser,
-	downloadFile,
+	fixturesDirPath,
+	getImagePath,
 	insertImage,
-	lockifyFakerImage,
 	oneDay,
-} from './seed-utils.ts'
-import allTheCities from 'all-the-cities'
+} from 'tests/db-utils.ts'
+import { prisma } from '~/utils/db.server.ts'
 import { typedBoolean } from '~/utils/misc.ts'
-
-const prisma = new PrismaClient()
 
 async function seed() {
 	console.log('🌱 Seeding...')
@@ -55,7 +55,7 @@ async function seed() {
 	const totalBrands = 5
 	console.time(`✅ Created ${totalBrands} brands...`)
 	const brands = await Promise.all(
-		Array.from({ length: totalBrands }, async () => {
+		Array.from({ length: totalBrands }, async (_, index) => {
 			const brand = await prisma.shipBrand.create({
 				data: {
 					...createBrand(),
@@ -64,8 +64,8 @@ async function seed() {
 							contentType: 'image/jpeg',
 							file: {
 								create: {
-									blob: await downloadFile(
-										lockifyFakerImage(faker.image.nature(512, 512, true)),
+									blob: await fs.promises.readFile(
+										getImagePath('ship-brand', index),
 									),
 								},
 							},
@@ -81,11 +81,8 @@ async function seed() {
 	const totalShipModels = 30
 	console.time(`⭐ Created ${totalShipModels} ship models...`)
 	const shipModels = await Promise.all(
-		Array.from({ length: totalShipModels }, async () => {
-			const imageId = await insertImage(
-				prisma,
-				lockifyFakerImage(faker.image.business(512, 512, true)),
-			)
+		Array.from({ length: totalShipModels }, async (_, index) => {
+			const imageId = await insertImage(getImagePath('ship-model', index))
 
 			const shipModel = await prisma.shipModel.create({
 				data: {
@@ -114,8 +111,8 @@ async function seed() {
 							contentType: 'image/jpeg',
 							file: {
 								create: {
-									blob: await downloadFile(
-										lockifyFakerImage(faker.image.business(512, 512, true)),
+									blob: await fs.promises.readFile(
+										getImagePath('starport', index),
 									),
 								},
 							},
@@ -135,11 +132,7 @@ async function seed() {
 	console.time(`👤 Created ${totalUsers} users...`)
 	const users = await Promise.all(
 		Array.from({ length: totalUsers }, async () => {
-			const gender = faker.helpers.arrayElement(['female', 'male']) as
-				| 'female'
-				| 'male'
-			const userData = createUser({ gender })
-			const imageGender = gender === 'female' ? 'women' : 'men'
+			const userData = createUser()
 			const imageNumber = faker.datatype.number({ min: 0, max: 99 })
 			const user = await prisma.user.create({
 				data: {
@@ -155,8 +148,8 @@ async function seed() {
 							contentType: 'image/jpeg',
 							file: {
 								create: {
-									blob: await downloadFile(
-										`https://randomuser.me/api/portraits/${imageGender}/${imageNumber}.jpg`,
+									blob: await fs.promises.readFile(
+										getImagePath('user', imageNumber),
 									),
 								},
 							},
@@ -196,11 +189,8 @@ async function seed() {
 			const shipCount = faker.datatype.number({ min: 1, max: 15 })
 
 			const imageIds = await Promise.all(
-				Array.from({ length: shipCount }, () =>
-					insertImage(
-						prisma,
-						lockifyFakerImage(faker.image.transport(512, 512, true)),
-					),
+				Array.from({ length: shipCount }, (_, index) =>
+					insertImage(getImagePath('ship', index)),
 				),
 			)
 
@@ -401,8 +391,8 @@ async function seed() {
 					contentType: 'image/png',
 					file: {
 						create: {
-							blob: await downloadFile(
-								`https://res.cloudinary.com/kentcdodds-com/image/upload/kentcdodds.com/misc/kody.png`,
+							blob: await fs.promises.readFile(
+								path.join(fixturesDirPath, 'images', 'kody.png'),
 							),
 						},
 					},
