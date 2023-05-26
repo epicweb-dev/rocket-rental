@@ -1,4 +1,4 @@
-import Dialog from '@radix-ui/react-dialog/dist/index.js'
+import * as Dialog from '@radix-ui/react-dialog'
 import {
 	type DataFunctionArgs,
 	json,

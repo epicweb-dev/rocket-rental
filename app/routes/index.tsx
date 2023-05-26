@@ -1,4 +1,4 @@
-import Tabs from '@radix-ui/react-tabs/dist/index.js'
+import * as Tabs from '@radix-ui/react-tabs'
 import { Form, Link } from '@remix-run/react'
 import { clsx } from 'clsx'
 import { useRef, useState } from 'react'

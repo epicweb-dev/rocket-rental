@@ -1,4 +1,4 @@
-import Separator from '@radix-ui/react-separator/dist/index.js'
+import * as Separator from '@radix-ui/react-separator'
 import { redirect } from '@remix-run/node'
 import { Form, Link, useLocation } from '@remix-run/react'
 import * as React from 'react'
