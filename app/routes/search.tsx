@@ -1,4 +1,4 @@
-import Popover from '@radix-ui/react-popover/dist/index.js'
+import * as Popover from '@radix-ui/react-popover'
 import { json, redirect, type DataFunctionArgs } from '@remix-run/node'
 import {
 	Form,
