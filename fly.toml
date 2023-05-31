@@ -3,6 +3,10 @@ kill_signal = "SIGINT"
 kill_timeout = 5
 processes = [ ]
 
+[build]
+  [build.args]
+  NODE_VERSION = "18"
+
 [experimental]
 enable_consul = true
 allowed_public_ports = [ ]
