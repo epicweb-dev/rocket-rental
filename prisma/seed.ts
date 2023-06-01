@@ -133,7 +133,7 @@ async function seed() {
 	const users = await Promise.all(
 		Array.from({ length: totalUsers }, async () => {
 			const userData = createUser()
-			const imageNumber = faker.datatype.number({ min: 0, max: 99 })
+			const imageNumber = faker.number.int({ min: 0, max: 99 })
 			const user = await prisma.user.create({
 				data: {
 					...userData,
@@ -186,7 +186,7 @@ async function seed() {
 		.map(user => user.id)
 	const hosts = await Promise.all(
 		hostIds.map(async id => {
-			const shipCount = faker.datatype.number({ min: 1, max: 15 })
+			const shipCount = faker.number.int({ min: 1, max: 15 })
 
 			const imageIds = await Promise.all(
 				Array.from({ length: shipCount }, (_, index) =>
@@ -301,7 +301,7 @@ async function seed() {
 							data: {
 								subjectId: booking.shipId,
 								reviewerId: booking.renterId,
-								rating: faker.datatype.number({ min: 1, max: 5 }),
+								rating: faker.number.int({ min: 1, max: 5 }),
 								content: faker.lorem.sentences(3),
 								createdAt,
 								updatedAt: createdAt,
@@ -315,7 +315,7 @@ async function seed() {
 							data: {
 								subjectId: booking.ship.hostId,
 								reviewerId: booking.renterId,
-								rating: faker.datatype.number({ min: 1, max: 5 }),
+								rating: faker.number.int({ min: 1, max: 5 }),
 								content: faker.lorem.sentences(3),
 								createdAt,
 								updatedAt: createdAt,
@@ -329,7 +329,7 @@ async function seed() {
 							data: {
 								subjectId: booking.renterId,
 								reviewerId: booking.ship.hostId,
-								rating: faker.datatype.number({ min: 1, max: 5 }),
+								rating: faker.number.int({ min: 1, max: 5 }),
 								content: faker.lorem.sentences(3),
 								createdAt,
 								updatedAt: createdAt,
@@ -345,10 +345,10 @@ async function seed() {
 	console.time('💬 Created chats...')
 	const chats = await Promise.all(
 		bookings.map(async booking => {
-			const createdAt = faker.date.between(
-				booking.createdAt.getTime() - oneDay,
-				booking.createdAt.getTime() + oneDay,
-			)
+			const createdAt = faker.date.between({
+				from: booking.createdAt.getTime() - oneDay,
+				to: booking.createdAt.getTime() + oneDay,
+			})
 			const chat = await prisma.chat.create({
 				data: {
 					users: {
@@ -357,7 +357,7 @@ async function seed() {
 					createdAt,
 					messages: {
 						create: Array.from(
-							{ length: faker.datatype.number({ min: 1, max: 10 }) },
+							{ length: faker.number.int({ min: 1, max: 10 }) },
 							(_, index): Omit<P.Message, 'id' | 'chatId'> => {
 								const sentAt = new Date(createdAt.getTime() + 1000 * 3 * index)
 								return {
@@ -367,7 +367,7 @@ async function seed() {
 										? booking.renterId
 										: booking.ship.hostId,
 									content: faker.lorem.sentences(
-										faker.datatype.number({ min: 1, max: 3 }),
+										faker.number.int({ min: 1, max: 3 }),
 									),
 								}
 							},

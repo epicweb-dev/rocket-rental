@@ -57,7 +57,7 @@ test('allows users to delete their own images', async () => {
 
 test('requires auth', async () => {
 	const form = new FormData()
-	form.set('imageId', faker.datatype.uuid())
+	form.set('imageId', faker.string.uuid())
 	const request = new Request(RESOURCE_URL, {
 		method: 'POST',
 		body: form,
@@ -96,7 +96,7 @@ test('validates the form', async () => {
 test('cannot delete an image that does not exist', async () => {
 	const { cookie } = await setupUser()
 	const form = new FormData()
-	form.set('imageId', faker.datatype.uuid())
+	form.set('imageId', faker.string.uuid())
 	const request = new Request(RESOURCE_URL, {
 		method: 'POST',
 		headers: { cookie },

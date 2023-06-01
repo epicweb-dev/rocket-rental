@@ -10,9 +10,9 @@ function setup(
 	props?: Partial<React.ComponentProps<typeof UserProfileBasicInfo>>,
 ) {
 	const user = {
-		imageId: faker.datatype.uuid(),
+		imageId: faker.string.uuid(),
 		username: faker.internet.userName(),
-		name: faker.name.fullName(),
+		name: faker.person.fullName(),
 	}
 	const App = createRemixStub([
 		{
@@ -56,7 +56,7 @@ test('Link to chat is a form if user is logged in, is not self, and no chat exis
 })
 
 test('Link to chat is link to specific chat if logged in, not self, and there is a history', async () => {
-	const oneOnOneChatId = faker.datatype.uuid()
+	const oneOnOneChatId = faker.string.uuid()
 	setup({ isSelf: false, userLoggedIn: true, oneOnOneChatId })
 	const chatLink = await screen.findByRole('link', {
 		name: /message/i,
