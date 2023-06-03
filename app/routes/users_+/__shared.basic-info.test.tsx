@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { test } from 'vitest'
 import { faker } from '@faker-js/faker'
 import { render, screen } from '@testing-library/react'
@@ -31,7 +32,7 @@ function setup(
 			),
 		},
 	])
-	const routeUrl = `/users/${user}/host`
+	const routeUrl = `/users/${user.username}/host`
 	render(<App initialEntries={[routeUrl]} />)
 	return { routeUrl }
 }

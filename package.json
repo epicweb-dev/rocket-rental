@@ -116,8 +116,8 @@
     "@types/react": "^18.0.34",
     "@types/react-dom": "^18.0.11",
     "@types/uuid": "^9.0.1",
-    "@vitejs/plugin-react": "^3.1.0",
-    "@vitest/coverage-c8": "^0.30.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "@vitest/coverage-c8": "^0.31.4",
     "all-the-cities": "^3.1.0",
     "autoprefixer": "^10.4.14",
     "c8": "^7.13.0",
@@ -137,9 +137,9 @@
     "tsconfig-paths": "^4.2.0",
     "tsx": "^3.12.6",
     "typescript": "^5.0.4",
-    "vite": "^4.2.1",
-    "vite-tsconfig-paths": "^4.0.8",
-    "vitest": "^0.30.0",
+    "vite": "^4.3.9",
+    "vite-tsconfig-paths": "^4.2.0",
+    "vitest": "^0.31.4",
     "vitest-mock-extended": "^1.1.3"
   },
   "engines": {
