@@ -14,7 +14,7 @@ import {
 	insertImage,
 } from 'tests/vitest-utils.ts'
 import invariant from 'tiny-invariant'
-import { test } from 'vitest'
+import { expect, test } from 'vitest'
 import { prisma } from '~/utils/db.server.ts'
 import { loader } from './$bookingId.tsx'
 

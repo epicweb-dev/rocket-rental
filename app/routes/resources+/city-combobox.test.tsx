@@ -3,7 +3,7 @@ import { unstable_createRemixStub as createRemixStub } from '@remix-run/testing'
 import { act, render, screen } from '@testing-library/react'
 import { userEvent } from '~/utils/user-event.cjs'
 import * as React from 'react'
-import { test } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { db } from '~/utils/db.server.ts'
 import { CityCombobox, loader } from './city-combobox.tsx'
 
@@ -40,8 +40,8 @@ VALUES (@id, @name, @country, @latitude, @longitude, datetime('now'), datetime('
 
 	type Geo = { lat: number; long: number } | null
 	type Exclude = Array<string>
-	let setGeolocation: (geo: Geo) => void = () => {}
-	let setExclude: (exclude: Exclude) => void = () => {}
+	let setGeolocation: (geo: Geo) => void = () => { }
+	let setExclude: (exclude: Exclude) => void = () => { }
 
 	const handleChange = vi.fn()
 
