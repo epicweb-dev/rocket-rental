@@ -104,10 +104,12 @@ test.afterEach(async () => {
 			})
 		}
 	}
-	await deleteAll(dataCleanup.users, prisma.user)
-	await deleteAll(dataCleanup.ships, prisma.ship)
-	await deleteAll(dataCleanup.shipBrands, prisma.shipBrand)
-	await deleteAll(dataCleanup.starports, prisma.starport)
-	await deleteAll(dataCleanup.bookings, prisma.booking)
-	await deleteAll(dataCleanup.chats, prisma.chat)
+	await Promise.all([
+		deleteAll(dataCleanup.users, prisma.user),
+		deleteAll(dataCleanup.ships, prisma.ship),
+		deleteAll(dataCleanup.shipBrands, prisma.shipBrand),
+		deleteAll(dataCleanup.starports, prisma.starport),
+		deleteAll(dataCleanup.bookings, prisma.booking),
+		deleteAll(dataCleanup.chats, prisma.chat),
+	])
 })

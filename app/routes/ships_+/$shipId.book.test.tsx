@@ -13,7 +13,7 @@ import {
 	createImageFromFile,
 	insertImage,
 } from 'tests/vitest-utils.ts'
-import { test } from 'vitest'
+import { expect, test } from 'vitest'
 import { bookingSessionKey } from '~/routes/resources+/booker.tsx'
 import { prisma } from '~/utils/db.server.ts'
 import { commitSession, getSession } from '~/utils/session.server.ts'

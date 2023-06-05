@@ -3,6 +3,7 @@
  */
 import { faker } from '@faker-js/faker'
 import { encrypt, decrypt } from './encryption.server.ts'
+import { afterEach, beforeEach, expect, test } from 'vitest'
 
 let originalEncryptionSecret: string
 
