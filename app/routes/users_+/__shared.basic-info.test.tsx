@@ -82,9 +82,10 @@ test('Link to chat is links to login if user is not logged in', async () => {
 		userLoggedIn: false,
 		oneOnOneChatId: null,
 	})
-	const messageLink = await screen.findByRole('link', {
-		name: /message/i,
-	})
+	const links = await screen.findAllByRole('link', { name: /message/i })
+	const messageLink = links.find(
+		l => l.getAttribute('title') === 'Login to message',
+	)
 	expect(messageLink).toHaveAttribute(
 		'href',
 		`/login?${new URLSearchParams({ redirectTo: routeUrl })}`,
