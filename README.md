@@ -2,6 +2,8 @@
 
 Let's launch together!
 
+> This is no longer actively maintained. If you want an up-to-date example of a Remix app that builds on top of what was done here, check [the Epic Stack](https://github.com/epicweb-dev/epic-stack).
+
 ## Development
 
 - Initial setup:
